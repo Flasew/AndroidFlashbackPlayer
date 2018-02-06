@@ -17,7 +17,17 @@ public class MainActivity extends AppCompatActivity {
     private MediaPlayer mediaPlayer;
     private static final int MEDIA_RES_ID = R.raw.everything_i_love;
 
-    private static final int[] MEDIA_IDS;
+
+    Class raw = R.raw.class;
+    Field[] fields = raw.getFields();
+    for (Field fields : fields) {
+        try {
+            Log.i("REFLECTION", String.format("%s is %d",field.getName(),field.getInt(null)));
+        } catch(IllegalAccessException e) {
+            Log.e.("REFLECTION", String.format("%s threw IllegalAccessException.",
+                    field.getName()));
+        }
+    }
 
 
     @Override

@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context="edu.ucsd.team6flashbackplayer.MainActivity">
 
-<<<<<<< HEAD
     <Button
         android:id="@+id/button_play"
         android:layout_width="wrap_content"
@@ -16,8 +15,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-=======
     <include layout="@layout/content_main" />
->>>>>>> 213ff332abaffb23d5e6388c56c286d1c10c082d
 
 </android.support.constraint.ConstraintLayout>
