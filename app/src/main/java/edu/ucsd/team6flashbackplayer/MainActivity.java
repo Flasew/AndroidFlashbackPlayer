@@ -7,10 +7,13 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+
+import java.lang.reflect.Field;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,10 +25,10 @@ public class MainActivity extends AppCompatActivity {
     Field[] fields = raw.getFields();
     for (Field fields : fields) {
         try {
-            Log.i("REFLECTION", String.format("%s is %d",field.getName(),field.getInt(null)));
+            Log.i("REFLECTION", String.format("%s is %d",fields.getName(),fields.getInt(null)));
         } catch(IllegalAccessException e) {
             Log.e.("REFLECTION", String.format("%s threw IllegalAccessException.",
-                    field.getName()));
+                    fields.getName()));
         }
     }
 
