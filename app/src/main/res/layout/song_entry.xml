@@ -5,8 +5,6 @@
     android:layout_height="match_parent"
     android:padding="@dimen/entry_margin">
 
-
-
     <TextView
         android:id="@+id/song_name"
         android:layout_height="50dp"
@@ -18,15 +16,16 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/like_button"/>
 
-    <ImageView
+    <ImageButton
         android:id="@+id/dislike_button"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:background="#890909"
         android:padding="@dimen/entry_margin"
-        app:layout_constraintRight_toRightOf="parent" />
+        android:layout_marginEnd="10dp"
+        app:layout_constraintRight_toRightOf="parent"/>
 
-    <ImageView
+    <ImageButton
         android:id="@+id/like_button"
         android:layout_width="50dp"
         android:layout_height="50dp"

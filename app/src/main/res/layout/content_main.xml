@@ -20,7 +20,7 @@
         app:layout_constraintGuide_percent="0.9" />
 
     <Button
-        android:id="@+id/fb_song"
+        android:id="@+id/fb_button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@drawable/fb_disabled"
@@ -35,7 +35,6 @@
     <Button
         android:id="@+id/main_songs"
         android:layout_width="wrap_content"
-
         android:layout_height="wrap_content"
         android:layout_marginTop="150dp"
         android:background="@drawable/black_frame"
@@ -43,11 +42,10 @@
         android:textSize="20dp"
         app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
         app:layout_constraintRight_toRightOf="@id/guidelineR10"
-        app:layout_constraintTop_toTopOf="@id/fb_song" />
+        app:layout_constraintTop_toTopOf="@id/fb_button" />
     <Button
         android:id="@+id/main_albums"
         android:layout_width="wrap_content"
-
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
         android:background="@drawable/black_frame"
