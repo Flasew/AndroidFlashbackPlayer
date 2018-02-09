@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guidelineL10"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.1" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guidelineR10"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.9" />
+
+    <Button
+        android:id="@+id/fb_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/fb_disabled"
+        android:text="@string/flashback"
+        android:textSize="15dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
+        app:layout_constraintRight_toRightOf="@id/guidelineR10"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.01" />
+
+    <Button
+        android:id="@+id/main_songs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="150dp"
+        android:background="@drawable/black_frame"
+        android:text="@string/songs"
+        android:textSize="20dp"
+        app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
+        app:layout_constraintRight_toRightOf="@id/guidelineR10"
+        app:layout_constraintTop_toTopOf="@id/fb_button" />
+    <Button
+        android:id="@+id/main_albums"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/black_frame"
+        android:text="@string/albusms"
+        android:textSize="20dp"
+        app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
+        app:layout_constraintRight_toRightOf="@id/guidelineR10"
+        app:layout_constraintTop_toBottomOf="@id/main_songs" />
+
+    <include layout="@layout/current_song"/>
+
+</android.support.constraint.ConstraintLayout>

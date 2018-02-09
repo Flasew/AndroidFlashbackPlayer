@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Team6FlashbackPlayer</string>
+    <string name="flashback">FLASHBACK</string>
+    <string name="songs">Songs</string>
+    <string name="albusms">Albums</string>
+    <string name="curr_playing">Currently Playing</string>
+</resources>
