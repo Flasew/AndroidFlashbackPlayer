@@ -2,12 +2,14 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.IBinder;
 import android.support.constraint.ConstraintLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -44,9 +46,53 @@ public class SongAdapter extends BaseAdapter {
         return 0;
     }
 
+    static class ViewHolder {
+        TextView title;
+        ImageButton likeButton;
+        ImageButton dislikeButton;
+        int position;
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         //map to song layout
+
+        // XXX: perhaps do this later...
+//        //Here, position is the index in the list, the convertView is the view to be
+//        //recycled (or created), and parent is the ListView itself.
+//
+//        //Grab the convertView as our row of the ListView
+//        View row = convertView;
+//
+//        //If the row is null, it means that we aren't recycling anything - so we have
+//        //to inflate the layout ourselves.
+//        ViewHolder holder = null;
+//        if(row == null) {
+//            LayoutInflater inflater = (LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//            row = inflater.inflate(R.layout.list_item, parent, false);
+//            //Now create the ViewHolder
+//            holder = new ViewHolder();
+//            //and set its textView field to the proper value
+//            holder.textView =  (TextView) row.findViewById(R.id.listItemTextView);
+//            //and store it as the 'tag' of our view
+//            row.setTag(holder);
+//        } else {
+//            //We've already seen this one before!
+//            holder = (ViewHolder) row.getTag();
+//        }
+//
+//        //Grab the item to be rendered. In this case, I'm just using a string, but
+//        //you will use your underlying object type.
+//        final String item = getItem(position);
+//
+//        //And update the ViewHolder for this View's text to the correct text.
+//        holder.textView.setText(item);
+//
+//        //and return the row
+//        return row;
+
+
+
         ConstraintLayout songLay = (ConstraintLayout) songInf.inflate
                 (R.layout.song_entry, parent, false);
         //get title and artist views
