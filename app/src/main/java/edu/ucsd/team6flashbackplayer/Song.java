@@ -2,6 +2,7 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.location.Location;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,8 +11,8 @@ import java.util.Collection;
  * Created by frankwang on 2/6/18.
  */
 
-public final class Song {
-    private final long URI_ID;      // URI seems to be taken...
+public final class Song implements Serializable {
+    private final String ID;      // URI seems to be taken...
     private final String NAME;
     private final String ARTIST;
     private final String ALBUM;
@@ -34,8 +35,8 @@ public final class Song {
     private boolean disliked;
 
     // Ctor
-    public Song(long uri, String name, String artist, String album) {
-        URI_ID = uri;
+    public Song(String id, String name, String artist, String album) {
+        ID = id;
         NAME = name;
         ARTIST = artist;
         ALBUM = album;
@@ -60,7 +61,7 @@ public final class Song {
     }
 
     // getters of const fields
-    public long get_uri()       { return URI_ID; }
+    public String get_id()      { return ID; }
     public String get_name()    { return NAME; }
     public String get_album()   { return ALBUM; }
     public String get_artist()  { return ARTIST; }

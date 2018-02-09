@@ -1,8 +1,15 @@
 package edu.ucsd.team6flashbackplayer;
 
+import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
+import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -14,23 +21,12 @@ import android.view.MenuItem;
 import android.widget.Button;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private MediaPlayer mediaPlayer;
-    private static final int MEDIA_RES_ID = R.raw.everything_i_love;
-
-
-    Class raw = R.raw.class;
-    Field[] fields = raw.getFields();
-    for (Field fields : fields) {
-        try {
-            Log.i("REFLECTION", String.format("%s is %d",fields.getName(),fields.getInt(null)));
-        } catch(IllegalAccessException e) {
-            Log.e.("REFLECTION", String.format("%s threw IllegalAccessException.",
-                    fields.getName()));
-        }
-    }
+    private static MediaPlayer media_player;
 
 
     @Override
@@ -38,25 +34,29 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        loadMedia(MEDIA_RES_ID);
-        Button playButton = (Button) findViewById(R.id.button_play);
-        playButton.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        mediaPlayer.start();
-                    }
-                });
+        Button songButton = findViewById(R.id.main_songs);
+        songButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startSongActivity();
+            }
+        });
     }
 
+    public void startSongActivity() {
+        Intent intent = new Intent(this, SongActivity.class);
+        startActivity(intent);
+    }
+
+
     public void loadMedia(int resourceId) {
-        if (mediaPlayer == null) {
-            mediaPlayer = new MediaPlayer();
+        if (media_player == null) {
+            media_player = new MediaPlayer();
         }
         AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(resourceId);
         try {
-            mediaPlayer.setDataSource(assetFileDescriptor);
-            mediaPlayer.prepareAsync();
+            media_player.setDataSource(assetFileDescriptor);
+            media_player.prepareAsync();
         } catch (Exception e) {
             System.out.println(e.toString());
         }

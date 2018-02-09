@@ -6,4 +6,6 @@
     android:layout_height="match_parent"
     tools:context="edu.ucsd.team6flashbackplayer.SongActivity">
 
+    <include layout="@layout/content_song" />
+
 </android.support.constraint.ConstraintLayout>
