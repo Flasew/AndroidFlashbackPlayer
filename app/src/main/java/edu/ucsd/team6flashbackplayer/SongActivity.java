@@ -53,7 +53,6 @@ public class SongActivity extends AppCompatActivity {
         SongAdapter songAdt = new SongAdapter(this, songList);
         songView.setAdapter(songAdt);
 
-<<<<<<< HEAD
         ConstraintLayout currSong = findViewById(R.id.current_song);
         currSong.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,8 +73,6 @@ public class SongActivity extends AppCompatActivity {
             }
         });
 
-=======
->>>>>>> origin/milestone_1
     }
 
     @Override
@@ -89,11 +86,8 @@ public class SongActivity extends AppCompatActivity {
         songView.setAdapter(songAdt);
     }
 
-<<<<<<< HEAD
     public void startCurrSongActivity() {
         Intent intent = new Intent(this, CurrSongActivity.class);
         startActivity(intent);
     }
-=======
->>>>>>> origin/milestone_1
 }
