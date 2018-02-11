@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="edu.ucsd.team6flashbackplayer"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    package="edu.ucsd.team6flashbackplayer"
     xsi:schemaLocation="http://schemas.android.com/apk/res/android ">
 
     <application
@@ -18,7 +18,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SongActivity"></activity>
+        <activity android:name=".SongActivity" />
+        <activity android:name=".AlbumActivity" />
+        <activity android:name=".CurrSongActivity"></activity>
     </application>
 
 </manifest>
