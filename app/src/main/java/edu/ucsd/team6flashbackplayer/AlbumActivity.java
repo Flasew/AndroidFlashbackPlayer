@@ -38,6 +38,7 @@ public class AlbumActivity extends AppCompatActivity {
                 startSongActivity(listItem);
             }
         });
+<<<<<<< HEAD
 
         ConstraintLayout currSong = findViewById(R.id.current_song);
         currSong.setOnClickListener(new View.OnClickListener() {
@@ -58,6 +59,8 @@ public class AlbumActivity extends AppCompatActivity {
                 startCurrSongActivity();
             }
         });
+=======
+>>>>>>> origin/milestone_1
     }
 
     private void startSongActivity(Album album) {
@@ -66,9 +69,12 @@ public class AlbumActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+<<<<<<< HEAD
     public void startCurrSongActivity() {
         Intent intent = new Intent(this, CurrSongActivity.class);
         startActivity(intent);
     }
 
+=======
+>>>>>>> origin/milestone_1
 }

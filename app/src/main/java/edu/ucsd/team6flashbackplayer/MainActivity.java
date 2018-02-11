@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+<<<<<<< HEAD
         ConstraintLayout currSong = findViewById(R.id.current_song);
         currSong.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,6 +79,12 @@ public class MainActivity extends AppCompatActivity {
     public void startCurrSongActivity() {
         Intent intent = new Intent(this, CurrSongActivity.class);
         startActivity(intent);
+=======
+    }
+
+    public void startCurrSongActivity() {
+
+>>>>>>> origin/milestone_1
     }
 
     public void startSongActivity() {
