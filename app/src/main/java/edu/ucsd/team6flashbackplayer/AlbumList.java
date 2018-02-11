@@ -19,11 +19,11 @@ public class AlbumList {
         loadFromSongList(songs.getSongs());
     }
 
-    public HashMap<String, Album> getAlbums() {
+    public static HashMap<String, Album> getAlbums() {
         return albums;
     }
 
-    public Album getAlbums(String albumName) {
+    public static Album getAlbum(String albumName) {
         return albums.get(albumName);
     }
 

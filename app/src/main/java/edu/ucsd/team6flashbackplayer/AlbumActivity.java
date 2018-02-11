@@ -24,9 +24,8 @@ public class AlbumActivity extends AppCompatActivity {
         setContentView(R.layout.activity_album);
 
         final ListView albumView = findViewById(R.id.album_list);
-        AlbumList albumList = new AlbumList();
 
-        AlbumAdapter albumAdt = new AlbumAdapter(this, albumList.getAlbums());
+        AlbumAdapter albumAdt = new AlbumAdapter(this, AlbumList.getAlbums());
         albumView.setAdapter(albumAdt);
         albumView.setItemsCanFocus(false);
         albumView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

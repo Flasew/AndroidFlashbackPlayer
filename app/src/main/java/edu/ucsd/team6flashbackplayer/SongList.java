@@ -17,7 +17,7 @@ public class SongList {
         this.songs.addAll(songs);
     }
 
-    public List<Song> getSongs() {
+    public static List<Song> getSongs() {
         return songs;
     }
 

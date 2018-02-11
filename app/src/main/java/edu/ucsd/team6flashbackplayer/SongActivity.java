@@ -42,12 +42,10 @@ public class SongActivity extends AppCompatActivity {
         Bundle extras = getIntent().getExtras();
         if(extras == null) {
             albumName = null;
-            SongList sl = new SongList();
-            songList = sl.getSongs();
+            songList = SongList.getSongs();
         } else {
             albumName = extras.getString("albumName");
-            AlbumList al = new AlbumList();
-            songList = al.getAlbums().get(albumName).getSongs();
+            songList = AlbumList.getAlbum(albumName).getSongs();
         }
 
         songView = findViewById(R.id.song_list);
