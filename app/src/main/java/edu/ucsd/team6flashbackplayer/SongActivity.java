@@ -55,6 +55,29 @@ public class SongActivity extends AppCompatActivity {
         SongAdapter songAdt = new SongAdapter(this, songList);
         songView.setAdapter(songAdt);
 
+<<<<<<< HEAD
+        ConstraintLayout currSong = findViewById(R.id.current_song);
+        currSong.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startCurrSongActivity();
+            }
+        });
+
+        final SharedPreferences sp = getSharedPreferences("mode", MODE_PRIVATE);
+        final SharedPreferences.Editor editor = sp.edit();
+        Button flashBackButton = findViewById(R.id.fb_button);
+        flashBackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editor.putBoolean("mode" , true);
+                editor.apply();
+                startCurrSongActivity();
+            }
+        });
+
+=======
+>>>>>>> origin/milestone_1
     }
 
     @Override
@@ -68,4 +91,11 @@ public class SongActivity extends AppCompatActivity {
         songView.setAdapter(songAdt);
     }
 
+<<<<<<< HEAD
+    public void startCurrSongActivity() {
+        Intent intent = new Intent(this, CurrSongActivity.class);
+        startActivity(intent);
+    }
+=======
+>>>>>>> origin/milestone_1
 }
