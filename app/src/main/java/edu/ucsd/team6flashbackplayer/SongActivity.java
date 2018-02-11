@@ -44,15 +44,17 @@ public class SongActivity extends AppCompatActivity {
             albumName = null;
             SongList sl = new SongList();
             songList = sl.getSongs();
+        } else {
+            albumName = extras.getString("albumName");
+            AlbumList al = new AlbumList();
+            songList = al.getAlbums().get(albumName).getSongs();
         }
-        // album part to be added
 
         songView = findViewById(R.id.song_list);
 
         SongAdapter songAdt = new SongAdapter(this, songList);
         songView.setAdapter(songAdt);
 
-        ConstraintLayout currSong = findViewById(R.id.current_song);
     }
 
     @Override

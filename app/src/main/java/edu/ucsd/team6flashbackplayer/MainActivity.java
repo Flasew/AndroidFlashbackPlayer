@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final String TAG = "MainActivity";
     private SongList songList;
+    private AlbumList albumList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
         listAssetFiles("", songPaths);
 
         songList = new SongList(getSongList(songPaths));
+        albumList = new AlbumList(songList);
 
         Button songButton = findViewById(R.id.main_songs);
         songButton.setOnClickListener(new View.OnClickListener() {
@@ -46,13 +48,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ConstraintLayout currSong = findViewById(R.id.current_song);
-        currSong.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startCurrSongActivity();
-            }
-        });
     }
 
     public void startCurrSongActivity() {
@@ -65,7 +60,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startAlbumActivity() {
-
+        Intent intent = new Intent(this, AlbumActivity.class);
+        startActivity(intent);
     }
 
     private boolean listAssetFiles(String path, List<String> result) {

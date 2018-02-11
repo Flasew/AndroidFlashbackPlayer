@@ -4,8 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="edu.ucsd.team6flashbackplayer.MainActivity">
-
-    <include layout="@layout/content_main" />
-
+    tools:context="edu.ucsd.team6flashbackplayer.AlbumActivity">
+    <include layout="@layout/content_album" />
 </android.support.constraint.ConstraintLayout>
