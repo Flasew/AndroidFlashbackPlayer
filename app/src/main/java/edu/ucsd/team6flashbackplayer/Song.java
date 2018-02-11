@@ -1,8 +1,8 @@
 package edu.ucsd.team6flashbackplayer;
 
-import android.location.Location;
-
+import com.google.android.gms.maps.model.LatLng;
 import java.io.Serializable;
+import java.time.DayOfWeek;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,137 +13,89 @@ import java.util.Collection;
 
 public final class Song implements Serializable {
     private final String ID;      // URI seems to be taken...
-    private final String NAME;
+    private final String TITLE;
     private final String ARTIST;
     private final String ALBUM;
 
     // latest information, about last played. Put here in case we use
     // unordered data structures and would be unable to track the information.
     // ZonedDateTime stores everything we need about time
-    private Location latest_loc;  // perhaps string of longitude & latitude?
-    private ZonedDateTime latest_time;
+    private LatLng latestLoc;  // perhaps string of longitude & latitude?
+    private ZonedDateTime latestTime;
 
-    // all history of location
-    private Collection<Location> loc_hist;
+    // all history of location of longitude and latitude
+    private Collection<LatLng> locHist;
     // day of week and time of day, by their nature, could be implemented
     // as boolean arrays to achieve the fastest speed.
-    private boolean[] time_hist;
-    private boolean[] day_hist;    // 8 since GC.TIME_OF_WEEK ranges [1, 7]
+    private boolean[] timeHist;
+    private boolean[] dayHist;    // 8 since GC.TIME_OF_WEEK ranges [1, 7]
 
     // like and dislike
     private boolean liked;
     private boolean disliked;
 
     // Ctor
-    public Song(String id, String name, String artist, String album) {
+    public Song(String id, String title, String artist, String album) {
         ID = id;
-        NAME = name;
+        TITLE = title;
         ARTIST = artist;
         ALBUM = album;
 
-        latest_loc = null;
-        latest_time = null;
+        latestLoc = null;
+        latestTime = null;
 
         // let's say array list first...
-        loc_hist = new ArrayList<Location>();
+        locHist = new ArrayList<LatLng>();
 
-        time_hist = new boolean[3];
-        day_hist  = new boolean[8];
+        timeHist = new boolean[3];
+        dayHist  = new boolean[8];
 
-        for (int i = 0; i < time_hist.length; i++)
-            time_hist[i] = false;
+        for (int i = 0; i < timeHist.length; i++)
+            timeHist[i] = false;
 
-        for (int i = 0; i < day_hist.length; i++)
-            day_hist[i] = false;
+        for (int i = 0; i < dayHist.length; i++)
+            dayHist[i] = false;
 
         liked = false;
         disliked = false;
     }
 
     // getters of const fields
-    public String get_id()      { return ID; }
-    public String get_name()    { return NAME; }
-    public String get_album()   { return ALBUM; }
-    public String get_artist()  { return ARTIST; }
+    public String getId()      { return ID; }
+    public String getTitle()   { return TITLE; }
+    public String getAlbum()   { return ALBUM; }
+    public String getArtist()  { return ARTIST; }
 
     // getter & setter methods of location and time
-    public Location get_latest_loc()              { return latest_loc; }
-    public ZonedDateTime get_latest_time()    { return latest_time; }
+    public LatLng getLatestLoc()              { return latestLoc; }
+    public ZonedDateTime getLatestTime()      { return latestTime; }
 
     // following setters set the latest fields and add them to the history collection
     // Location should be made immutable.
-    public void set_latest_loc(Location l) {
-        latest_loc = l;
-        loc_hist.add(l);
+    public void setLatestLoc(LatLng l) {
+        latestLoc = l;
+        locHist.add(l);
     }
 
-    public void set_latest_time(ZonedDateTime t) {
-        latest_time = t;
-        time_hist[time_of_day(t.getHour())] = true;
-        day_hist[t.getDayOfWeek().getValue()] = true;
+    public void setLatestTime(ZonedDateTime t) {
+        latestTime = t;
+        timeHist[timeOfDay(t.getHour())] = true;
+        dayHist[t.getDayOfWeek().getValue()] = true;
     }
-
-    // calculate score
-    public int loc_score(Location l) {
-        for (Location loc: loc_hist) {
-            if (l.equals(loc))
-                return 1;
-        }
-        return 0;
-    }
-
-    public int tod_score(ZonedDateTime t) {
-        if (time_hist[time_of_day(t.getHour())])
-            return 1;
-        return 0;
-    }
-
-    public int dow_score(ZonedDateTime t) {
-        if (day_hist[t.getDayOfWeek().getValue()])
-            return 1;
-        return 0;
-    }
-
-    // perhaps an aggregated function?
-    public int score(Location l, ZonedDateTime t) {
-        return loc_score(l) + tod_score(t) + dow_score(t);
-    }
-
+    
+    public boolean[] getTimeHist()         { return timeHist; }
+    public boolean[] getDayHist()          { return dayHist; }
+    public Collection<LatLng> getLocHist() { return locHist; }
     // like and dislike
-    // this function basically emulates what should happed when "like" button
-    // is pressed so it's much more complicated than simply inverting...
-    // returns the final condition of @liked
-    public boolean like() {
-        // not liked: like the song and untoggle dislike
-        if (!liked) {
-            liked = true;
-            disliked = false;
-        }
-        // other wise, the song is already liked so un-toggle the like.
-        else {
-            liked = false;
-        }
-        return liked;
-    }
-    // similar
-    public boolean dislike(){
-        // not disliked: dislike the song and untoggle like
-        if (!disliked) {
-            disliked = true;
-            liked = false;
-        }
-        // other wise, the song is already liked so un-toggle the like.
-        else {
-            disliked = false;
-        }
-        return disliked;
-    }
+    // NEW: like and dislike detailed implementation moved to songprefernce class
+    public void setLike(boolean l)     { liked = l; }
+    public void setDislike(boolean l)  { disliked = l; }
 
     // getter
-    public boolean is_liked()        {return liked;}
-    public boolean is_disliked()     {return disliked;}
+    public boolean isLiked()        {return liked; }
+    public boolean isDisliked()     {return disliked; }
 
-    private static int time_of_day(int h) {
+    private static int timeOfDay(int h) {
         if (5 <= h && h < 11)
             return -1;
         if (11 <= h && h < 17)

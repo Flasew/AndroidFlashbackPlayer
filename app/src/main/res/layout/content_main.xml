@@ -23,26 +23,28 @@
         android:id="@+id/fb_button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="0.7"
         android:background="@drawable/fb_disabled"
         android:text="@string/flashback"
-        android:textSize="15dp"
+        android:textSize="15sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
         app:layout_constraintRight_toRightOf="@id/guidelineR10"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.01" />
+        app:layout_constraintVertical_bias="0.05" />
 
     <Button
         android:id="@+id/main_songs"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="150dp"
         android:background="@drawable/black_frame"
         android:text="@string/songs"
-        android:textSize="20dp"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@id/current_song"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
         app:layout_constraintRight_toRightOf="@id/guidelineR10"
-        app:layout_constraintTop_toTopOf="@id/fb_button" />
+        app:layout_constraintVertical_bias="0.4"/>
     <Button
         android:id="@+id/main_albums"
         android:layout_width="wrap_content"
@@ -50,11 +52,13 @@
         android:layout_marginTop="15dp"
         android:background="@drawable/black_frame"
         android:text="@string/albusms"
-        android:textSize="20dp"
+        android:textSize="20sp"
         app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
         app:layout_constraintRight_toRightOf="@id/guidelineR10"
-        app:layout_constraintTop_toBottomOf="@id/main_songs" />
+        app:layout_constraintTop_toBottomOf="@id/main_songs"
+        app:layout_constraintVertical_bias="0.1"/>
 
-    <include layout="@layout/current_song"/>
+    <include layout="@layout/current_song"
+        android:id="@+id/current_song"/>
 
 </android.support.constraint.ConstraintLayout>

@@ -1,38 +1,34 @@
 package edu.ucsd.team6flashbackplayer;
 
-import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.AssetFileDescriptor;
-import android.database.Cursor;
-import android.media.MediaPlayer;
-import android.net.Uri;
-import android.os.AsyncTask;
+import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Button;
 
-import java.lang.reflect.Field;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static MediaPlayer media_player;
-
+    private final String TAG = "MainActivity";
+    private SongList songList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        List<String> songPaths = new ArrayList<>();
+        listAssetFiles("", songPaths);
+
+        songList = new SongList(getSongList(songPaths));
 
         Button songButton = findViewById(R.id.main_songs);
         songButton.setOnClickListener(new View.OnClickListener() {
@@ -41,6 +37,26 @@ public class MainActivity extends AppCompatActivity {
                 startSongActivity();
             }
         });
+
+        Button albumButton = findViewById(R.id.main_albums);
+        albumButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startAlbumActivity();
+            }
+        });
+
+        ConstraintLayout currSong = findViewById(R.id.current_song);
+        currSong.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startCurrSongActivity();
+            }
+        });
+    }
+
+    public void startCurrSongActivity() {
+
     }
 
     public void startSongActivity() {
@@ -48,18 +64,80 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-
-    public void loadMedia(int resourceId) {
-        if (media_player == null) {
-            media_player = new MediaPlayer();
-        }
-        AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(resourceId);
-        try {
-            media_player.setDataSource(assetFileDescriptor);
-            media_player.prepareAsync();
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
+    public void startAlbumActivity() {
 
     }
+
+    private boolean listAssetFiles(String path, List<String> result) {
+        Log.v(TAG, "In List assets\n");
+        String [] list;
+        try {
+            list = getAssets().list(path);
+            if (list.length > 0) {
+                // This is a folder
+                for (String file : list) {
+                    String fname = (path.equals("")) ? path + file : path + "/" + file;
+                    Log.v(TAG, fname+"\n");
+
+                    if (!listAssetFiles(fname, result))
+                        return false;
+                    else {
+                        if (file.length() > 3 &&
+                                file.substring(file.length() - 3).toLowerCase().equals("mp3")) {
+                            result.add(fname);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
+    }
+
+    private List<Song> getSongList(List<String> songPaths) {
+
+        List<Song> songList = new ArrayList<>();
+
+        // load to song class with metadata
+        try {
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            for (String path: songPaths) {
+                AssetFileDescriptor descriptor = getAssets().openFd(path);
+                mmr.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
+                descriptor.close();
+
+                songList.add(new Song(
+                        path,
+                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE),
+                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST),
+                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
+                ));
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return songList;
+    }
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+//    public void loadMedia(int resourceId) {
+//        if (media_player == null) {
+//            media_player = new MediaPlayer();
+//        }
+//        AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(resourceId);
+//        try {
+//            media_player.setDataSource(assetFileDescriptor);
+//            media_player.prepareAsync();
+//        } catch (Exception e) {
+//            System.out.println(e.toString());
+//        }
+//
+//    }
 }
