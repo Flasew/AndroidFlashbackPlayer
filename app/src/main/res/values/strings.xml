@@ -4,4 +4,8 @@
     <string name="songs">Songs</string>
     <string name="albusms">Albums</string>
     <string name="curr_playing">Currently Playing</string>
+    <string name="no_history">---</string>
+    <string name="location">Location:</string>
+    <string name="time">Time:</string>
+
 </resources>

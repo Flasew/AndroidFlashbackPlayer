@@ -35,13 +35,12 @@ public class SongAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int arg0) {
-        // TODO Auto-generated method stub
-        return null;
+    public Object getItem(int position) {
+        return songList.get(position);
     }
 
     @Override
-    public long getItemId(int arg0) {
+    public long getItemId(int position) {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -57,75 +56,65 @@ public class SongAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         //map to song layout
 
-        // XXX: perhaps do this later...
-//        //Here, position is the index in the list, the convertView is the view to be
-//        //recycled (or created), and parent is the ListView itself.
-//
-//        //Grab the convertView as our row of the ListView
-//        View row = convertView;
-//
-//        //If the row is null, it means that we aren't recycling anything - so we have
-//        //to inflate the layout ourselves.
-//        ViewHolder holder = null;
-//        if(row == null) {
-//            LayoutInflater inflater = (LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//            row = inflater.inflate(R.layout.list_item, parent, false);
-//            //Now create the ViewHolder
-//            holder = new ViewHolder();
-//            //and set its textView field to the proper value
-//            holder.textView =  (TextView) row.findViewById(R.id.listItemTextView);
-//            //and store it as the 'tag' of our view
-//            row.setTag(holder);
-//        } else {
-//            //We've already seen this one before!
-//            holder = (ViewHolder) row.getTag();
-//        }
-//
-//        //Grab the item to be rendered. In this case, I'm just using a string, but
-//        //you will use your underlying object type.
-//        final String item = getItem(position);
-//
-//        //And update the ViewHolder for this View's text to the correct text.
-//        holder.textView.setText(item);
-//
-//        //and return the row
-//        return row;
+        //Here, position is the index in the list, the convertView is the view to be
+        //recycled (or created), and parent is the ListView itself.
 
-
-
-        ConstraintLayout songLay = (ConstraintLayout) songInf.inflate
-                (R.layout.song_entry, parent, false);
-        //get title and artist views
-        final TextView songView = (TextView)songLay.findViewById(R.id.song_name);
-        songView.setSelected(true);
-        final ImageButton likeView = (ImageButton)songLay.findViewById(R.id.like_button);
-        final ImageButton dislikeView = (ImageButton)songLay.findViewById(R.id.dislike_button);
-        //get song using position
+        //Grab the convertView as our row of the ListView
+        View row = convertView;
         final Song currSong = songList.get(position);
-        //get title and artist strings
-        songView.setText(currSong.get_name());
-        likeView.setBackgroundColor(currSong.is_liked()? Color.GREEN : Color.GRAY);
-        dislikeView.setBackgroundColor(currSong.is_disliked()? Color.RED : Color.GRAY);
 
-        likeView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                currSong.like();
-                likeView.setBackgroundColor(currSong.is_liked()? Color.GREEN : Color.GRAY);
-                dislikeView.setBackgroundColor(currSong.is_disliked()? Color.RED : Color.GRAY);
-            }
-        });
+        //If the row is null, it means that we aren't recycling anything - so we have
+        //to inflate the layout ourselves.
 
-        dislikeView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                currSong.dislike();
-                likeView.setBackgroundColor(currSong.is_liked()? Color.GREEN : Color.GRAY);
-                dislikeView.setBackgroundColor(currSong.is_disliked()? Color.RED : Color.GRAY);
-            }
-        });
-        //set position as tag
-        songLay.setTag(position);
-        return songLay;
+        if(row == null) {
+
+
+            final ViewHolder holder = new ViewHolder();
+
+            row = songInf.inflate(R.layout.song_entry, parent, false);
+            //Now create the ViewHolder
+            //and set its textView field to the proper value
+
+            holder.title =  (TextView)row.findViewById(R.id.song_name);
+            holder.title.setSelected(true);
+            holder.title.setText(currSong.getTitle());
+            holder.likeButton = (ImageButton)row.findViewById(R.id.like_button);
+            holder.dislikeButton = (ImageButton)row.findViewById(R.id.dislike_button);
+            holder.likeButton.setBackgroundColor(currSong.isLiked()? Color.GREEN : Color.GRAY);
+            holder.dislikeButton.setBackgroundColor(currSong.isDisliked()? Color.RED : Color.GRAY);
+
+            //and store it as the 'tag' of our view
+            holder.likeButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    SongPreference sp = new SongPreference();
+                    sp.like(currSong);
+                    holder.likeButton.setBackgroundColor(currSong.isLiked()? Color.GREEN : Color.GRAY);
+                    holder.dislikeButton.setBackgroundColor(currSong.isDisliked()? Color.RED : Color.GRAY);
+                }
+            });
+
+            holder.dislikeButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    SongPreference sp = new SongPreference();
+                    sp.dislike(currSong);
+                    holder.likeButton.setBackgroundColor(currSong.isLiked()? Color.GREEN : Color.GRAY);
+                    holder.dislikeButton.setBackgroundColor(currSong.isDisliked()? Color.RED : Color.GRAY);
+                }
+            });
+            row.setTag(holder);
+        } else {
+            //We've already seen this one before!
+            ViewHolder holder = (ViewHolder) row.getTag();
+            holder.title.setSelected(true);
+            holder.title.setText(currSong.getTitle());
+            holder.likeButton.setBackgroundColor(currSong.isLiked()? Color.GREEN : Color.GRAY);
+            holder.dislikeButton.setBackgroundColor(currSong.isDisliked()? Color.RED : Color.GRAY);
+        }
+
+        return row;
+
+
     }
 }
