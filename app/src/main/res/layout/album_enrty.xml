@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/song_entry"
+    android:id="@+id/album_entry"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/entry_margin">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <TextView
-        android:id="@+id/song_name"
+        android:id="@+id/album_name"
         android:singleLine="true"
         android:ellipsize="marquee"
         android:marqueeRepeatLimit ="marquee_forever"
@@ -22,23 +21,6 @@
         android:textColor="#000000"
         android:textSize="16sp"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@id/like_button"/>
-
-    <ImageButton
-        android:id="@+id/dislike_button"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:focusable="false"
-        android:padding="@dimen/entry_margin"
-        android:layout_marginEnd="10dp"
         app:layout_constraintRight_toRightOf="parent"/>
-
-    <ImageButton
-        android:id="@+id/like_button"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:focusable="false"
-        android:layout_marginEnd="10dp"
-        app:layout_constraintRight_toLeftOf="@id/dislike_button" />
 
 </android.support.constraint.ConstraintLayout>
