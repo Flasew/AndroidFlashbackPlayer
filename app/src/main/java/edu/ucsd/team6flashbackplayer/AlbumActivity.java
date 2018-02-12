@@ -34,6 +34,7 @@ public class AlbumActivity extends AppCompatActivity {
                 Log.v(TAG, "On click listener.");
                 Album listItem = (Album)albumView.getItemAtPosition(position);
                 Log.v(TAG, "Album" + listItem.getName());
+                play(listItem);
                 startSongActivity(listItem);
             }
         });
@@ -57,6 +58,15 @@ public class AlbumActivity extends AppCompatActivity {
                 startCurrSongActivity();
             }
         });
+    }
+
+    private void play(Album album) {
+
+        PositionPlayList ppl = new PositionPlayList(album);
+        Intent playerIntent = new Intent(this, MusicPlayerService.class);
+        playerIntent.putIntegerArrayListExtra("posList", ppl.getPositionList());
+        startService(playerIntent);
+
     }
 
     private void startSongActivity(Album album) {

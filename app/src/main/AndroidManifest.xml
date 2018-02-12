@@ -20,7 +20,12 @@
         </activity>
         <activity android:name=".SongActivity" />
         <activity android:name=".AlbumActivity" />
-        <activity android:name=".CurrSongActivity"></activity>
+        <activity android:name=".CurrSongActivity" />
+
+        <service
+            android:name=".MusicPlayerService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>
