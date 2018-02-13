@@ -11,12 +11,14 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.List;
 
-public class AlbumActivity extends AppCompatActivity {
+public class AlbumActivity extends MusicPlayerActivity {
 
-    private final String TAG = "AlbumActivity";
+    protected final String TAG = "AlbumActivity";
+    private ConstraintLayout currSong;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +41,7 @@ public class AlbumActivity extends AppCompatActivity {
             }
         });
 
-        ConstraintLayout currSong = findViewById(R.id.current_song);
+        currSong = findViewById(R.id.current_song);
         currSong.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -47,8 +49,7 @@ public class AlbumActivity extends AppCompatActivity {
             }
         });
 
-        final SharedPreferences sp = getSharedPreferences("mode", MODE_PRIVATE);
-        final SharedPreferences.Editor editor = sp.edit();
+        final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
         flashBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,6 +59,17 @@ public class AlbumActivity extends AppCompatActivity {
                 startCurrSongActivity();
             }
         });
+    }
+
+    @Override
+    protected void onSongUpdate(int position) {
+        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
+        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
+        Song currSong = SongList.getSongs().get(position);
+        String title = currSong.getTitle();
+        String artist = currSong.getArtist();
+        currPlayingName.setText((title == null) ? "---" : title);
+        currPlayingArtist.setText((artist == null) ? "---" : artist);
     }
 
     private void play(Album album) {
@@ -72,11 +84,6 @@ public class AlbumActivity extends AppCompatActivity {
     private void startSongActivity(Album album) {
         Intent intent = new Intent(this, SongActivity.class);
         intent.putExtra("albumName", album.getName());
-        startActivity(intent);
-    }
-
-    public void startCurrSongActivity() {
-        Intent intent = new Intent(this, CurrSongActivity.class);
         startActivity(intent);
     }
 

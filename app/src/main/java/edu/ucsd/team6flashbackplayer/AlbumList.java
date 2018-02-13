@@ -15,8 +15,8 @@ public class AlbumList {
     public AlbumList () {
     }
 
-    public AlbumList(SongList songs) {
-        loadFromSongList(songs.getSongs());
+    public AlbumList(List<Song> songs) {
+        loadFromSongList(songs);
     }
 
     public static HashMap<String, Album> getAlbums() {

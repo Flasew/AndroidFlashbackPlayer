@@ -20,7 +20,7 @@ import java.util.List;
 
 public class SongActivity extends MusicPlayerActivity {
 
-    private final String TAG = "SongActivity";
+    protected final String TAG = "SongActivity";
     private List<Song> songList;
     private ListView songView;
     private ConstraintLayout currSong;

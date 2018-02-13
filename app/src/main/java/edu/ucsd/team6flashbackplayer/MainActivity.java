@@ -10,16 +10,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends MusicPlayerActivity {
 
-    private final String TAG = "MainActivity";
-    private SongList songList;
-    private AlbumList albumList;
+    protected final String TAG = "MainActivity";
+    private ConstraintLayout currSong;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
         List<String> songPaths = new ArrayList<>();
         listAssetFiles("", songPaths);
 
-        songList = new SongList(getSongList(songPaths));
-        albumList = new AlbumList(songList);
+        new SongList(getSongList(songPaths));
+        new AlbumList(SongList.getSongs());
 
         Button songButton = findViewById(R.id.main_songs);
         songButton.setOnClickListener(new View.OnClickListener() {
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ConstraintLayout currSong = findViewById(R.id.current_song);
+        currSong = findViewById(R.id.current_song);
         currSong.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,9 +75,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void startCurrSongActivity() {
-        Intent intent = new Intent(this, CurrSongActivity.class);
-        startActivity(intent);
+    @Override
+    protected void onSongUpdate(int position) {
+        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
+        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
+        Song currSong = SongList.getSongs().get(position);
+        String title = currSong.getTitle();
+        String artist = currSong.getArtist();
+        currPlayingName.setText((title == null) ? "---" : title);
+        currPlayingArtist.setText((artist == null) ? "---" : artist);
     }
 
     public void startSongActivity() {
