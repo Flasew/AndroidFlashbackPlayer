@@ -97,10 +97,10 @@ public final class Song implements Serializable {
 
     private static int timeOfDay(int h) {
         if (5 <= h && h < 11)
-            return -1;
-        if (11 <= h && h < 17)
             return 0;
-        return 1;
+        if (11 <= h && h < 17)
+            return 1;
+        return 2;
     }
 
 
