@@ -1,48 +1,29 @@
 package edu.ucsd.team6flashbackplayer;
 
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.res.AssetFileDescriptor;
-import android.database.Cursor;
-import android.media.MediaMetadataRetriever;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.IBinder;
-import android.provider.MediaStore;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.LogPrinter;
-import android.view.GestureDetector;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-public class SongActivity extends AppCompatActivity {
+public class SongActivity extends MusicPlayerActivity {
 
-
-    private static final String TAG = "SongActivity";
+    private final String TAG = "SongActivity";
     private List<Song> songList;
     private ListView songView;
     private ConstraintLayout currSong;
-    private BroadcastReceiver broadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,8 +62,7 @@ public class SongActivity extends AppCompatActivity {
             }
         });
 
-        final SharedPreferences sp = getSharedPreferences("mode", MODE_PRIVATE);
-        final SharedPreferences.Editor editor = sp.edit();
+        final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
         flashBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,38 +73,27 @@ public class SongActivity extends AppCompatActivity {
             }
         });
 
-        broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.v(TAG, "Broad cast received");
-                int pos = intent.getIntExtra(MusicPlayerService.BROADCAST_UI_UPDATE, -1);
-                if (pos != -1) {
-                    TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
-                    TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
-                    Song currSong = SongList.getSongs().get(pos);
-                    String title = currSong.getTitle();
-                    String artist = currSong.getArtist();
-                    currPlayingName.setText((title == null) ? "---" : title);
-                    currPlayingArtist.setText((artist == null) ? "---" : artist);
-                }
-            }
-        };
-
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        Log.v(TAG, "On Start");
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
-                new IntentFilter(MusicPlayerService.BROADCAST_UI_UPDATE)
-        );
     }
 
     @Override
     protected void onStop() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
         super.onStop();
+    }
+
+    @Override
+    protected void onSongUpdate(int position) {
+        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
+        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
+        Song currSong = SongList.getSongs().get(position);
+        String title = currSong.getTitle();
+        String artist = currSong.getArtist();
+        currPlayingName.setText((title == null) ? "---" : title);
+        currPlayingArtist.setText((artist == null) ? "---" : artist);
     }
 
 //    private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -166,10 +135,5 @@ public class SongActivity extends AppCompatActivity {
 
         SongAdapter songAdt = new SongAdapter(this, songList);
         songView.setAdapter(songAdt);
-    }
-
-    public void startCurrSongActivity() {
-        Intent intent = new Intent(this, CurrSongActivity.class);
-        startActivity(intent);
     }
 }

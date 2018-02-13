@@ -1,7 +1,10 @@
 package edu.ucsd.team6flashbackplayer;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.AssetFileDescriptor;
 import android.media.MediaPlayer;
 import android.os.Binder;
@@ -16,22 +19,30 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnInfoListener {
 
-    final static String BROADCAST_UI_UPDATE = "uiUpdate";
+    final static String BROADCAST_SONG_CHANGE = "uiUpdate";
     private final static String TAG = "MusicPlayerService";
     private final IBinder iBinder = new LocalBinder();
     private List<Song> songs = SongList.getSongs();
-    private int counter = 0;
+    private int counter = 0;                // current song position counter
     private MediaPlayer mediaPlayer;        // media player that plays the song
     private List<Integer> positionList;     // list of songs to be played
-    private LocalBroadcastManager broadcastManager;
+    private LocalBroadcastManager localBroadcastManager;
+    private BroadcastReceiver songUpdateRequestReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            broadcastSongChange();
+        }
+    };
 
     public MusicPlayerService() {
+
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // get the position list indicating songs
-
+        if (localBroadcastManager == null)
+            localBroadcastManager = LocalBroadcastManager.getInstance(this);
         try {
             positionList = intent.getExtras().getIntegerArrayList("posList");
         } catch (NullPointerException e) {
@@ -40,9 +51,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
         if (positionList != null && positionList.size() != 0) {
             counter = 0;
-            broadcastManager = LocalBroadcastManager.getInstance(this);
             initMediaPlayer();
         }
+
+        localBroadcastManager.registerReceiver(songUpdateRequestReceiver,
+                new IntentFilter(MusicPlayerActivity.BROADCAST_REQUEST_SONG_UPDATE)
+        );
+
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -95,10 +110,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
     }
 
-    public void updateUI() {
-        Intent intent = new Intent(BROADCAST_UI_UPDATE);
-        intent.putExtra(BROADCAST_UI_UPDATE, positionList.get(counter));
-        broadcastManager.sendBroadcast(intent);
+
+    // broadcast song change, latest position.
+    public void broadcastSongChange() {
+        Log.v(TAG, "Broadcast song change, position "+ positionList.get(counter));
+        Intent intent = new Intent(BROADCAST_SONG_CHANGE);
+        intent.putExtra(BROADCAST_SONG_CHANGE, positionList.get(counter));
+        localBroadcastManager.sendBroadcast(intent);
     }
 
     @Override
@@ -129,7 +147,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     public void onPrepared(MediaPlayer mp) {
         playMedia();
         // update UI by broadcast
-        updateUI();
+        broadcastSongChange();
     }
 
     //Handle errors
