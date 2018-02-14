@@ -25,7 +25,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private List<Song> songs = SongList.getSongs();
     private int counter = 0;                // current song position counter
     private MediaPlayer mediaPlayer;        // media player that plays the song
-    private List<Integer> positionList;     // list of songs to be played
+    private static List<Integer> positionList;     // list of songs to be played
     private LocalBroadcastManager localBroadcastManager;
     private BroadcastReceiver songUpdateRequestReceiver = new BroadcastReceiver() {
         @Override
@@ -46,6 +46,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         try {
             positionList = intent.getExtras().getIntegerArrayList("posList");
         } catch (NullPointerException e) {
+            stopSelf();
+        } catch (IndexOutOfBoundsException e) {
             stopSelf();
         }
 
@@ -113,9 +115,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     // broadcast song change, latest position.
     public void broadcastSongChange() {
-        Log.v(TAG, "Broadcast song change, position "+ positionList.get(counter));
+        int index;
+        try {
+            index = positionList.get(counter);
+            Log.d(TAG, "Broadcast song change, position " + index);
+        }
+        catch (IndexOutOfBoundsException e) {
+            index = -1;
+        }
         Intent intent = new Intent(BROADCAST_SONG_CHANGE);
-        intent.putExtra(BROADCAST_SONG_CHANGE, positionList.get(counter));
+        intent.putExtra(BROADCAST_SONG_CHANGE, index);
         localBroadcastManager.sendBroadcast(intent);
     }
 
@@ -134,6 +143,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
         else {
             stopSelf();
+            broadcastSongChange();
         }
     }
 

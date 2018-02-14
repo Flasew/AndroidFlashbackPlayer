@@ -12,7 +12,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +34,12 @@ public class MainActivity extends MusicPlayerActivity {
 
         new SongList(getSongList(songPaths));
         new AlbumList(SongList.getSongs());
+
+        // fake location and time for testing
+        // for(Song s: SongList.getSongs()) {
+        //    s.setLatestTime(ZonedDateTime.now());
+        //    s.setLatestLoc(new LatLng(32.8812, -117.2374));
+        // }
 
         Button songButton = findViewById(R.id.main_songs);
         songButton.setOnClickListener(new View.OnClickListener() {
@@ -86,6 +95,14 @@ public class MainActivity extends MusicPlayerActivity {
         currPlayingArtist.setText((artist == null) ? "---" : artist);
     }
 
+    @Override
+    protected void onSongFinish() {
+        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
+        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
+        currPlayingName.setText(NO_INFO);
+        currPlayingArtist.setText(NO_INFO);
+    }
+
     public void startSongActivity() {
         Intent intent = new Intent(this, SongActivity.class);
         startActivity(intent);
@@ -97,7 +114,7 @@ public class MainActivity extends MusicPlayerActivity {
     }
 
     private boolean listAssetFiles(String path, List<String> result) {
-        Log.v(TAG, "In List assets\n");
+        Log.d(TAG, "In List assets\n");
         String [] list;
         try {
             list = getAssets().list(path);
@@ -105,7 +122,7 @@ public class MainActivity extends MusicPlayerActivity {
                 // This is a folder
                 for (String file : list) {
                     String fname = (path.equals("")) ? path + file : path + "/" + file;
-                    Log.v(TAG, fname+"\n");
+                    Log.d(TAG, fname+"\n");
 
                     if (!listAssetFiles(fname, result))
                         return false;
@@ -154,6 +171,7 @@ public class MainActivity extends MusicPlayerActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
     }
 //    public void loadMedia(int resourceId) {
 //        if (media_player == null) {

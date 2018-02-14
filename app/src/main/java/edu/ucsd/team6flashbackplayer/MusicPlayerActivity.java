@@ -21,8 +21,9 @@ import android.util.Log;
  */
 public abstract class MusicPlayerActivity extends AppCompatActivity {
 
-    static final String BROADCAST_REQUEST_SONG_UPDATE = "reqUpdate";
-    static final String FLASHBACK_SHAREDPREFERENCE_NAME = "mode";
+    public static final String BROADCAST_REQUEST_SONG_UPDATE = "reqUpdate";
+    public static final String FLASHBACK_SHAREDPREFERENCE_NAME = "mode";
+    public static final String NO_INFO = "---";
 
     // Log tag
     protected String TAG = "MusicPlayerActivity";
@@ -31,10 +32,13 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
     protected BroadcastReceiver songUpdateBroadCastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.v(TAG(), "Broadcast received");
+            Log.d(TAG(), "Broadcast received");
             int pos = intent.getIntExtra(MusicPlayerService.BROADCAST_SONG_CHANGE, -1);
             if (pos != -1) {
                 onSongUpdate(pos);
+            }
+            else {
+                onSongFinish();
             }
         }
     };
@@ -70,7 +74,7 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
     }
 
     protected void broadcastRequestSongUpdate() {
-        Log.v(TAG(), "Requested song info update.");
+        Log.d(TAG(), "Requested song info update.");
         Intent intent = new Intent(BROADCAST_REQUEST_SONG_UPDATE);
         localBroadcastManager.sendBroadcast(intent);
     }
@@ -86,7 +90,12 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
         return TAG;
     }
 
+    // When a song is updated, onSongUpdate should update all the relevant UI.
     // need to be implemented in specific class since there's view change
     protected abstract void onSongUpdate(int position);
+
+    // When all songs finished playing in this positionlist, -1 will be broadcasted
+    // and this method will be called to update the UI.
+    protected abstract void onSongFinish();
 
 }

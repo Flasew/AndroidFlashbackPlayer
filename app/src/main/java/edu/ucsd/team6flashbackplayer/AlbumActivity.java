@@ -33,9 +33,9 @@ public class AlbumActivity extends MusicPlayerActivity {
         albumView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.v(TAG, "On click listener.");
+                Log.d(TAG, "On click listener.");
                 Album listItem = (Album)albumView.getItemAtPosition(position);
-                Log.v(TAG, "Album" + listItem.getName());
+                Log.d(TAG, "Album" + listItem.getName());
                 play(listItem);
                 startSongActivity(listItem);
             }
@@ -70,6 +70,14 @@ public class AlbumActivity extends MusicPlayerActivity {
         String artist = currSong.getArtist();
         currPlayingName.setText((title == null) ? "---" : title);
         currPlayingArtist.setText((artist == null) ? "---" : artist);
+    }
+
+    @Override
+    protected void onSongFinish() {
+        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
+        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
+        currPlayingName.setText(NO_INFO);
+        currPlayingArtist.setText(NO_INFO);
     }
 
     private void play(Album album) {

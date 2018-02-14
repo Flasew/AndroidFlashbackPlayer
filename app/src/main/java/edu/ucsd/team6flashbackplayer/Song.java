@@ -12,6 +12,8 @@ import java.util.Collection;
  */
 
 public final class Song implements Serializable {
+
+    public static final String NO_INFO = "---";
     private final String ID;      // URI seems to be taken...
     private final String TITLE;
     private final String ARTIST;
@@ -62,9 +64,9 @@ public final class Song implements Serializable {
 
     // getters of const fields
     public String getId()      { return ID; }
-    public String getTitle()   { return TITLE; }
-    public String getAlbum()   { return ALBUM; }
-    public String getArtist()  { return ARTIST; }
+    public String getTitle()   { return TITLE != null ? TITLE : NO_INFO; }
+    public String getAlbum()   { return ALBUM != null ? ALBUM : NO_INFO; }
+    public String getArtist()  { return ARTIST != null ? ARTIST : NO_INFO; }
 
     // getter & setter methods of location and time
     public LatLng getLatestLoc()              { return latestLoc; }

@@ -23,6 +23,7 @@ public class SongActivity extends MusicPlayerActivity {
     protected final String TAG = "SongActivity";
     private List<Song> songList;
     private ListView songView;
+    private SongAdapter songAdapter;
     private ConstraintLayout currSong;
 
     @Override
@@ -42,14 +43,15 @@ public class SongActivity extends MusicPlayerActivity {
 
         songView = findViewById(R.id.song_list);
 
-        SongAdapter songAdt = new SongAdapter(this, songList);
-        songView.setAdapter(songAdt);
+        songAdapter = new SongAdapter(this, songList);
+
+        songView.setAdapter(songAdapter);
         songView.setItemsCanFocus(false);
         songView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Song listItem = (Song)songView.getItemAtPosition(position);
-                Log.v(TAG, "Song: " + listItem.getTitle());
+                Log.d(TAG, "Song: " + listItem.getTitle());
                 play(listItem);
             }
         });
@@ -78,6 +80,7 @@ public class SongActivity extends MusicPlayerActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        songAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -94,6 +97,14 @@ public class SongActivity extends MusicPlayerActivity {
         String artist = currSong.getArtist();
         currPlayingName.setText((title == null) ? "---" : title);
         currPlayingArtist.setText((artist == null) ? "---" : artist);
+    }
+
+    @Override
+    protected void onSongFinish() {
+        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
+        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
+        currPlayingName.setText(NO_INFO);
+        currPlayingArtist.setText(NO_INFO);
     }
 
 //    private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -131,9 +142,7 @@ public class SongActivity extends MusicPlayerActivity {
         // this refreshes the like/dislike status.
         // a little bit of overkill though...
         super.onResume();
-        songView = findViewById(R.id.song_list);
-
-        SongAdapter songAdt = new SongAdapter(this, songList);
-        songView.setAdapter(songAdt);
+        songAdapter.notifyDataSetChanged();
+        Log.d(TAG(), "On resume of song activity called.");
     }
 }
