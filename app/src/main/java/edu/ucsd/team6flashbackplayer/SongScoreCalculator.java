@@ -16,7 +16,7 @@ public class SongScoreCalculator {
             // calculate the distance
             Location.distanceBetween(loc.latitude, loc.longitude, l.latitude, l.longitude, result);
             // convert to feet
-            if (result[0] * 3.2808399 >= 1000)
+            if (result[0] * 3.2808399 <= 1000)
                 return 1;
         }
         return 0;

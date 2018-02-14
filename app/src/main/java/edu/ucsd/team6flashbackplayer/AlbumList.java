@@ -15,15 +15,15 @@ public class AlbumList {
     public AlbumList () {
     }
 
-    public AlbumList(SongList songs) {
-        loadFromSongList(songs.getSongs());
+    public AlbumList(List<Song> songs) {
+        loadFromSongList(songs);
     }
 
-    public HashMap<String, Album> getAlbums() {
+    public static HashMap<String, Album> getAlbums() {
         return albums;
     }
 
-    public Album getAlbums(String albumName) {
+    public static Album getAlbum(String albumName) {
         return albums.get(albumName);
     }
 

@@ -10,16 +10,19 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+
+import com.google.android.gms.maps.model.LatLng;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends MusicPlayerActivity {
 
-    private final String TAG = "MainActivity";
-    private SongList songList;
-    private AlbumList albumList;
+    protected final String TAG = "MainActivity";
+    private ConstraintLayout currSong;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,8 +32,14 @@ public class MainActivity extends AppCompatActivity {
         List<String> songPaths = new ArrayList<>();
         listAssetFiles("", songPaths);
 
-        songList = new SongList(getSongList(songPaths));
-        albumList = new AlbumList(songList);
+        new SongList(getSongList(songPaths));
+        new AlbumList(SongList.getSongs());
+
+        // fake location and time for testing
+        // for(Song s: SongList.getSongs()) {
+        //    s.setLatestTime(ZonedDateTime.now());
+        //    s.setLatestLoc(new LatLng(32.8812, -117.2374));
+        // }
 
         Button songButton = findViewById(R.id.main_songs);
         songButton.setOnClickListener(new View.OnClickListener() {
@@ -48,10 +57,50 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        currSong = findViewById(R.id.current_song);
+        currSong.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startCurrSongActivity();
+            }
+        });
+
+        final SharedPreferences sp = getSharedPreferences("mode", MODE_PRIVATE);
+        final SharedPreferences.Editor editor = sp.edit();
+        Button flashBackButton = findViewById(R.id.fb_button);
+        flashBackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editor.putBoolean("mode" , true);
+                editor.apply();
+                startCurrSongActivity();
+            }
+        });
+
+        // lanuch fb mode if it was in it.
+        boolean flashBackMode = sp.getBoolean("mode", false);
+        if (flashBackMode) {
+            startCurrSongActivity();
+        }
     }
 
-    public void startCurrSongActivity() {
+    @Override
+    protected void onSongUpdate(int position) {
+        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
+        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
+        Song currSong = SongList.getSongs().get(position);
+        String title = currSong.getTitle();
+        String artist = currSong.getArtist();
+        currPlayingName.setText((title == null) ? "---" : title);
+        currPlayingArtist.setText((artist == null) ? "---" : artist);
+    }
 
+    @Override
+    protected void onSongFinish() {
+        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
+        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
+        currPlayingName.setText(NO_INFO);
+        currPlayingArtist.setText(NO_INFO);
     }
 
     public void startSongActivity() {
@@ -65,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean listAssetFiles(String path, List<String> result) {
-        Log.v(TAG, "In List assets\n");
+        Log.d(TAG, "In List assets\n");
         String [] list;
         try {
             list = getAssets().list(path);
@@ -73,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 // This is a folder
                 for (String file : list) {
                     String fname = (path.equals("")) ? path + file : path + "/" + file;
-                    Log.v(TAG, fname+"\n");
+                    Log.d(TAG, fname+"\n");
 
                     if (!listAssetFiles(fname, result))
                         return false;
@@ -122,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
     }
 //    public void loadMedia(int resourceId) {
 //        if (media_player == null) {
