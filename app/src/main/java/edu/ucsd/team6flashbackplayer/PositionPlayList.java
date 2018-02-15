@@ -6,6 +6,8 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 // position of the songs in the global songlist
 // In this way we can easily pass these data across activities and services.
@@ -32,13 +34,21 @@ public class PositionPlayList {
      * @param currTime time when entering flashback mode
      */
     public PositionPlayList(LatLng currLoc, ZonedDateTime currTime ){
-        List<Song> sortedList = new ArrayList<Song>(songs);
-        Collections.sort(sortedList, new SongScoreComparator(currLoc, currTime));
+        Queue<Integer> pq = new PriorityQueue<Integer>(new SongScoreComparator(currLoc, currTime));
 
-        for( Song song : sortedList ){
-            if(!song.isDisliked()){
-                positionList.add(songs.indexOf(song));
+        for( int index = 0; index < songs.size(); index++ ){
+            Song s = songs.get(index);
+            // get rid of disliked songs
+            if( !(s.isDisliked()) ) {
+                // get rid of songs not liked and not played before
+                if( s.isLiked() || !(s.getLatestTime() == null) ) {
+                    pq.add(index);
+                }
             }
+        }
+
+        while(!(pq.isEmpty())) {
+            positionList.add(pq.poll());
         }
     }
 
