@@ -42,6 +42,7 @@
         android:marqueeRepeatLimit ="marquee_forever"
         android:focusable="false"
         android:focusableInTouchMode="false"
+
         android:scrollHorizontally="true"
         android:textSize="15sp"
         android:textColor="#000000"

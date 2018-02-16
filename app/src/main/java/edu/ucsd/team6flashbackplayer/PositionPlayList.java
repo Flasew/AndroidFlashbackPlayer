@@ -1,5 +1,7 @@
 package edu.ucsd.team6flashbackplayer;
 
+import android.util.Log;
+
 import com.google.android.gms.maps.model.LatLng;
 
 import java.time.ZonedDateTime;
@@ -12,6 +14,8 @@ import java.util.Queue;
 // position of the songs in the global songlist
 // In this way we can easily pass these data across activities and services.
 public class PositionPlayList {
+
+    private static final String TAG = "PositionPlaylist";
 
     private ArrayList<Integer> positionList = new ArrayList<>();;
     private List<Song> songs = SongList.getSongs();
@@ -34,6 +38,8 @@ public class PositionPlayList {
      * @param currTime time when entering flashback mode
      */
     public PositionPlayList(LatLng currLoc, ZonedDateTime currTime ){
+
+        Log.d(TAG, "Generating FB playlist...");
         Queue<Integer> pq = new PriorityQueue<Integer>(new SongScoreComparator(currLoc, currTime));
 
         for( int index = 0; index < songs.size(); index++ ){
