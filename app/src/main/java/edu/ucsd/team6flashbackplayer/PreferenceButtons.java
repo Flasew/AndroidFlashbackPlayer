@@ -2,6 +2,7 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.AppCompatImageButton;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -17,9 +18,13 @@ import android.widget.ImageButton;
  */
 public class PreferenceButtons {
 
+    public static final String PREF_DISLIKED_BROADCAST = "SongLikedBroadCast";
+
     private Song song;              // song corresponding to this  button group
     private ImageButton likeButton; // the like button
     private ImageButton dislikeButton;  // this dislike button
+    private LocalBroadcastManager localBroadcastManager;    // broadcast for like and dislike
+
     private static final String TAG = "PreferenceButtons";
 
     // constructor should handle initializing UI and set listener
@@ -30,6 +35,7 @@ public class PreferenceButtons {
         Log.d(TAG, "Buttons constructed for " + song.getTitle());
     }
 
+    // Constructor without a song. Mainly for buttons that just hangs there with no song playing
     public PreferenceButtons(ImageButton like, ImageButton dislike) {
         likeButton = like;
         dislikeButton = dislike;
@@ -41,6 +47,7 @@ public class PreferenceButtons {
         song = s;
     }
 
+    // redraw the button UIs
     public void redrawButtons() {
         if (song == null) {
             likeButton.setBackgroundColor(Color.GRAY);
@@ -56,12 +63,14 @@ public class PreferenceButtons {
 
     }
 
+    // remove the button listners
     public void removeButtonListeners() {
         likeButton.setOnClickListener(null);
         dislikeButton.setOnClickListener(null);
         Log.d(TAG, "Button listener removed.");
     }
 
+    // set the button listeners
     public void setButtonListeners() {
 
         if (song == null) {

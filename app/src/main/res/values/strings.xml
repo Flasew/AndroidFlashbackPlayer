@@ -7,5 +7,8 @@
     <string name="no_history">---</string>
     <string name="location">Location:</string>
     <string name="time">Time:</string>
+    <string name="loc_req_title">Location Service Request</string>
+    <string name="loc_req_txt">Flashback Player need your location</string>
+    <string name="ok">ok</string>
 
 </resources>

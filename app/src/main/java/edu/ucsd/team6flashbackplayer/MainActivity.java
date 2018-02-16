@@ -1,34 +1,32 @@
 package edu.ucsd.team6flashbackplayer;
 
 import android.Manifest;
-import android.content.Context;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
-import android.location.LocationManager;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.model.LatLng;
-
 import java.io.IOException;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends MusicPlayerActivity {
 
-    protected final String TAG = "MainActivity";
-    protected static MyLocListener tracker;
+    private static final String TAG = "MainActivity";
+    private static final int FBPLAYER_PERMISSIONS_REQUEST_LOCATION = 999;
+    // protected static MyLocListener tracker;
     private ConstraintLayout currSong;
 
     @Override
@@ -36,18 +34,12 @@ public class MainActivity extends MusicPlayerActivity {
         super.onCreate(savedInstanceState);
 
         // Check for/request location permission
-        while (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
-                        PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
-        }
+        requestLocationPermission();
 
         // Start keeping track of location
-        tracker = new MyLocListener();
-        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, tracker);
+        // tracker = new MyLocListener();
+        // LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        // lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, tracker);
 
         setContentView(R.layout.activity_main);
 
@@ -104,6 +96,66 @@ public class MainActivity extends MusicPlayerActivity {
         boolean flashBackMode = sp.getBoolean("mode", false);
         if (flashBackMode) {
             startCurrSongActivity();
+        }
+    }
+
+    public void requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.loc_req_title)
+                        .setMessage(R.string.loc_req_txt)
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //Prompt the user once explanation has been shown
+                                ActivityCompat.requestPermissions(MainActivity.this,
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        FBPLAYER_PERMISSIONS_REQUEST_LOCATION);
+                            }
+                        })
+                        .create()
+                        .show();
+
+
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        FBPLAYER_PERMISSIONS_REQUEST_LOCATION);
+            }
+        }
+    }
+
+    /**
+     * Called when permission request is finished. In this case only for logging
+     * permission issue.
+     * @param requestCode a request code corresponding to a location
+     * @param permissions permissions asked
+     * @param grantResults permissions granted results
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case FBPLAYER_PERMISSIONS_REQUEST_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    Log.d(TAG(), "Location permission granted");
+
+                }
+            }
         }
     }
 
@@ -196,31 +248,19 @@ public class MainActivity extends MusicPlayerActivity {
         super.onDestroy();
         stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
     }
-//    public void loadMedia(int resourceId) {
-//        if (media_player == null) {
-//            media_player = new MediaPlayer();
-//        }
-//        AssetFileDescriptor assetFileDescriptor = this.getResources().openRawResourceFd(resourceId);
-//        try {
-//            media_player.setDataSource(assetFileDescriptor);
-//            media_player.prepareAsync();
-//        } catch (Exception e) {
-//            System.out.println(e.toString());
-//        }
+
+
+//    public boolean requestPermission() {
 //
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+//                != PackageManager.PERMISSION_GRANTED &&
+//                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+//                        PackageManager.PERMISSION_GRANTED) {
+//
+//            //Log.d("Fuck", "Working");
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
+//            return true;
+//        }
+//        return false;
 //    }
-
-    public boolean requestPermission() {
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
-                        PackageManager.PERMISSION_GRANTED) {
-
-            //Log.d("Fuck", "Working");
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
-            return true;
-        }
-        return false;
-    }
 }

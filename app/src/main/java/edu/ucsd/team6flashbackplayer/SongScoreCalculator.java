@@ -11,6 +11,9 @@ public class SongScoreCalculator {
 
     // calculate score
     public static int locScore(Song s, LatLng l) {
+        if (l == null)
+            return 0;
+
         float[] result = new float[3];
         for (LatLng loc: s.getLocHist()) {
             // calculate the distance

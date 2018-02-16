@@ -6,15 +6,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -22,12 +23,9 @@ import com.google.android.gms.maps.model.LatLng;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import static android.media.MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO;
-import static edu.ucsd.team6flashbackplayer.MainActivity.tracker;
 
 public class MusicPlayerService extends Service implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
@@ -35,11 +33,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     final static String BROADCAST_SONG_CHANGE = "uiUpdate";
     private final static String TAG = "MusicPlayerService";
-    private final IBinder iBinder = new LocalBinder();
-    private List<Song> songs = SongList.getSongs();
-    private int counter = 0;                // current song position counter
-    private MediaPlayer mediaPlayer;        // media player that plays the song
-    private static List<Integer> positionList;     // list of songs to be played
+    private final IBinder iBinder = new LocalBinder();  // unused
+    private List<Song> songs = SongList.getSongs();     // global song list
+    private int counter = 0;                        // current song position counter
+    private MediaPlayer mediaPlayer;                // media player that plays the song
+    private static List<Integer> positionList;      // list of songs to be played
+
     private LocalBroadcastManager localBroadcastManager;
     private BroadcastReceiver songUpdateRequestReceiver = new BroadcastReceiver() {
         @Override
@@ -48,8 +47,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
     };
 
-    private Location curSongLoc;
-    private ZonedDateTime curSongTime;
+    private LocationManager locationManager;
+    private static Location currLoc;            // current location updated with location
+    private LatLng songLatLngCache;             // cache the location of a song on start playing
+    private ZonedDateTime songDateTimeCache;    // cache the time of a song on start playing
 
     public MusicPlayerService() {
 
@@ -57,14 +58,53 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // get the position list indicating songs
+
         if (localBroadcastManager == null)
             localBroadcastManager = LocalBroadcastManager.getInstance(this);
+
+        if (locationManager == null)
+            locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+
+        // If permission is granted, use the location.
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+
+            // Request location updates:
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0,
+                    new LocationListener() {
+
+                        /**
+                         * Upate the current location.
+                         * @param location
+                         */
+                        @Override
+                        public void onLocationChanged(Location location) {
+                            currLoc = location;
+                            Log.d(TAG, "Location updated, Lat: " + location.getLatitude() + "Lng: " + location.getLongitude());
+                        }
+
+                        @Override
+                        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+                        }
+
+                        @Override
+                        public void onProviderEnabled(String provider) {
+
+                        }
+
+                        @Override
+                        public void onProviderDisabled(String provider) {
+
+                        }
+                    });
+        }
+
+        // get the playlist
         try {
             positionList = intent.getExtras().getIntegerArrayList("posList");
-        } catch (NullPointerException e) {
-            stopSelf();
-        } catch (IndexOutOfBoundsException e) {
+        } catch (NullPointerException | IndexOutOfBoundsException e) {
             stopSelf();
         }
 
@@ -112,6 +152,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         } catch (IOException e) {
             e.printStackTrace();
             stopSelf();
+        } catch (ArrayIndexOutOfBoundsException e) {
+            stopSelf();
         }
         mediaPlayer.prepareAsync();
     }
@@ -150,17 +192,21 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         return iBinder;
     }
 
+    /**
+     * Callback function when a song completes
+     * @param mp media player associated with the song.
+     */
     @Override
     public void onCompletion(MediaPlayer mp) {
         //Invoked when playback of a media source has completed
 
         // Update the most recently played song's latest location, datetime
-        int trackNum = mp.getSelectedTrack(MEDIA_TRACK_TYPE_AUDIO);
-        songs.get(trackNum).setLatestLoc(new LatLng(curSongLoc.getLatitude(), curSongLoc.getLongitude()));
-        songs.get(trackNum).setLatestTime(curSongTime);
+        songs.get(positionList.get(counter)).setLatestLoc(songLatLngCache);
+        songs.get(positionList.get(counter)).setLatestTime(songDateTimeCache);
 
         stopMedia();
         counter += 1;
+
         if (counter < positionList.size()) {
             prepSongAsync();
         }
@@ -176,14 +222,27 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         return false;
     }
 
+    /**
+     * Callback function when prepareAsync() finish
+     * @param mp media player associated with the player.
+     */
     @Override
     public void onPrepared(MediaPlayer mp) {
         playMedia();
 
         // Get Android's current location
-        curSongLoc = tracker.getCurrentLocation();
+        try {
+            songLatLngCache = new LatLng(currLoc.getLatitude(), currLoc.getLongitude());
+            Log.d(TAG, "LatLng cache updated: " + songLatLngCache.latitude + ", " + songLatLngCache.longitude);
+        }
+        // location unavailable, put null
+        catch (NullPointerException e) {
+            songDateTimeCache = null;
+            Log.d(TAG, "Location cache updated: Null.");
+        }
+
         // Get current datetime
-        curSongTime = ZonedDateTime.now();
+        songDateTimeCache = ZonedDateTime.now();
 
         // update UI by broadcast
         broadcastSongChange();
@@ -211,5 +270,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             return MusicPlayerService.this;
         }
     }
+
 
 }
