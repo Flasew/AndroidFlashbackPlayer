@@ -244,8 +244,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             Log.d(TAG, "Location cache updated: Null.");
         }
 
-        // Get current datetime
-        Log.d("log", Double.toString(currLoc.getLatitude()));
         /*SharedPreferences sp = getSharedPreferences("metadata", MODE_PRIVATE);
         int trackNum = mp.getSelectedTrack(MEDIA_TRACK_TYPE_AUDIO);
         String a = sp.getString(songs.get(trackNum).getId(),null);
