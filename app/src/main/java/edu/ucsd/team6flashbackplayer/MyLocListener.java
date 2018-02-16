@@ -9,7 +9,7 @@ import android.os.Bundle;
  */
 
 public class MyLocListener implements LocationListener {
-    Location curLoc;
+    private Location curLoc;
 
     public void onLocationChanged(Location loc) {
         curLoc = loc;
