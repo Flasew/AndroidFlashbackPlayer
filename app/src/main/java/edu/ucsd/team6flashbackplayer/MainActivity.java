@@ -183,13 +183,25 @@ public class MainActivity extends MusicPlayerActivity {
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
 
                 songList.add(toAdd);
-
-                // Add the initial metadata of the song to the shared preferences for metadata
+                /*
+                // Try to get the song information from Shared Preferences metadata
                 SharedPreferences sharedPref = getSharedPreferences("metadata", MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPref.edit();
-                // The info is keyed on the ID of the song(path name) and the json string is created on construction
-                editor.putString(toAdd.getId(), toAdd.getJsonString());
-                editor.apply();
+                String jsonInfo = sharedPref.getString(toAdd.getId(), null);
+                // Check if it exists or not - if not then we need to create it in the SharedPreferences
+                if (jsonInfo == null) {
+                    Log.d("null","Yes");
+                    // Add the initial metadata of the song to the shared preferences for metadata
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    // The info is keyed on the ID of the song(path name) and the json string is created on construction
+                    editor.putString(toAdd.getId(), toAdd.getJsonString());
+                    editor.apply();
+                }
+                // Else get the data and save it to the Song's fields
+                else {
+                    Log.d("notnull", jsonInfo);
+                    toAdd.jsonPopulate(jsonInfo);
+                }
+                */
             }
         }
         catch (IOException e) {
@@ -203,7 +215,7 @@ public class MainActivity extends MusicPlayerActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Toast.makeText(MainActivity.this,"asdf",Toast.LENGTH_SHORT).show();
+        //Toast.makeText(MainActivity.this,"asdf",Toast.LENGTH_SHORT).show();
         //stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
 
     }
@@ -228,7 +240,6 @@ public class MainActivity extends MusicPlayerActivity {
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
                         PackageManager.PERMISSION_GRANTED) {
 
-            //Log.d("Fuck", "Working");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
             return true;
         }

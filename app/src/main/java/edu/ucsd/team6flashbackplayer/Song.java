@@ -3,15 +3,13 @@ package edu.ucsd.team6flashbackplayer;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
-import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 // JSON parsing - for SharedPreferences
 import com.eclipsesource.json.*;
-
-import org.json.JSONObject;
-
 
 /**
  * Created by frankwang on 2/6/18.
@@ -55,8 +53,7 @@ public final class Song {
         latestLoc = null;
         latestTime = null;
 
-        // let's say array list first...
-        locHist = new ArrayList<LatLng>();
+        locHist = new HashSet<LatLng>();
 
         timeHist = new boolean[3];
         dayHist  = new boolean[8];
@@ -70,6 +67,7 @@ public final class Song {
         liked = false;
         disliked = false;
 
+        // Parse the default fields into JSON on creation
         jsonString = jsonParse();
     }
 
@@ -83,11 +81,14 @@ public final class Song {
     public LatLng getLatestLoc()              { return latestLoc; }
     public ZonedDateTime getLatestTime()      { return latestTime; }
 
-    // following setters set the latest fields and add them to the history collection
+    // following setters set the latest fields and add them to the history set
     // Location should be made immutable.
     public void setLatestLoc(LatLng l) {
         latestLoc = l;
         locHist.add(l);
+    }
+    public void setLocHist(HashSet<LatLng> l) {
+        locHist = l;
     }
 
     public void setLatestTime(ZonedDateTime t) {
@@ -97,7 +98,10 @@ public final class Song {
     }
 
     public boolean[] getTimeHist()         { return timeHist; }
+    public void setTimeHist(boolean[] history) { timeHist = history; }
     public boolean[] getDayHist()          { return dayHist; }
+    public void setDayHist(boolean[] history) { dayHist = history; }
+
     public Collection<LatLng> getLocHist() { return locHist; }
     // like and dislike
     // NEW: like and dislike detailed implementation moved to SongPreference class
@@ -108,6 +112,7 @@ public final class Song {
     public boolean isLiked()        {return liked; }
     public boolean isDisliked()     {return disliked; }
 
+    // Getters and setters for the Json string
     public void setJsonString(String json) {
         jsonString = json;
     }
@@ -132,6 +137,59 @@ public final class Song {
     }
 
     /**
+     * Given the JSON string representing the saved fields of a certain song, load/set
+     * those fields of the Song object
+     *
+     * @param json The string (from SharedPreferences) representing the saved fields/info
+     */
+    public void jsonPopulate(String json) {
+        JsonObject obj = Json.parse(json).asObject();
+
+        // Title/Album/Artist don't need to be populated from SharedPreferences
+
+        // Check if the latest location exists - song was played before
+        JsonArray latestLocArray = obj.get("LatestLocation").asArray();
+        // If not then set latest location and location history to default values
+        if (latestLocArray.get(0).asString().equals("---")) {
+            setLatestLoc(null);
+            setLocHist(new HashSet<LatLng>());
+        }
+        // Otherwise get the locations and set to the fields
+        else {
+            double latitude = latestLocArray.get(0).asDouble();
+            double longitude = latestLocArray.get(1).asDouble();
+            setLatestLoc(new LatLng(latitude,longitude));
+
+            // Iterate over the JsonArray to get all locations and put into a HashSet
+            HashSet<LatLng> allLoc = new HashSet<>();
+            JsonArray locationHistory = obj.get("LocationHistory").asArray();
+            for (int m = 0; m < locationHistory.size(); m++) {
+                JsonArray currLoc = locationHistory.get(m).asArray();
+                // Get the lat and long of that location and add it to the HashSet
+                allLoc.add(new LatLng(currLoc.get(0).asDouble(),currLoc.get(1).asDouble()));
+            }
+            setLocHist(allLoc);
+        }
+
+        setLike(obj.get("Liked").asBoolean());
+        setLike(obj.get("Disliked").asBoolean());
+
+        JsonArray timeOfDay = obj.get("TimeOfDay").asArray();
+        boolean[] timeHist = new boolean[timeOfDay.size()];
+        for (int i = 0; i < timeOfDay.size(); i++) {
+            timeHist[i] = timeOfDay.get(i).asBoolean();
+        }
+        setTimeHist(timeHist);
+
+        JsonArray dayOfWeek = obj.get("DayOfWeek").asArray();
+        boolean[] dayHist = new boolean[dayOfWeek.size()];
+        for (int i = 0; i < dayOfWeek.size(); i++) {
+            dayHist[i] = dayOfWeek.get(i).asBoolean();
+        }
+        setDayHist(dayHist);
+    }
+
+    /**
      * Gives the JSON representation of song metadata (in a String form)
      * @return a string in JSON form representing the metadata of a song
      */
@@ -141,10 +199,11 @@ public final class Song {
         double latitude = geisel.latitude;
         double longitude = geisel.longitude;
         setLatestLoc(geisel);*/
-        JsonArray location = Json.array();
 
         /*setLatestLoc(new LatLng(45.415,1.568));
         setLatestLoc(new LatLng(64.2205, 19.996));*/
+        JsonArray location = Json.array();
+
         JsonArray allLocations = Json.array();
 
         if (latestLoc == null) {
@@ -187,13 +246,7 @@ public final class Song {
         builder.add("DayOfWeek", dayOfWeek);
 
         builder.add("LocationHistory", allLocations);
-        Log.d("Song metadata", builder.toString());
+        //Log.d("Song metadata", builder.toString());
         return builder.toString();
-    }
-
-    public String jsonEdit(String json, LatLng loc) {
-        JsonObject jsonObject = Json.parse(json).asObject();
-
-        return "";
     }
 }

@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
@@ -21,6 +22,8 @@ import android.util.Log;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
@@ -48,7 +51,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
     };
 
-    private Location curSongLoc;
+    private static Location curSongLoc;
     private ZonedDateTime curSongTime;
 
     public MusicPlayerService() {
@@ -184,7 +187,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         curSongLoc = tracker.getCurrentLocation();
         // Get current datetime
         curSongTime = ZonedDateTime.now();
-
+        Log.d("log", Double.toString(curSongLoc.getLatitude()));
+        /*SharedPreferences sp = getSharedPreferences("metadata", MODE_PRIVATE);
+        int trackNum = mp.getSelectedTrack(MEDIA_TRACK_TYPE_AUDIO);
+        String a = sp.getString(songs.get(trackNum).getId(),null);
+        Log.d("meta", a);*/
         // update UI by broadcast
         broadcastSongChange();
     }
