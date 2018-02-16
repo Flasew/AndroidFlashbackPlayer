@@ -111,12 +111,18 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         try {
             positionList = intent.getExtras().getIntegerArrayList("posList");
         } catch (NullPointerException | IndexOutOfBoundsException e) {
+            stopMedia();
+            broadcastSongChange();
             stopSelf();
         }
 
         if (positionList != null && positionList.size() != 0) {
             counter = 0;
             initMediaPlayer();
+        } else if (positionList.size() == 0) {
+            stopMedia();
+            broadcastSongChange();
+            stopSelf();
         }
 
         localBroadcastManager.registerReceiver(songUpdateRequestReceiver,
@@ -185,7 +191,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             index = positionList.get(counter);
             Log.d(TAG, "Broadcast song change, position " + index);
         }
-        catch (IndexOutOfBoundsException e) {
+        catch (IndexOutOfBoundsException | NullPointerException e) {
             index = -1;
         }
         Intent intent = new Intent(BROADCAST_SONG_CHANGE);
