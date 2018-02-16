@@ -18,6 +18,9 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.maps.model.LatLng;
 
 import com.google.android.gms.maps.GoogleMap;
 
@@ -31,6 +34,7 @@ public class SongActivity extends MusicPlayerActivity {
     private SongAdapter songAdapter;
     private ConstraintLayout currSong;
     private Location curSongLoc;
+    private Song currentSong;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,6 +145,7 @@ public class SongActivity extends MusicPlayerActivity {
 //            //Service is active
 //            //Send media with BroadcastReceiver
 //        }
+        currentSong = song;
     }
 
     @Override

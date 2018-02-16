@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -175,12 +176,20 @@ public class MainActivity extends MusicPlayerActivity {
                 mmr.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
                 descriptor.close();
 
-                songList.add(new Song(
+                Song toAdd = new Song(
                         path,
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE),
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST),
-                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
-                ));
+                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
+
+                songList.add(toAdd);
+
+                // Add the initial metadata of the song to the shared preferences for metadata
+                SharedPreferences sharedPref = getSharedPreferences("metadata", MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                // The info is keyed on the ID of the song(path name) and the json string is created on construction
+                editor.putString(toAdd.getId(), toAdd.getJsonString());
+                editor.apply();
             }
         }
         catch (IOException e) {
@@ -194,7 +203,9 @@ public class MainActivity extends MusicPlayerActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
+        Toast.makeText(MainActivity.this,"asdf",Toast.LENGTH_SHORT).show();
+        //stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
+
     }
 //    public void loadMedia(int resourceId) {
 //        if (media_player == null) {
