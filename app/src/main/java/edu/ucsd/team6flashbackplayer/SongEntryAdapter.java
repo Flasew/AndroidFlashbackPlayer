@@ -1,32 +1,27 @@
 package edu.ucsd.team6flashbackplayer;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.os.IBinder;
-import android.support.constraint.ConstraintLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by frankwang on 2/8/18.
  */
 
-public class SongAdapter extends BaseAdapter {
+public class SongEntryAdapter extends BaseAdapter {
 
     private List<Song> songList;
     private LayoutInflater songInf;
-    private static final String TAG = "SongAdapter";
+    private static final String TAG = "SongEntryAdapter";
 
-    public SongAdapter(Context c, List<Song> theSongs){
+    public SongEntryAdapter(Context c, List<Song> theSongs){
         songList=theSongs;
         songInf=LayoutInflater.from(c);
     }
@@ -74,7 +69,7 @@ public class SongAdapter extends BaseAdapter {
 
             final ViewHolder holder = new ViewHolder();
 
-            row = songInf.inflate(R.layout.song_entry, parent, false);
+            row = songInf.inflate(R.layout.name_pref_entry, parent, false);
             //Now create the ViewHolder
             //and set its textView field to the proper value
 

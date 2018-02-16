@@ -249,4 +249,10 @@ public final class Song {
         //Log.d("Song metadata", builder.toString());
         return builder.toString();
     }
+
+    @Override
+    public String toString() {
+        return getTitle();
+    }
+
 }

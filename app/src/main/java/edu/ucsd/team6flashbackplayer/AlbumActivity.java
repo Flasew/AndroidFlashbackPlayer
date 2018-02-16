@@ -1,10 +1,8 @@
 package edu.ucsd.team6flashbackplayer;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.constraint.ConstraintLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -13,6 +11,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AlbumActivity extends MusicPlayerActivity {
@@ -25,9 +24,12 @@ public class AlbumActivity extends MusicPlayerActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_album);
 
+        // set title of this activity
+        setTitle(R.string.album_activity_title);
+
         final ListView albumView = findViewById(R.id.album_list);
 
-        AlbumAdapter albumAdt = new AlbumAdapter(this, AlbumList.getAlbums());
+        TextEntryAdapter<Album> albumAdt = new TextEntryAdapter<Album>(this, AlbumList.getAlbums() );
         albumView.setAdapter(albumAdt);
         albumView.setItemsCanFocus(false);
         albumView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

@@ -34,4 +34,9 @@ public class Album {
         return NAME;
     }
 
+    @Override
+    public String toString() {
+        return getName();
+    }
+
 }

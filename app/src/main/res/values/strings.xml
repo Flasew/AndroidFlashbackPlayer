@@ -9,6 +9,12 @@
     <string name="time">Time:</string>
     <string name="loc_req_title">Location Service Request</string>
     <string name="loc_req_txt">Flashback Player need your location</string>
-    <string name="ok">ok</string>
+    <string name="ok">OK</string>
+    <string name="showplaylist">Show Playlist</string>
+    <string name="main_activity_title">Flashback Player</string>
+    <string name="song_activity_title">Songs</string>
+    <string name="album_activity_title">Albums</string>
+    <string name="curr_song_activity_title">Currently Playing</string>
+    <string name="fbList_activity_title">Current Flashback Playlist</string>
 
 </resources>

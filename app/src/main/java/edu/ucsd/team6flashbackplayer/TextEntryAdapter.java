@@ -1,7 +1,6 @@
 package edu.ucsd.team6flashbackplayer;
 
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,31 +10,36 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by frankwang on 2/10/18.
  */
 
-public class AlbumAdapter extends BaseAdapter {
-    private List<Album> albums;
-    private LayoutInflater albumInf;
+/**
+ * text entry adapter of item type. allows customized view
+ * Item should have a toString method to be converted to string.
+ * @param <Item> Item type for returning in getItem method.
+ */
+public class TextEntryAdapter<Item> extends BaseAdapter {
+    private List<Item> items;
+    private LayoutInflater layoutInflater;
     private Context context;
+    private boolean clickable;
 
-    public AlbumAdapter(Context c, HashMap<String, Album> theAlbums){
-        albums = new ArrayList<>(theAlbums.values());
-        albumInf = LayoutInflater.from(c);
+    public TextEntryAdapter(Context c, List<Item> itemList){
+        items = itemList;
+        layoutInflater = LayoutInflater.from(c);
         context = c;
     }
 
     @Override
     public int getCount() {
-        return albums.size();
+        return items.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return albums.get(position);
+        return items.get(position);
     }
 
     @Override
@@ -53,29 +57,29 @@ public class AlbumAdapter extends BaseAdapter {
         //map to albums to layout
 
         View row = convertView;
-        final Album currAlbum = albums.get(position);
+        final Item currItem = items.get(position);
 
         if(row == null) {
 
-            final AlbumAdapter.ViewHolder holder = new AlbumAdapter.ViewHolder();
+            final TextEntryAdapter.ViewHolder holder = new TextEntryAdapter.ViewHolder();
 
-            row = albumInf.inflate(R.layout.album_enrty, parent, false);
+            row = layoutInflater.inflate(R.layout.name_entry, parent, false);
             //Now create the ViewHolder
             //and set its textView field to the proper value
 
-            holder.name = (TextView)row.findViewById(R.id.album_name);
+            holder.name = (TextView)row.findViewById(R.id.entry_name);
             holder.name.setSelected(true);
-            holder.name.setText(currAlbum.getName());
+            holder.name.setText(currItem.toString());
 
             row.setTag(holder);
         } else {
             //We've already seen this one before!
-            AlbumAdapter.ViewHolder holder = (AlbumAdapter.ViewHolder) row.getTag();
+            TextEntryAdapter.ViewHolder holder = (TextEntryAdapter.ViewHolder) row.getTag();
             holder.name.setSelected(true);
-            holder.name.setText(currAlbum.getName());
+            holder.name.setText(currItem.toString());
         }
 
         return row;
-
     }
+
 }
