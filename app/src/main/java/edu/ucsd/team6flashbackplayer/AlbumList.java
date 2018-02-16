@@ -2,6 +2,7 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.content.Context;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -19,8 +20,8 @@ public class AlbumList {
         loadFromSongList(songs);
     }
 
-    public static HashMap<String, Album> getAlbums() {
-        return albums;
+    public static ArrayList<Album> getAlbums() {
+        return new ArrayList<Album>(albums.values());
     }
 
     public static Album getAlbum(String albumName) {

@@ -33,6 +33,9 @@ public class MainActivity extends MusicPlayerActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // set title of this activity
+        setTitle(R.string.main_activity_title);
+
         // Check for/request location permission
         requestLocationPermission();
 

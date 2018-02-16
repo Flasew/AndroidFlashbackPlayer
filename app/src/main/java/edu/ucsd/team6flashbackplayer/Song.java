@@ -105,5 +105,10 @@ public final class Song implements Serializable {
         return 2;
     }
 
+    @Override
+    public String toString() {
+        return getTitle();
+    }
+
 
 }

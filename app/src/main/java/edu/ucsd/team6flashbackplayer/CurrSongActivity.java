@@ -8,17 +8,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.icu.text.DateTimePatternGenerator;
-import android.icu.util.ULocale;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -27,8 +23,6 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
-
-import org.w3c.dom.Text;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -44,6 +38,8 @@ public class CurrSongActivity extends MusicPlayerActivity {
     private final int[] UPDATE_TIME = {0, 5, 11, 17};
     private boolean flashBackMode;          // if FB is enabled
 
+    private ArrayList<Integer> positionList;
+
     // UI elements
     private Button flashBackButton;
     private TextView timeClockView;
@@ -51,7 +47,8 @@ public class CurrSongActivity extends MusicPlayerActivity {
     private TextView locationTextView;
     private TextView songTitleView;
     private TextView songArtistView;
-    private PreferenceButtons buttons;
+    private PreferenceButtons preferenceButtons;
+    private Button playListButton;
 
     // location manager to listen for location update & receiver
     private LocationManager locationManager;
@@ -73,6 +70,9 @@ public class CurrSongActivity extends MusicPlayerActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_curr_song);
 
+        // set title of this activity
+        setTitle(R.string.curr_song_activity_title);
+
         // BCM
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
@@ -88,12 +88,21 @@ public class CurrSongActivity extends MusicPlayerActivity {
         locationTextView = findViewById(R.id.location_txt);
         songTitleView = findViewById(R.id.song_name);
         songArtistView = findViewById(R.id.song_artist);
-        buttons = new PreferenceButtons(
+        preferenceButtons = new PreferenceButtons(
                 (ImageButton) findViewById(R.id.like_button),
                 (ImageButton) findViewById(R.id.dislike_button)
         );
-        buttons.redrawButtons();
+        preferenceButtons.redrawButtons();
         flashBackButton = findViewById(R.id.fb_button);
+        playListButton = findViewById(R.id.show_playlist);
+
+        // register list for
+        playListButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startFBListActivity();
+            }
+        });
 
         // register location change listener but disable it first
         // setup for location change listener
@@ -132,8 +141,6 @@ public class CurrSongActivity extends MusicPlayerActivity {
             flashBackButton.setBackground(getDrawable(R.drawable.fb_disabled));
         }
 
-
-
     }
 
     @Override
@@ -159,9 +166,9 @@ public class CurrSongActivity extends MusicPlayerActivity {
         timeDateView.setSelected(true);
         timeClockView.setText(getStrClock(currSong.getLatestTime()));
         timeClockView.setSelected(true);
-        buttons.setSong(currSong);
-        buttons.setButtonListeners();
-        buttons.redrawButtons();
+        preferenceButtons.setSong(currSong);
+        preferenceButtons.setButtonListeners();
+        preferenceButtons.redrawButtons();
     }
 
     @Override
@@ -172,9 +179,9 @@ public class CurrSongActivity extends MusicPlayerActivity {
         locationTextView.setText(NO_INFO);
         timeDateView.setText(NO_INFO);
         timeClockView.setText(NO_INFO);
-        buttons.setSong(null);
-        buttons.removeButtonListeners();
-        buttons.redrawButtons();
+        preferenceButtons.setSong(null);
+        preferenceButtons.removeButtonListeners();
+        preferenceButtons.redrawButtons();
 
     }
 
@@ -197,6 +204,12 @@ public class CurrSongActivity extends MusicPlayerActivity {
         }
     }
 
+    private void startFBListActivity() {
+        Intent intent = new Intent(CurrSongActivity.this, FBPlayListActivity.class);
+        intent.putIntegerArrayListExtra(FBPlayListActivity.FB_POS_LIST, positionList);
+        startActivity(intent);
+    }
+
     // enters the flashback mode
     private void enableFBMode() {
         // set up listeners on location and time update
@@ -216,8 +229,9 @@ public class CurrSongActivity extends MusicPlayerActivity {
         // enable the location listener for triggering FB mode
         locationReceiver.enable();
 
-        // redraw the button.
+        // redraw the buttons
         flashBackButton.setBackground(getDrawable(R.drawable.fb_enabled));
+        playListButton.setVisibility(View.VISIBLE);
 
         // force a location update to enter the flachback mode play list
         startMusicPlayerServiceFBMode();
@@ -238,6 +252,7 @@ public class CurrSongActivity extends MusicPlayerActivity {
 
         // redraw button
         flashBackButton.setBackground(getDrawable(R.drawable.fb_disabled));
+        playListButton.setVisibility(View.GONE);
 
         // pass empty playlist to signal no song should be played
         ArrayList<Integer> stoplist = new ArrayList<>();
@@ -250,7 +265,8 @@ public class CurrSongActivity extends MusicPlayerActivity {
     private void startMusicPlayerServiceFBMode() {
         PositionPlayList ppl = new PositionPlayList(lastLatLngCache, ZonedDateTime.now());
         Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
-        playerIntent.putIntegerArrayListExtra("posList", ppl.getPositionList());
+        positionList = ppl.getPositionList();
+        playerIntent.putIntegerArrayListExtra("posList", positionList);
         startService(playerIntent);
 
        Log.d(TAG(), "Flashback mode service started.");

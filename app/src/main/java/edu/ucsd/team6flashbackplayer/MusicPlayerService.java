@@ -65,10 +65,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         if (locationManager == null)
             locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
+
         // If permission is granted, use the location.
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
+
+            currLoc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
             // Request location updates:
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0,
@@ -200,6 +203,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     public void onCompletion(MediaPlayer mp) {
         //Invoked when playback of a media source has completed
 
+        if (positionList.size() == 0) {
+            stopSelf();
+            broadcastSongChange();
+        }
         // Update the most recently played song's latest location, datetime
         songs.get(positionList.get(counter)).setLatestLoc(songLatLngCache);
         songs.get(positionList.get(counter)).setLatestTime(songDateTimeCache);

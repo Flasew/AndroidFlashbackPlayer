@@ -73,7 +73,7 @@ public class AlbumPlayingTest {
         appCompatButton2.perform(click());
 
         ViewInteraction textView = onView(
-                allOf(withId(R.id.album_name), withText("Love Is Everywhere"),
+                allOf(withId(R.id.entry_name), withText("Love Is Everywhere"),
                         childAtPosition(
                                 allOf(withId(R.id.album_entry),
                                         childAtPosition(
