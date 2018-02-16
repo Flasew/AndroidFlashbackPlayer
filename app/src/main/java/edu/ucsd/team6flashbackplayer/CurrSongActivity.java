@@ -21,7 +21,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-public class CurrSongActivity extends MusicPlayerActivity {
+public class CurrSongActivity
+        extends MusicPlayerActivity {
 
     private boolean flashBackMode;
     private TextView timeClockView;

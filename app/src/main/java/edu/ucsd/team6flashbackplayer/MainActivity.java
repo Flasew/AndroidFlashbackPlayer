@@ -1,11 +1,17 @@
 package edu.ucsd.team6flashbackplayer;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
+import android.location.LocationManager;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -22,11 +28,27 @@ import java.util.List;
 public class MainActivity extends MusicPlayerActivity {
 
     protected final String TAG = "MainActivity";
+    protected static MyLocListener tracker;
     private ConstraintLayout currSong;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Check for/request location permission
+        while (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                        PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
+        }
+
+        // Start keeping track of location
+        tracker = new MyLocListener();
+        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, tracker);
+
         setContentView(R.layout.activity_main);
 
         List<String> songPaths = new ArrayList<>();
@@ -68,6 +90,7 @@ public class MainActivity extends MusicPlayerActivity {
         final SharedPreferences sp = getSharedPreferences("mode", MODE_PRIVATE);
         final SharedPreferences.Editor editor = sp.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
+
         flashBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -186,4 +209,18 @@ public class MainActivity extends MusicPlayerActivity {
 //        }
 //
 //    }
+
+    public boolean requestPermission() {
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                        PackageManager.PERMISSION_GRANTED) {
+
+            //Log.d("Fuck", "Working");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
+            return true;
+        }
+        return false;
+    }
 }

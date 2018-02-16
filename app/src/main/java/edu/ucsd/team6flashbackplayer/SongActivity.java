@@ -5,6 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -16,6 +19,8 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.GoogleMap;
+
 import java.util.List;
 
 public class SongActivity extends MusicPlayerActivity {
@@ -25,6 +30,7 @@ public class SongActivity extends MusicPlayerActivity {
     private ListView songView;
     private SongAdapter songAdapter;
     private ConstraintLayout currSong;
+    private Location curSongLoc;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

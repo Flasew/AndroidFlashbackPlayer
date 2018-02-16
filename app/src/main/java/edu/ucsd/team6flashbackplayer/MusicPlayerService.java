@@ -1,19 +1,33 @@
 package edu.ucsd.team6flashbackplayer;
 
+import android.Manifest;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.io.IOException;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+
+import static android.media.MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO;
+import static edu.ucsd.team6flashbackplayer.MainActivity.tracker;
 
 public class MusicPlayerService extends Service implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
@@ -33,6 +47,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             broadcastSongChange();
         }
     };
+
+    private Location curSongLoc;
+    private ZonedDateTime curSongTime;
 
     public MusicPlayerService() {
 
@@ -136,6 +153,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onCompletion(MediaPlayer mp) {
         //Invoked when playback of a media source has completed
+
+        // Update the most recently played song's latest location, datetime
+        int trackNum = mp.getSelectedTrack(MEDIA_TRACK_TYPE_AUDIO);
+        songs.get(trackNum).setLatestLoc(new LatLng(curSongLoc.getLatitude(), curSongLoc.getLongitude()));
+        songs.get(trackNum).setLatestTime(curSongTime);
+
         stopMedia();
         counter += 1;
         if (counter < positionList.size()) {
@@ -156,6 +179,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onPrepared(MediaPlayer mp) {
         playMedia();
+
+        // Get Android's current location
+        curSongLoc = tracker.getCurrentLocation();
+        // Get current datetime
+        curSongTime = ZonedDateTime.now();
+
         // update UI by broadcast
         broadcastSongChange();
     }
