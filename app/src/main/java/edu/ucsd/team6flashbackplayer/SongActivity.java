@@ -1,5 +1,6 @@
 package edu.ucsd.team6flashbackplayer;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.constraint.ConstraintLayout;
@@ -23,9 +24,12 @@ public class SongActivity extends MusicPlayerActivity {
     private ListView songView;
     private SongEntryAdapter songAdapter;
     private ConstraintLayout currSong;
+    private static Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SongActivity.context = getApplicationContext();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_song);
 
@@ -45,7 +49,7 @@ public class SongActivity extends MusicPlayerActivity {
 
         songView = findViewById(R.id.song_list);
 
-        songAdapter = new SongEntryAdapter(this, songList);
+        songAdapter = new SongEntryAdapter(this, songList, context);
 
         songView.setAdapter(songAdapter);
         songView.setItemsCanFocus(false);
@@ -111,7 +115,6 @@ public class SongActivity extends MusicPlayerActivity {
 
 
     private void play(Song song) {
-
         PositionPlayList ppl = new PositionPlayList(song);
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
         playerIntent.putIntegerArrayListExtra("posList", ppl.getPositionList());

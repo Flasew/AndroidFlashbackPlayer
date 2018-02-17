@@ -216,12 +216,21 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             stopSelf();
             broadcastSongChange();
         }
+        // The Song whose info we need to update
+        Song toUpdate = songs.get(positionList.get(counter));
         // Update the most recently played song's latest location, datetime
         songs.get(positionList.get(counter)).setLatestLoc(songLatLngCache);
         songs.get(positionList.get(counter)).setLatestTime(songDateTimeCache);
 
         stopMedia();
         counter += 1;
+
+        // Update by calling a separate method
+        updateLocTime(toUpdate, songDateTimeCache, songLatLngCache);
+        /*SharedPreferences sp = getSharedPreferences("metadata", MODE_PRIVATE);
+        int trackNum = mp.getSelectedTrack(MEDIA_TRACK_TYPE_AUDIO);
+        String a = sp.getString(songs.get(trackNum).getId(),null);
+        Log.d("meta", a);*/
 
         if (counter < positionList.size()) {
             prepSongAsync();
@@ -230,6 +239,19 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             stopSelf();
             broadcastSongChange();
         }
+    }
+
+    public void updateLocTime(Song song, ZonedDateTime time, LatLng loc) {
+        SharedPreferences sp = getSharedPreferences("metadata", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        String json = sp.getString(song.getId(),null);
+        Log.d("meta old", json);
+        song.updateLocTime(time,loc);
+        String newJson = song.jsonParse();
+
+        editor.putString(song.getId(), newJson);
+        editor.apply();
+        Log.d("meta new", newJson);
     }
 
     @Override
@@ -256,11 +278,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             songDateTimeCache = null;
             Log.d(TAG, "Location cache updated: Null.");
         }
-
-        /*SharedPreferences sp = getSharedPreferences("metadata", MODE_PRIVATE);
-        int trackNum = mp.getSelectedTrack(MEDIA_TRACK_TYPE_AUDIO);
-        String a = sp.getString(songs.get(trackNum).getId(),null);
-        Log.d("meta", a);*/
 
         songDateTimeCache = ZonedDateTime.now();
 

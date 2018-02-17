@@ -65,8 +65,12 @@ public class CurrSongActivity extends MusicPlayerActivity {
     // location cache
     private LatLng lastLatLngCache;
 
+    public static Context context;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        CurrSongActivity.context = getApplicationContext();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_curr_song);
 
@@ -90,7 +94,8 @@ public class CurrSongActivity extends MusicPlayerActivity {
         songArtistView = findViewById(R.id.song_artist);
         preferenceButtons = new PreferenceButtons(
                 (ImageButton) findViewById(R.id.like_button),
-                (ImageButton) findViewById(R.id.dislike_button)
+                (ImageButton) findViewById(R.id.dislike_button),
+                context
         );
         preferenceButtons.redrawButtons();
         flashBackButton = findViewById(R.id.fb_button);

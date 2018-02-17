@@ -1,10 +1,10 @@
 package edu.ucsd.team6flashbackplayer;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,7 +19,9 @@ import com.eclipsesource.json.*;
 public final class Song {
 
     public static final String NO_INFO = "---";
-    private final String ID;      // URI seems to be taken...
+    public static final double NO_LOC = 1000;
+    public static final int NO_TIME = 10000;
+    private final String ID;
     private final String TITLE;
     private final String ARTIST;
     private final String ALBUM;
@@ -27,11 +29,11 @@ public final class Song {
     // latest information, about last played. Put here in case we use
     // unordered data structures and would be unable to track the information.
     // ZonedDateTime stores everything we need about time
-    private LatLng latestLoc;  // perhaps string of longitude & latitude?
+    private LatLng latestLoc;  // lat and long in doubles
     private ZonedDateTime latestTime;
 
     // all history of location of longitude and latitude
-    private Collection<LatLng> locHist;
+    private HashSet<LatLng> locHist;
     // day of week and time of day, by their nature, could be implemented
     // as boolean arrays to achieve the fastest speed.
     private boolean[] timeHist;
@@ -93,8 +95,10 @@ public final class Song {
 
     public void setLatestTime(ZonedDateTime t) {
         latestTime = t;
-        timeHist[timeOfDay(t.getHour())] = true;
-        dayHist[t.getDayOfWeek().getValue()] = true;
+        if (t != null) {
+            timeHist[timeOfDay(t.getHour())] = true;
+            dayHist[t.getDayOfWeek().getValue()] = true;
+        }
     }
 
     public boolean[] getTimeHist()         { return timeHist; }
@@ -102,8 +106,8 @@ public final class Song {
     public boolean[] getDayHist()          { return dayHist; }
     public void setDayHist(boolean[] history) { dayHist = history; }
 
-    public Collection<LatLng> getLocHist() { return locHist; }
-    // like and dislike
+    public HashSet<LatLng> getLocHist() { return locHist; }
+
     // NEW: like and dislike detailed implementation moved to SongPreference class
     public void setLike(boolean l)     { liked = l; }
     public void setDislike(boolean l)  { disliked = l; }
@@ -139,7 +143,6 @@ public final class Song {
     /**
      * Given the JSON string representing the saved fields of a certain song, load/set
      * those fields of the Song object
-     *
      * @param json The string (from SharedPreferences) representing the saved fields/info
      */
     public void jsonPopulate(String json) {
@@ -147,10 +150,10 @@ public final class Song {
 
         // Title/Album/Artist don't need to be populated from SharedPreferences
 
-        // Check if the latest location exists - song was played before
         JsonArray latestLocArray = obj.get("LatestLocation").asArray();
+        // Check if the latest location exists - song was played before
         // If not then set latest location and location history to default values
-        if (latestLocArray.get(0).asString().equals("---")) {
+        if (latestLocArray.get(0).asDouble() == NO_LOC) {
             setLatestLoc(null);
             setLocHist(new HashSet<LatLng>());
         }
@@ -169,6 +172,20 @@ public final class Song {
                 allLoc.add(new LatLng(currLoc.get(0).asDouble(),currLoc.get(1).asDouble()));
             }
             setLocHist(allLoc);
+        }
+
+        // Check if song never played before (time)
+        JsonArray lastTime = obj.get("LatestTime").asArray();
+        if (lastTime.get(0).asInt() == NO_TIME) {
+            setLatestTime(null);
+        }
+        else {
+            // Get the current time zone of the system
+            ZoneId zone = ZoneId.systemDefault();
+            // Getting and setting the latest time song was played (creating new ZonedDateTime)
+            ZonedDateTime time = ZonedDateTime.of(lastTime.get(0).asInt(),lastTime.get(1).asInt(),lastTime.get(2).asInt(),
+                    lastTime.get(3).asInt(),lastTime.get(4).asInt(),lastTime.get(5).asInt(),lastTime.get(6).asInt(), zone);
+            setLatestTime(time);
         }
 
         setLike(obj.get("Liked").asBoolean());
@@ -194,22 +211,26 @@ public final class Song {
      * @return a string in JSON form representing the metadata of a song
      */
     public String jsonParse() {
-        //to test setting latest location
-        /*LatLng geisel = new LatLng(32.8812, -117.2374);
-        double latitude = geisel.latitude;
-        double longitude = geisel.longitude;
-        setLatestLoc(geisel);*/
+        // The builder for the entire JSON string
+        JsonObject builder = new JsonObject();
 
-        /*setLatestLoc(new LatLng(45.415,1.568));
-        setLatestLoc(new LatLng(64.2205, 19.996));*/
+        builder.add("ID", getId());
+        builder.add("Title", getTitle());
+        builder.add("Album", getAlbum());
+        builder.add("Artist", getArtist());
+
+        // Getting location into and converting to JSON
         JsonArray location = Json.array();
-
         JsonArray allLocations = Json.array();
 
+        LatLng latestLoc = getLatestLoc();
+        HashSet<LatLng> locHist = getLocHist();
+        // Check if song was never listened to before, if so then the arrays will just contain NO_INFO elem
         if (latestLoc == null) {
-            location.add(NO_INFO);
-            allLocations.add(NO_INFO);
+            location.add(NO_LOC);
+            allLocations.add(NO_LOC);
         }
+        // Otherwise get the info and add it to the JSON
         else {
             location = Json.array(latestLoc.latitude, latestLoc.longitude);
             for (LatLng loc : locHist) {
@@ -218,22 +239,16 @@ public final class Song {
             }
         }
 
-        JsonObject builder = new JsonObject();
-
-        builder.add("ID", getId());
-        builder.add("Title", getTitle());
-        builder.add("Album", getAlbum());
-        builder.add("Artist", getArtist());
-
         builder.add("LatestLocation", location);
-        //setLatestTime(ZonedDateTime.now());
+
+        ZonedDateTime latestTime = getLatestTime();
         JsonArray timeArray = Json.array();
         if (latestTime == null) {
-            timeArray.add(NO_INFO);
+            timeArray.add(NO_TIME);
         }
         else {
-            timeArray = Json.array(latestTime.getMonthValue(), latestTime.getDayOfMonth(), latestTime.getYear(),
-                    latestTime.getHour(), latestTime.getMinute(), latestTime.getSecond());
+            timeArray = Json.array(latestTime.getYear(), latestTime.getMonthValue(), latestTime.getDayOfMonth(),
+                    latestTime.getHour(), latestTime.getMinute(), latestTime.getSecond(), latestTime.getNano());
         }
         builder.add("LatestTime", timeArray);
 
@@ -248,6 +263,30 @@ public final class Song {
         builder.add("LocationHistory", allLocations);
         //Log.d("Song metadata", builder.toString());
         return builder.toString();
+    }
+
+    /**
+     * Update the Shared Preferences attached to the specific Song
+     * with the new latest time played and location it was played at
+     * @param time new latest time of the song in ZonedDateTime
+     * @param loc new latest location of the song in LatLng
+     */
+    public void updateLocTime(ZonedDateTime time, LatLng loc) {
+        setLatestTime(time);
+        setLatestLoc(loc);
+        HashSet<LatLng> locations = getLocHist();
+        locations.add(loc);
+        setLocHist(locations);
+        // Update the jsonString
+        refreshJson();
+    }
+
+    /**
+     * Updates the field of a song based on the passed in boolean determining if the
+     * like button of the Song was clicked (doesn't necessarily mean always will be liked)
+     */
+    public void refreshJson() {
+        setJsonString(jsonParse());
     }
 
     @Override

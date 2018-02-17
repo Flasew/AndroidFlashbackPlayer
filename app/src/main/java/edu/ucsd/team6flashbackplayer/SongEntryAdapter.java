@@ -20,10 +20,19 @@ public class SongEntryAdapter extends BaseAdapter {
     private List<Song> songList;
     private LayoutInflater songInf;
     private static final String TAG = "SongEntryAdapter";
+    // Context for like/dislike buttons
+    private Context context;
 
     public SongEntryAdapter(Context c, List<Song> theSongs){
         songList=theSongs;
         songInf=LayoutInflater.from(c);
+    }
+
+    // For use in Song lists with like and dislike buttons, which require context
+    public SongEntryAdapter(Context c, List<Song> theSongs, Context context){
+        songList=theSongs;
+        songInf=LayoutInflater.from(c);
+        this.context = context;
     }
 
     @Override
@@ -78,7 +87,8 @@ public class SongEntryAdapter extends BaseAdapter {
             holder.title.setText(currSong.getTitle());
             holder.buttons = new PreferenceButtons(currSong,
                     (ImageButton)row.findViewById(R.id.like_button),
-                    (ImageButton)row.findViewById(R.id.dislike_button)
+                    (ImageButton)row.findViewById(R.id.dislike_button),
+                    context
             );
             holder.buttons.setButtonListeners();
             holder.buttons.redrawButtons();

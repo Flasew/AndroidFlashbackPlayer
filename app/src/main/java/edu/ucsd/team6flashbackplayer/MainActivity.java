@@ -238,13 +238,13 @@ public class MainActivity extends MusicPlayerActivity {
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
 
                 songList.add(toAdd);
-                /*
+
                 // Try to get the song information from Shared Preferences metadata
                 SharedPreferences sharedPref = getSharedPreferences("metadata", MODE_PRIVATE);
                 String jsonInfo = sharedPref.getString(toAdd.getId(), null);
                 // Check if it exists or not - if not then we need to create it in the SharedPreferences
                 if (jsonInfo == null) {
-                    Log.d("null","Yes");
+                    Log.d("SharedPref Exists","Null");
                     // Add the initial metadata of the song to the shared preferences for metadata
                     SharedPreferences.Editor editor = sharedPref.edit();
                     // The info is keyed on the ID of the song(path name) and the json string is created on construction
@@ -253,10 +253,10 @@ public class MainActivity extends MusicPlayerActivity {
                 }
                 // Else get the data and save it to the Song's fields
                 else {
-                    Log.d("notnull", jsonInfo);
+                    Log.d("SharedPref Exists", "Not Null");
                     toAdd.jsonPopulate(jsonInfo);
                 }
-                */
+
             }
         }
         catch (IOException e) {
@@ -270,9 +270,8 @@ public class MainActivity extends MusicPlayerActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        //Toast.makeText(MainActivity.this,"asdf",Toast.LENGTH_SHORT).show();
+        // Commented out to keep functionality of music playing when exiting with back buttons
         //stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
-
     }
 
 //    public boolean requestPermission() {
