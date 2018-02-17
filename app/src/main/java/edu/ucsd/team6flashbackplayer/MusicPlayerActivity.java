@@ -22,6 +22,8 @@ import android.widget.Button;
  */
 public abstract class MusicPlayerActivity extends AppCompatActivity {
 
+    // if the service should finish the current song for a new start command.
+    public static final String START_MUSICSERVICE_KEEP_CURRPLAY = "cutPlaying";
     public static final String BROADCAST_REQUEST_SONG_UPDATE = "reqUpdate";
     public static final String FLASHBACK_SHAREDPREFERENCE_NAME = "mode";
     public static final String NO_INFO = "---";

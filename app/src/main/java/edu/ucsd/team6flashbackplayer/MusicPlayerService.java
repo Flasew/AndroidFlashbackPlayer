@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static android.media.MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO;
@@ -104,14 +105,29 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         // get the playlist. A playlist passed in from StartService will ALWAYS
         // REPLACE the current playlist, and the current playlist will stop immediately.
         try {
-            positionList = intent.getExtras().getIntegerArrayList("posList");
-            if (positionList != null && positionList.size() != 0) {
+            Bundle extras = intent.getExtras();
+            ArrayList<Integer> inList = extras.getIntegerArrayList(PositionPlayList.POS_LIST_INTENT);
+            boolean keepCurrSong = extras.getBoolean(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
+
+            if (inList != null) {
                 initMediaPlayer();
-            } else if (positionList.size() == 0) {
-                stopMedia();
-                broadcastSongChange();
-                stopSelf();
+                if (!keepCurrSong || !mediaPlayer.isPlaying()) {
+                    positionList = inList;
+                    if (inList.size() == 0) {
+                        stopMedia();
+                        broadcastSongChange();
+                        stopSelf();
+                    }
+                    else
+                        prepSongAsync();
+                }
+                else {
+                    inList.add(0, positionList.get(counter));
+                    positionList = inList;
+                }
             }
+
+
         } catch (NullPointerException | IndexOutOfBoundsException e) {
             stopMedia();
             broadcastSongChange();
@@ -262,20 +278,29 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnInfoListener(this);
 
-        prepSongAsync();
     }
 
     // prepare the mediaPlayer to play song at current counter position
+    // ignore the songs that are disliked.
     private void prepSongAsync() {
         mediaPlayer.reset();
+
         try {
             // Set the data source to the mediaFile location
-            AssetFileDescriptor afd = getAssets().openFd((songs.get(positionList.get(counter)).getId()));
+            Song currSong = songs.get(positionList.get(counter));
+
+            while (currSong.isDisliked()) {
+                counter += 1;
+                currSong = songs.get(positionList.get(counter));
+            }
+
+            AssetFileDescriptor afd = getAssets().openFd(currSong.getId());
             mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
         } catch (IOException e) {
             e.printStackTrace();
             stopSelf();
         } catch (ArrayIndexOutOfBoundsException e) {
+            broadcastSongChange();
             stopSelf();
         }
         mediaPlayer.prepareAsync();
@@ -345,14 +370,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         // otherwise check if the disliked song is currently playing
         if (position == positionList.get(counter)) {
             nextSong();
-        }
-
-        // now account for possible future song being disliked.
-        for (int i = counter + 1; i < positionList.size(); i++) {
-            if (position == positionList.get(i)) {
-                positionList.remove(i);
-                return;
-            }
         }
 
     }
