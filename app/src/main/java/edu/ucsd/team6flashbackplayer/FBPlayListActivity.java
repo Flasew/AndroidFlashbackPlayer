@@ -42,8 +42,12 @@ public class FBPlayListActivity extends AppCompatActivity {
             // retrive song info from the position list.
             List<Integer> positionList = extras.getIntegerArrayList(FB_POS_LIST);
             if (positionList != null)
-                for (int pos: positionList)
-                    songList.add(SongList.getSongs().get(pos));
+                for (int pos: positionList) {
+                    Song currSong = SongList.getSongs().get(pos);
+                    if (!currSong.isDisliked())
+                        songList.add(currSong);
+                }
+
 
         }
         // update the adapter view

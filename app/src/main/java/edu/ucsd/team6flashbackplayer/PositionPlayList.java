@@ -15,20 +15,19 @@ import java.util.Queue;
 // In this way we can easily pass these data across activities and services.
 public class PositionPlayList {
 
+    public static final String POS_LIST_INTENT = "posList";
     private static final String TAG = "PositionPlaylist";
 
     private ArrayList<Integer> positionList = new ArrayList<>();;
     private List<Song> songs = SongList.getSongs();
 
     public PositionPlayList(Song song) {
-        if (!song.isDisliked())
-            positionList.add(songs.indexOf(song));
+        positionList.add(songs.indexOf(song));
     }
 
     public PositionPlayList(Album album) {
         for (Song song: album.getSongs()) {
-            if (!song.isDisliked())
-                positionList.add(songs.indexOf(song));
+            positionList.add(songs.indexOf(song));
         }
     }
 

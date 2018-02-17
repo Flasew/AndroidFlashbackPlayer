@@ -21,6 +21,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -58,8 +59,8 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private PendingIntent[] alarmPendingIntents;
 
     // location update frequency
-    private final int LOC_UPDATE_MIN_TIME = 0;
-    private final int LOC_UPDATE_MIN_DIST = 50;
+    private final int LOC_UPDATE_MIN_TIME = 1000;       // milliseconds
+    private final int LOC_UPDATE_MIN_DIST = 50;         // meters
 
     // location cache
     private LatLng lastLatLngCache;
@@ -228,7 +229,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         }
 
         if (flashBackMode)
-            startMusicPlayerServiceFBMode();
+            startMusicPlayerServiceFBMode(true);
 
         Log.d(TAG, "Location updated, Lat: " + location.getLatitude() + "Lng: " + location.getLongitude());
 
@@ -278,7 +279,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         playListButton.setVisibility(View.VISIBLE);
 
         // force a location update to enter the flachback mode play list
-        startMusicPlayerServiceFBMode();
+        startMusicPlayerServiceFBMode(false);
     }
 
     private void disableFBMode() {
@@ -299,17 +300,30 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         // pass empty playlist to signal no song should be played
         ArrayList<Integer> stoplist = new ArrayList<>();
         Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
-        playerIntent.putIntegerArrayListExtra("posList", stoplist);
+        playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, stoplist);
+        playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, true);
         startService(playerIntent);
 
     }
 
-    private void startMusicPlayerServiceFBMode() {
+    /**
+     * call start service of music service and pass in a flashback playlist.
+     * Use a parameter to indicate if the list is updated or a fresh start.
+     * In the second case, we wait for the current song to finish and
+     * play the next song.
+     * @param update
+     */
+    private void startMusicPlayerServiceFBMode(boolean update) {
         PositionPlayList ppl = new PositionPlayList(lastLatLngCache, ZonedDateTime.now());
         Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
         positionList = ppl.getPositionList();
-        playerIntent.putIntegerArrayListExtra("posList", positionList);
+        playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, positionList);
+        playerIntent.putExtra(MainActivity.START_MUSICSERVICE_KEEP_CURRPLAY, update);
         startService(playerIntent);
+        
+        // send a toast for updated list
+        if (update)
+            Toast.makeText(this, "Playlist updated", Toast.LENGTH_SHORT).show();
 
         Log.d(TAG, "Flashback mode service started.");
     }
@@ -384,7 +398,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         // when receive an update, start a new fb playlist
         @Override
         public void onReceive(Context context, Intent intent) {
-            startMusicPlayerServiceFBMode();
+            startMusicPlayerServiceFBMode(true);
         }
     }
 }
