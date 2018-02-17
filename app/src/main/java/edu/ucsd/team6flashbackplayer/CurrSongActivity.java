@@ -31,7 +31,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class CurrSongActivity extends MusicPlayerActivity {
+public class CurrSongActivity extends MusicPlayerActivity implements LocationListener {
 
     private static final String TAG = "CurrSongActivity";
     // time for update the "time of day" period. 0 handles day change.
@@ -52,7 +52,6 @@ public class CurrSongActivity extends MusicPlayerActivity {
 
     // location manager to listen for location update & receiver
     private LocationManager locationManager;
-    private LocationReceiver locationReceiver;
 
     // Alarm manager to listen for time/day update & pending intents for cancel
     private AlarmManager alarmManager;
@@ -65,8 +64,12 @@ public class CurrSongActivity extends MusicPlayerActivity {
     // location cache
     private LatLng lastLatLngCache;
 
+    public static Context context;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        CurrSongActivity.context = getApplicationContext();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_curr_song);
 
@@ -77,10 +80,10 @@ public class CurrSongActivity extends MusicPlayerActivity {
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
         // Location manager
-        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         // AlarmManager
-        alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         // UI elements
         timeClockView = findViewById(R.id.time_clock_txt);
@@ -90,7 +93,8 @@ public class CurrSongActivity extends MusicPlayerActivity {
         songArtistView = findViewById(R.id.song_artist);
         preferenceButtons = new PreferenceButtons(
                 (ImageButton) findViewById(R.id.like_button),
-                (ImageButton) findViewById(R.id.dislike_button)
+                (ImageButton) findViewById(R.id.dislike_button),
+                context
         );
         preferenceButtons.redrawButtons();
         PreferenceButtons.setLocalBroadcastManager(this);
@@ -105,17 +109,6 @@ public class CurrSongActivity extends MusicPlayerActivity {
             }
         });
 
-        // register location change listener but disable it first
-        // setup for location change listener
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            locationReceiver = new LocationReceiver(false);
-            // Request location updates:
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                    LOC_UPDATE_MIN_TIME, LOC_UPDATE_MIN_DIST,
-                    locationReceiver);
-        }
 
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         flashBackMode = fbModeSharedPreferences.getBoolean("mode", false);
@@ -123,7 +116,7 @@ public class CurrSongActivity extends MusicPlayerActivity {
         flashBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG(), "fbmode before pressing: " + flashBackMode);
+                Log.d(TAG, "fbmode before pressing: " + flashBackMode);
                 flashBackMode = !flashBackMode;
                 editor.putBoolean("mode", flashBackMode);
                 editor.apply();
@@ -134,11 +127,22 @@ public class CurrSongActivity extends MusicPlayerActivity {
             }
         });
 
-        Log.d(TAG(), "fbmode on enter: " + flashBackMode);
+        // register location change listener but disable it first
+        // setup for location change listener
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            // Request location updates:
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    LOC_UPDATE_MIN_TIME, LOC_UPDATE_MIN_DIST,
+                    this);
+        }
+
+
+        Log.d(TAG, "fbmode on enter: " + flashBackMode);
         if (flashBackMode) {
             enableFBMode();
-        }
-        else {
+        } else {
             flashBackButton.setBackground(getDrawable(R.drawable.fb_disabled));
         }
 
@@ -192,8 +196,7 @@ public class CurrSongActivity extends MusicPlayerActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        locationManager.removeUpdates(locationReceiver);
-        locationReceiver = null;
+        locationManager.removeUpdates(this);
 
         if (alarmPendingIntents != null) {
             for (int i = 0; i < alarmPendingIntents.length; i++) {
@@ -205,6 +208,48 @@ public class CurrSongActivity extends MusicPlayerActivity {
         }
     }
 
+
+    /**
+     * give a new playlist to music service
+     *
+     * @param location new location
+     */
+    @Override
+    public void onLocationChanged(Location location) {
+
+
+        LatLng latlng = lastLatLngCache;
+        try {
+            lastLatLngCache = new LatLng(location.getLatitude(), location.getLongitude());
+        }
+        // if somehow new location is null, keep the old one.
+        catch (NullPointerException e) {
+            lastLatLngCache = latlng;
+        }
+
+        if (flashBackMode)
+            startMusicPlayerServiceFBMode();
+
+        Log.d(TAG, "Location updated, Lat: " + location.getLatitude() + "Lng: " + location.getLongitude());
+
+
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
+    }
+
     private void startFBListActivity() {
         Intent intent = new Intent(CurrSongActivity.this, FBPlayListActivity.class);
         intent.putIntegerArrayListExtra(FBPlayListActivity.FB_POS_LIST, positionList);
@@ -214,6 +259,7 @@ public class CurrSongActivity extends MusicPlayerActivity {
     // enters the flashback mode
     private void enableFBMode() {
         // set up listeners on location and time update
+        flashBackMode = true;
 
         // time update: use repeat alarm
         long[] updateMillTime = getUpdateTimeMills();
@@ -227,9 +273,6 @@ public class CurrSongActivity extends MusicPlayerActivity {
                     AlarmManager.INTERVAL_DAY, alarmPendingIntents[i]);
         }
 
-        // enable the location listener for triggering FB mode
-        locationReceiver.enable();
-
         // redraw the buttons
         flashBackButton.setBackground(getDrawable(R.drawable.fb_enabled));
         playListButton.setVisibility(View.VISIBLE);
@@ -240,9 +283,7 @@ public class CurrSongActivity extends MusicPlayerActivity {
 
     private void disableFBMode() {
         // unregister all listeners
-
-        // disable location update triggering FB mode
-        locationReceiver.disable();
+        flashBackMode = false;
 
         // unregister time listener
         for (int i = 0; i < alarmPendingIntents.length; i++) {
@@ -270,7 +311,7 @@ public class CurrSongActivity extends MusicPlayerActivity {
         playerIntent.putIntegerArrayListExtra("posList", positionList);
         startService(playerIntent);
 
-       Log.d(TAG(), "Flashback mode service started.");
+        Log.d(TAG, "Flashback mode service started.");
     }
 
     // get the string location from a longitude and latitude
@@ -288,7 +329,7 @@ public class CurrSongActivity extends MusicPlayerActivity {
                 String address = addresses.get(0).getAddressLine(0);
                 String city = addresses.get(0).getAddressLine(1);
                 String country = addresses.get(0).getAddressLine(2);
-                Log.d(TAG(), "address = " + address + ", city = " + city + ", country = " + country);
+                Log.d(TAG, "address = " + address + ", city = " + city + ", country = " + country);
                 return address + ", " + city;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -329,7 +370,7 @@ public class CurrSongActivity extends MusicPlayerActivity {
             calendar.set(Calendar.SECOND, 0);
 
             // avoid passed time
-            if(calendar.getTime().compareTo(new Date()) < 0)
+            if (calendar.getTime().compareTo(new Date()) < 0)
                 calendar.add(Calendar.DAY_OF_MONTH, 1);
 
             result[i] = calendar.getTimeInMillis();
@@ -344,73 +385,6 @@ public class CurrSongActivity extends MusicPlayerActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             startMusicPlayerServiceFBMode();
-        }
-    }
-
-    // LocationReceiver class that handles location updates. required for remove listener.
-    public class LocationReceiver implements LocationListener {
-
-        private boolean sendFBList = false;    // if this thing is enabled
-
-        // location with a boolean enabled
-        public LocationReceiver(boolean enabled) {
-            this.sendFBList = enabled;
-        }
-
-        /**
-         * enable this listener
-         */
-        public void enable() {
-            sendFBList = true;
-        }
-
-        /**
-         * disable this listener
-         */
-        public void disable() {
-            sendFBList = false;
-        }
-
-        /**
-         * give a new playlist to music service
-         *
-         * @param location new location
-         */
-        @Override
-        public void onLocationChanged(Location location) {
-
-
-
-            LatLng latlng = lastLatLngCache;
-            try {
-                lastLatLngCache = new LatLng(location.getLatitude(), location.getLongitude());
-            }
-            // if somehow new location is null, keep the old one.
-            catch (NullPointerException e) {
-                lastLatLngCache = latlng;
-            }
-
-            if (sendFBList)
-                startMusicPlayerServiceFBMode();
-
-            Log.d(TAG(), "Location updated, Lat: " + location.getLatitude() + "Lng: " + location.getLongitude());
-
-
-        }
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-
-        }
-
-        @Override
-        public void onProviderEnabled(String provider) {
-
-        }
-
-        @Override
-        public void onProviderDisabled(String provider) {
-
         }
     }
 }

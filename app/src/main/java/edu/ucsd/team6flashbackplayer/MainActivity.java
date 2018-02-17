@@ -17,34 +17,27 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends MusicPlayerActivity {
+public class MainActivity extends MusicPlayerNavigateActivity {
 
     private static final String TAG = "MainActivity";
     private static final int FBPLAYER_PERMISSIONS_REQUEST_LOCATION = 999;
-    // protected static MyLocListener tracker;
-    private ConstraintLayout currSong;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // set title of this activity
+        // set title and layout of this activity
         setTitle(R.string.main_activity_title);
+        setContentView(R.layout.activity_main);
 
         // Check for/request location permission
         requestLocationPermission();
-
-        // Start keeping track of location
-        // tracker = new MyLocListener();
-        // LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        // lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, tracker);
-
-        setContentView(R.layout.activity_main);
 
         List<String> songPaths = new ArrayList<>();
         listAssetFiles("", songPaths);
@@ -52,11 +45,15 @@ public class MainActivity extends MusicPlayerActivity {
         new SongList(getSongList(songPaths));
         new AlbumList(SongList.getSongs());
 
-        // fake location and time for testing
-        // for(Song s: SongList.getSongs()) {
-        //    s.setLatestTime(ZonedDateTime.now());
-        //    s.setLatestLoc(new LatLng(32.8812, -117.2374));
-        // }
+        currSong = findViewById(R.id.current_song);
+        currSong.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startCurrSongActivity();
+            }
+        });
+
+        resetSongStatusBar();
 
         Button songButton = findViewById(R.id.main_songs);
         songButton.setOnClickListener(new View.OnClickListener() {
@@ -74,16 +71,8 @@ public class MainActivity extends MusicPlayerActivity {
             }
         });
 
-        currSong = findViewById(R.id.current_song);
-        currSong.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startCurrSongActivity();
-            }
-        });
 
-        final SharedPreferences sp = getSharedPreferences("mode", MODE_PRIVATE);
-        final SharedPreferences.Editor editor = sp.edit();
+        final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
 
         flashBackButton.setOnClickListener(new View.OnClickListener() {
@@ -96,7 +85,7 @@ public class MainActivity extends MusicPlayerActivity {
         });
 
         // lanuch fb mode if it was in it.
-        boolean flashBackMode = sp.getBoolean("mode", false);
+        boolean flashBackMode = fbModeSharedPreferences.getBoolean("mode", false);
         if (flashBackMode) {
             startCurrSongActivity();
         }
@@ -155,30 +144,11 @@ public class MainActivity extends MusicPlayerActivity {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    Log.d(TAG(), "Location permission granted");
+                    Log.d(TAG, "Location permission granted");
 
                 }
             }
         }
-    }
-
-    @Override
-    protected void onSongUpdate(int position) {
-        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
-        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
-        Song currSong = SongList.getSongs().get(position);
-        String title = currSong.getTitle();
-        String artist = currSong.getArtist();
-        currPlayingName.setText((title == null) ? "---" : title);
-        currPlayingArtist.setText((artist == null) ? "---" : artist);
-    }
-
-    @Override
-    protected void onSongFinish() {
-        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
-        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
-        currPlayingName.setText(NO_INFO);
-        currPlayingArtist.setText(NO_INFO);
     }
 
     public void startSongActivity() {
@@ -230,12 +200,32 @@ public class MainActivity extends MusicPlayerActivity {
                 mmr.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
                 descriptor.close();
 
-                songList.add(new Song(
+                Song toAdd = new Song(
                         path,
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE),
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST),
-                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
-                ));
+                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
+
+                songList.add(toAdd);
+
+                // Try to get the song information from Shared Preferences metadata
+                SharedPreferences sharedPref = getSharedPreferences("metadata", MODE_PRIVATE);
+                String jsonInfo = sharedPref.getString(toAdd.getId(), null);
+                // Check if it exists or not - if not then we need to create it in the SharedPreferences
+                if (jsonInfo == null) {
+                    Log.d("SharedPref Exists","Null");
+                    // Add the initial metadata of the song to the shared preferences for metadata
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    // The info is keyed on the ID of the song(path name) and the json string is created on construction
+                    editor.putString(toAdd.getId(), toAdd.getJsonString());
+                    editor.apply();
+                }
+                // Else get the data and save it to the Song's fields
+                else {
+                    Log.d("SharedPref Exists", "Not Null");
+                    toAdd.jsonPopulate(jsonInfo);
+                }
+
             }
         }
         catch (IOException e) {
@@ -249,9 +239,9 @@ public class MainActivity extends MusicPlayerActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
+        // Commented out to keep functionality of music playing when exiting with back buttons
+        //stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
     }
-
 
 //    public boolean requestPermission() {
 //
@@ -260,10 +250,10 @@ public class MainActivity extends MusicPlayerActivity {
 //                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
 //                        PackageManager.PERMISSION_GRANTED) {
 //
-//            //Log.d("Fuck", "Working");
 //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
 //            return true;
 //        }
 //        return false;
 //    }
+
 }

@@ -2,29 +2,35 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.constraint.ConstraintLayout;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import java.util.List;
 
-public class SongActivity extends MusicPlayerActivity {
+public class SongActivity extends MusicPlayerNavigateActivity {
 
     protected final String TAG = "SongActivity";
     private List<Song> songList;
     private ListView songView;
     private SongEntryAdapter songAdapter;
-    private ConstraintLayout currSong;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_song);
+
+        currSong = findViewById(R.id.current_song);
+        currSong.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startCurrSongActivity();
+            }
+        });
 
         String albumName;
         Bundle extras = getIntent().getExtras();
@@ -55,14 +61,6 @@ public class SongActivity extends MusicPlayerActivity {
             }
         });
 
-        currSong = findViewById(R.id.current_song);
-        currSong.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startCurrSongActivity();
-            }
-        });
-
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
         flashBackButton.setOnClickListener(new View.OnClickListener() {
@@ -87,33 +85,11 @@ public class SongActivity extends MusicPlayerActivity {
         super.onStop();
     }
 
-    @Override
-    protected void onSongUpdate(int position) {
-        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
-        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
-        Song currSong = SongList.getSongs().get(position);
-        String title = currSong.getTitle();
-        String artist = currSong.getArtist();
-        currPlayingName.setText((title == null) ? "---" : title);
-        currPlayingArtist.setText((artist == null) ? "---" : artist);
-    }
-
-    @Override
-    protected void onSongFinish() {
-        TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
-        TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
-        currPlayingName.setText(NO_INFO);
-        currPlayingArtist.setText(NO_INFO);
-    }
-
-
     private void play(Song song) {
-
         PositionPlayList ppl = new PositionPlayList(song);
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
         playerIntent.putIntegerArrayListExtra("posList", ppl.getPositionList());
         startService(playerIntent);
-
     }
 
     @Override
@@ -122,6 +98,6 @@ public class SongActivity extends MusicPlayerActivity {
         // a little bit of overkill though...
         super.onResume();
         songAdapter.notifyDataSetChanged();
-        Log.d(TAG(), "On resume of song activity called.");
+        Log.d(TAG, "On resume of song activity called.");
     }
 }

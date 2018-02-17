@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Button;
 
 /**
  * Created by frankwang on 2/13/18.
@@ -27,12 +28,13 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
 
     // Log tag
     protected String TAG = "MusicPlayerActivity";
+    protected Button fbButton;      // flashback mode button
 
     // broadcast receiver for currently playing song updated
     protected BroadcastReceiver songUpdateBroadCastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG(), "Broadcast received");
+            Log.d(TAG, "Broadcast received");
             int pos = intent.getIntExtra(MusicPlayerService.BROADCAST_SONG_CHANGE, -1);
             if (pos != -1) {
                 onSongUpdate(pos);
@@ -54,6 +56,7 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
         fbModeSharedPreferences = getSharedPreferences(FLASHBACK_SHAREDPREFERENCE_NAME, MODE_PRIVATE);
+
     }
 
     @Override
@@ -63,7 +66,7 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
                 new IntentFilter(MusicPlayerService.BROADCAST_SONG_CHANGE)
         );
         // broadcast locally to request song information
-        broadcastRequestSongUpdate();
+        // broadcastRequestSongUpdate();
 
     }
 
@@ -71,7 +74,7 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         broadcastRequestSongUpdate();
-        Log.d(TAG(), "On resume called");
+        Log.d(TAG, "On resume called");
     }
 
     @Override
@@ -81,20 +84,9 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
     }
 
     protected void broadcastRequestSongUpdate() {
-        Log.d(TAG(), "Requested song info update.");
+        Log.d(TAG, "Requested song info update.");
         Intent intent = new Intent(BROADCAST_REQUEST_SONG_UPDATE);
         localBroadcastManager.sendBroadcast(intent);
-    }
-
-    // start the current song activity page. Will not be called CurrSongActivity itself
-    protected void startCurrSongActivity() {
-        Intent intent = new Intent(this, CurrSongActivity.class);
-        startActivity(intent);
-    }
-
-    // get the correct String for log
-    protected String TAG() {
-        return TAG;
     }
 
     // When a song is updated, onSongUpdate should update all the relevant UI.
