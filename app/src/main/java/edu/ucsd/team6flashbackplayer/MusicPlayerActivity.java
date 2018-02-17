@@ -68,6 +68,13 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        broadcastRequestSongUpdate();
+        Log.d(TAG(), "On resume called");
+    }
+
+    @Override
     protected void onStop() {
         localBroadcastManager.unregisterReceiver(songUpdateBroadCastReceiver);
         super.onStop();

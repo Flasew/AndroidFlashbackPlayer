@@ -24,6 +24,7 @@ public class SongEntryAdapter extends BaseAdapter {
     public SongEntryAdapter(Context c, List<Song> theSongs){
         songList=theSongs;
         songInf=LayoutInflater.from(c);
+        PreferenceButtons.setLocalBroadcastManager(c);
     }
 
     @Override
@@ -82,6 +83,7 @@ public class SongEntryAdapter extends BaseAdapter {
             );
             holder.buttons.setButtonListeners();
             holder.buttons.redrawButtons();
+
 
             row.setTag(holder);
         } else {

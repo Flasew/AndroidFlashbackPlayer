@@ -21,12 +21,14 @@ public class PositionPlayList {
     private List<Song> songs = SongList.getSongs();
 
     public PositionPlayList(Song song) {
-        positionList.add(songs.indexOf(song));
+        if (!song.isDisliked())
+            positionList.add(songs.indexOf(song));
     }
 
     public PositionPlayList(Album album) {
         for (Song song: album.getSongs()) {
-            positionList.add(songs.indexOf(song));
+            if (!song.isDisliked())
+                positionList.add(songs.indexOf(song));
         }
     }
 

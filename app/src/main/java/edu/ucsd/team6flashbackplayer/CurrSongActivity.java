@@ -93,6 +93,7 @@ public class CurrSongActivity extends MusicPlayerActivity {
                 (ImageButton) findViewById(R.id.dislike_button)
         );
         preferenceButtons.redrawButtons();
+        PreferenceButtons.setLocalBroadcastManager(this);
         flashBackButton = findViewById(R.id.fb_button);
         playListButton = findViewById(R.id.show_playlist);
 

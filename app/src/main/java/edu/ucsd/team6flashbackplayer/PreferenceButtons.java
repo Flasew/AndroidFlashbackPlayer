@@ -1,6 +1,7 @@
 package edu.ucsd.team6flashbackplayer;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.AppCompatImageButton;
@@ -23,9 +24,10 @@ public class PreferenceButtons {
     private Song song;              // song corresponding to this  button group
     private ImageButton likeButton; // the like button
     private ImageButton dislikeButton;  // this dislike button
-    private LocalBroadcastManager localBroadcastManager;    // broadcast for like and dislike
+    private static LocalBroadcastManager localBroadcastManager;  // broadcast for like and dislike
 
     private static final String TAG = "PreferenceButtons";
+
 
     // constructor should handle initializing UI and set listener
     public PreferenceButtons(Song s, ImageButton like, ImageButton dislike) {
@@ -39,7 +41,7 @@ public class PreferenceButtons {
     public PreferenceButtons(ImageButton like, ImageButton dislike) {
         likeButton = like;
         dislikeButton = dislike;
-        Log.d(TAG, "Buttons constructed no song.");
+        Log.d(TAG, "Buttons constructed, no song.");
     }
 
     // In list view, these button are get re-used, so we need to be able to change songs.
@@ -85,14 +87,28 @@ public class PreferenceButtons {
             }
         });
 
+        // broadcast a song is disliked
         dislikeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 SongPreference.dislike(song);
+                Intent intent = new Intent(PREF_DISLIKED_BROADCAST);
+                intent.putExtra(PREF_DISLIKED_BROADCAST, SongList.getSongs().indexOf(song));
+                localBroadcastManager.sendBroadcast(intent);
                 redrawButtons();
             }
         });
         Log.d(TAG, "Button listener set for " + song.getTitle());
     }
+
+
+    /**
+     * Set the local broadcast manager from a context. This is required
+     * for the dislike broadcast to function.
+     */
+    public static void setLocalBroadcastManager(Context c) {
+        localBroadcastManager = LocalBroadcastManager.getInstance(c);
+    }
+
 
 }
