@@ -89,7 +89,7 @@ public class SongActivity extends MusicPlayerNavigateActivity {
         PositionPlayList ppl = new PositionPlayList(song);
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
         playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, ppl.getPositionList());
-        playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, true);
+        playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
         startService(playerIntent);
     }
 
