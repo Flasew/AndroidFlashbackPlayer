@@ -28,10 +28,10 @@ public class PreferenceButtons {
     private ImageButton dislikeButton;  // this dislike button
 
     // drawables for button icon
-    private static Drawable heartRed;
-    private static Drawable heartGrey;
-    private static Drawable brokenHeartRed;
-    private static Drawable brokenHeartGrey;
+    private Drawable heartRed;
+    private Drawable heartGrey;
+    private Drawable brokenHeartRed;
+    private Drawable brokenHeartGrey;
 
     private static LocalBroadcastManager localBroadcastManager;  // broadcast for like and dislike
 

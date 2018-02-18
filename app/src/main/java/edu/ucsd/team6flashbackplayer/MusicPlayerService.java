@@ -107,7 +107,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                         .setContentText(getText(R.string.notification_message))
                         .setSmallIcon(R.drawable.ic_player_icon)
                         .setContentIntent(pendingIntent)
-
                         .build();
 
         startForeground(FOREGROUND_ID, notification);
@@ -145,12 +144,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             if (inList != null) {
                 initMediaPlayer();
                 if (!keepCurrSong || !mediaPlayer.isPlaying()) {
+
                     counter = 0;
                     positionList = inList;
                     if (inList.size() == 0) {
                         stopMedia();
                         broadcastSongChange();
-                        stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
+                        stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
                     }
                     else
                         prepSongAsync();
@@ -336,7 +336,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
         } catch (ArrayIndexOutOfBoundsException e) {
             broadcastSongChange();
-            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
         }
         mediaPlayer.prepareAsync();
     }

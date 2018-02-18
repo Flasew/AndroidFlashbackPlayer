@@ -331,6 +331,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
      * @param update
      */
     private void startMusicPlayerServiceFBMode(boolean update) {
+
         try {
             PositionPlayList ppl = new PositionPlayList(lastLatLngCache, ZonedDateTime.now());
             Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
@@ -349,6 +350,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
             Log.d(TAG, "Exception caught when starting FB mode");
             e.printStackTrace();
         }
+
     }
 
     // get the string location from a longitude and latitude
