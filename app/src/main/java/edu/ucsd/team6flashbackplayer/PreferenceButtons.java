@@ -3,7 +3,6 @@ package edu.ucsd.team6flashbackplayer;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -41,7 +40,14 @@ public class PreferenceButtons {
     private static final String TAG = "PreferenceButtons";
 
 
-    // constructor should handle initializing UI and set listener
+    /**
+     * Constructor of PrefButtons. Associate a button set with a song and a context.
+     * constructor should handle initializing UI and set listener
+     * @param s song that this button set will modify
+     * @param like like button
+     * @param dislike dislike button
+     * @param context context for reagent functions.
+     */
     public PreferenceButtons(Song s, ImageButton like, ImageButton dislike, Context context) {
         song = s;
         likeButton = like;
@@ -53,7 +59,12 @@ public class PreferenceButtons {
         Log.d(TAG, "Buttons constructed for " + song.getTitle());
     }
 
-    // Constructor without a song. Mainly for buttons that just hangs there with no song playing
+    /**
+     * Constructor without a song. Mainly for buttons that just hangs there with no song playing
+     * @param like like button
+     * @param dislike dislike button
+     * @param context context for reagent functions.
+     */
     public PreferenceButtons(ImageButton like, ImageButton dislike, Context context) {
         likeButton = like;
         dislikeButton = dislike;
@@ -63,12 +74,17 @@ public class PreferenceButtons {
 
     }
 
-    // In list view, these button are get re-used, so we need to be able to change songs.
+    /**
+     * Set a song that the button should modify
+     * @param s song that this button set will modify
+     */
     public void setSong(Song s) {
         song = s;
     }
 
-    // redraw the button UIs
+    /**
+     * Redraw the button UIs.
+     */
     public void redrawButtons() {
         if (song == null) {
             likeButton.setBackground(heartGrey);
@@ -84,14 +100,18 @@ public class PreferenceButtons {
 
     }
 
-    // remove the button listners
+    /**
+     * Remove the button listeners.
+     */
     public void removeButtonListeners() {
         likeButton.setOnClickListener(null);
         dislikeButton.setOnClickListener(null);
         Log.d(TAG, "Button listener removed.");
     }
 
-    // set the button listeners
+    /**
+     * Set the button listeners.
+     */
     public void setButtonListeners() {
 
         if (song == null) {

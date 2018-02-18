@@ -1,7 +1,5 @@
 package edu.ucsd.team6flashbackplayer;
 
-import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -16,9 +14,9 @@ import com.eclipsesource.json.*;
 
 public final class Song {
 
-    public static final String NO_INFO = "---";
-    public static final double NO_LOC = 1000;
-    public static final int NO_TIME = 10000;
+    private static final String NO_INFO = "---";     // noinfo string
+    private static final double NO_LOC = 1000;
+    private static final int NO_TIME = 10000;
     private final String ID;
     private final String TITLE;
     private final String ARTIST;
@@ -41,9 +39,16 @@ public final class Song {
     private boolean liked;
     private boolean disliked;
 
+    // json sting of this song.
     private String jsonString;
 
-    // Ctor
+    /**
+     * Constructor. Takes song's relevant information and make a new song object
+     * @param id id of the song. for now it's the path.
+     * @param title title of the song
+     * @param artist artist created the song
+     * @param album album the song belongs to
+     */
     public Song(String id, String title, String artist, String album) {
         ID = id;
         TITLE = title;
@@ -286,6 +291,10 @@ public final class Song {
         setJsonString(jsonParse());
     }
 
+    /**
+     * toString will get the title of the song.
+     * @return title of song
+     */
     @Override
     public String toString() {
         return getTitle();

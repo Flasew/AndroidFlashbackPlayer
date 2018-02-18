@@ -31,20 +31,39 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * class MusicPlayerService
+ * This class is an android service, and handles music play back for the player program.
+ * In general, the music player service is always started by startService(intent) where
+ * the intent contains a integer arraylist corresponding to the position of the songs in
+ * the global list. The intent should also consist a field indicating if the currently playing
+ * song should just end for the new list or wait until the current song finish.
+ * MusicPlayerService also listens to the location change of the user when music is playing
+ * in order to correctly record the location history.
+ * This service is always started as a foreground service so it's unlikely to be killed by
+ * the operating system.
+ */
 public class MusicPlayerService extends Service implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnInfoListener, LocationListener {
 
-    final static String BROADCAST_SONG_CHANGE = "uiUpdate";
+    // label of broadcasting song change.
+    static String BROADCAST_SONG_CHANGE = "uiUpdate";
+
     private final static String TAG = "MusicPlayerService";
+
     private final IBinder iBinder = new LocalBinder();  // unused
+
     private List<Song> songs = SongList.getSongs();     // global song list
     private int counter = 0;                        // current song position counter
-    private MediaPlayer mediaPlayer;                // media player that plays the song
     private static List<Integer> positionList;      // list of songs to be played
 
+    private MediaPlayer mediaPlayer;                // media player that plays the song
+
+    // broadcast
     private LocalBroadcastManager localBroadcastManager;
-    private boolean locationListenerRegistered = false;
+
+    // when a song update is requested, broad cast a song update.
     private BroadcastReceiver songUpdateRequestReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -53,7 +72,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     };
     private boolean songUpdateReceiverRegistered = false;
 
-
+    // when a song is disliked, the current playlist should be modified.
     private BroadcastReceiver songDislikedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -62,10 +81,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     };
     private boolean songDislikeReceiverRegistered = false;
 
+    // location
     private LocationManager locationManager;
     private static Location currLoc;            // current location updated with location
     private LatLng songLatLngCache;             // cache the location of a song on start playing
     private ZonedDateTime songDateTimeCache;    // cache the time of a song on start playing
+    private boolean locationListenerRegistered = false;
 
     // notification
     private NotificationManager notificationManager;
@@ -79,6 +100,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     /* ---------------------OVERRIDE SERVICE------------------------- */
 
+    /**
+     * onStartCommand is always called when a new playlist passes in. If there's already a
+     * service instance running, a new one will NOT be created. The intent contains the
+     * position list information of the songs to be played.
+     * @param intent intent containing an arraylist of positions and a boolean variable of if the
+     *               song should be updated
+     * @param flags  Unused.
+     * @param startId Start id of this start. unused.
+     * @return
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -91,6 +122,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         if (notificationManager == null)
             notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
+        // Android O requires a notification channel.
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID,
                     NOTIFICATION_CHANNEL_NAME,
@@ -100,7 +132,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             notificationManager.createNotificationChannel(channel);
         }
 
-
+        // noticication channel is needed for a foreground service
         Notification notification =
                 new Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
                         .setContentTitle(getText(R.string.notification_title))
@@ -110,7 +142,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                         .build();
 
         startForeground(FOREGROUND_ID, notification);
+        Log.d(TAG, "Service brought to foreground.");
 
+        // acquire the managers if needed.
         if (localBroadcastManager == null)
             localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
@@ -134,8 +168,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
         registerBroadcastReceivers();
 
-        // get the playlist. A playlist passed in from StartService will ALWAYS
-        // REPLACE the current playlist, and the current playlist will stop immediately.
+        // get the playlist. Depending on the current player status and the intent specifying update or not,
+        // The player will either cut the current playlist immediately or wait for the current song to
+        // finish and start the new list.
         try {
             Bundle extras = intent.getExtras();
             ArrayList<Integer> inList = extras.getIntegerArrayList(PositionPlayList.POS_LIST_INTENT);
@@ -161,9 +196,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                     positionList = inList;
                 }
             }
-
-
-        } catch (NullPointerException | IndexOutOfBoundsException e) {
+        }
+        // Invalid intent: just stop and exit.
+        catch (NullPointerException | IndexOutOfBoundsException e) {
             stopMedia();
             broadcastSongChange();
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
@@ -174,9 +209,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
 
+    /**
+     * Called when the service is destroyed. A MPService is destroyed when
+     * all songs finish playing, or the OS forced to kill it.
+     */
     @Override
     public void onDestroy() {
-        Log.d(TAG, "On Destroy...");
+        Log.d(TAG, "MusicPlayerService "+ this + " destroyed...");
 
         if (mediaPlayer != null) {
             stopMedia();
@@ -198,8 +237,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     /* ---------------------OVERRIDE LOCATIONLISTENER------------------------ */
     /**
-     * Upate the current location.
-     * @param location
+     * Update the current location.
+     * @param location latest location.
      */
     @Override
     public void onLocationChanged(Location location) {
@@ -208,16 +247,30 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             ", this instance: " + MusicPlayerService.this);
     }
 
+    /**
+     * Unused.
+     * @param provider
+     * @param status
+     * @param extras
+     */
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
 
     }
 
+    /**
+     * Unused.
+     * @param provider
+     */
     @Override
     public void onProviderEnabled(String provider) {
 
     }
 
+    /**
+     * Unused.
+     * @param provider
+     */
     @Override
     public void onProviderDisabled(String provider) {
 
@@ -226,7 +279,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     /* ---------------------OVERRIDE MEDIAPLAYER.ON???------------------------- */
 
     /**
-     * Callback function when prepareAsync() finish
+     * Callback function when prepareAsync() finish. Start to play the prepared media,
+     * Cache the current location and time, and broadcast a songinfoupdate message.
+     *
      * @param mp media player associated with the player.
      */
     @Override
@@ -251,20 +306,23 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     /**
-     * Callback function when a song completes
+     * Callback function when a song completes. Update the song location and time history.
+     * If all the songs are finished, stop the service.
      * @param mp media player associated with the song.
      */
     @Override
     public void onCompletion(MediaPlayer mp) {
-        //Invoked when playback of a media source has completed
+        // Invoked when playback of a media source has completed
 
         if (positionList.size() == 0) {
-            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
             broadcastSongChange();
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
+            return;
         }
         // The Song whose info we need to update
         Song toUpdate = songs.get(positionList.get(counter));
         // Update the most recently played song's latest location, datetime
+        Log.d(TAG, "Song " + toUpdate +" finished playing.");
 
         // Update by calling a separate method
         updateLocTime(toUpdate, songDateTimeCache, songLatLngCache);
@@ -277,7 +335,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     }
 
-    //Handle errors
+    /**
+     * Media player error callback. Unused except for logging information.
+     * @param mp media player this callback works on
+     * @param what what's the error
+     * @param extra extra information
+     * @return false for now
+     */
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         switch (what) {
@@ -296,6 +360,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         return false;
     }
 
+    /**
+     * Invoked to communicate some info. Unused for now.
+     * @param mp
+     * @param what
+     * @param extra
+     * @return
+     */
     @Override
     public boolean onInfo(MediaPlayer mp, int what, int extra) {
         //Invoked to communicate some info.
@@ -304,6 +375,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     /* ---------------------MEDIA PLAYER CONTROL------------------------- */
 
+    /**
+     * Initialize a media player and set the listeners.
+     */
     private void initMediaPlayer() {
         if (mediaPlayer == null)
             mediaPlayer = new MediaPlayer();
@@ -315,8 +389,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     }
 
-    // prepare the mediaPlayer to play song at current counter position
-    // ignore the songs that are disliked.
+    /**
+     * prepare the mediaPlayer to play song at current counter position
+     * ignore the songs that are disliked.
+     */
     private void prepSongAsync() {
         mediaPlayer.reset();
 
@@ -331,6 +407,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
             AssetFileDescriptor afd = getAssets().openFd(currSong.getId());
             mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+
+            mediaPlayer.prepareAsync();
+            Log.d(TAG, "Preparing song " + currSong.getTitle());
+
         } catch (IOException e) {
             e.printStackTrace();
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
@@ -338,12 +418,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             broadcastSongChange();
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
         }
-        mediaPlayer.prepareAsync();
+
     }
 
+    /**
+     * Play the media.
+     */
     private void playMedia() {
         if (!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
+            Log.d(TAG, "Media player started");
         }
     }
 
@@ -360,15 +444,19 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             prepSongAsync();
         }
         else {
-            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
             broadcastSongChange();
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
         }
     }
 
+    /**
+     * Stop the currently playing media.
+     */
     private void stopMedia() {
         if (mediaPlayer == null) return;
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
+            Log.d(TAG, "Media player stopped");
         }
     }
 
@@ -376,7 +464,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     /* ---------------------BROADCAST RELATIVE------------------------ */
 
 
-    // broadcast song change, latest position.
+    /**
+     * broadcast song change: broadcast the latest position.
+     */
     public void broadcastSongChange() {
         int index;
         try {
@@ -389,7 +479,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         Intent intent = new Intent(BROADCAST_SONG_CHANGE);
         intent.putExtra(BROADCAST_SONG_CHANGE, index);
         localBroadcastManager.sendBroadcast(intent);
-        Log.d(TAG, "Broadcast song change, position " + index + ", this instance" + this);
+        Log.d(TAG, "Broadcast song change, position " + index + ", this instance " + this);
     }
 
     /**
@@ -404,6 +494,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
         // otherwise check if the disliked song is currently playing
         if (position == positionList.get(counter)) {
+            Log.d(TAG, "Current song disliked, skipping to next song...");
             nextSong();
         }
 
@@ -433,28 +524,37 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
      */
     private void unregisterBroadcastReceivers() {
         localBroadcastManager.unregisterReceiver(songUpdateRequestReceiver);
+        songUpdateReceiverRegistered = false;
         localBroadcastManager.unregisterReceiver(songDislikedReceiver);
+        songDislikeReceiverRegistered = false;
     }
 
     /* ---------------------UPDATE SONG SP------------------------ */
 
+
+    /**
+     * Update a song's latest location and time information, and append it to the history.
+     * @param song song to be updated
+     * @param time latest time
+     * @param loc latest location
+     */
     public void updateLocTime(Song song, ZonedDateTime time, LatLng loc) {
         SharedPreferences sp = getSharedPreferences("metadata", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
         String json = sp.getString(song.getId(),null);
-        Log.d("meta old", json);
+        Log.d(TAG, "Meta old: " + json);
         song.updateLocTime(time,loc);
         String newJson = song.jsonParse();
 
         editor.putString(song.getId(), newJson);
         editor.apply();
-        Log.d("meta new", newJson);
+        Log.d(TAG, "Meta new: " + newJson);
     }
 
     /* ---------------------BINDER STUFF------------------------ */
 
 
-
+    // the service is now a started service so these remain unused.
     @Override
     public IBinder onBind(Intent intent) {
         return iBinder;

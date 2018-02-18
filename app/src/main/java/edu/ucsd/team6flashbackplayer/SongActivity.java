@@ -11,6 +11,14 @@ import android.widget.ListView;
 
 import java.util.List;
 
+
+/**
+ * class SongActivity.
+ * This class corresponds to the song page in the application.
+ * Consist of a list view of song entries.
+ * It can also be invoked from an album activity, in which it will
+ * display a list of songs in this album
+ */
 public class SongActivity extends MusicPlayerNavigateActivity {
 
     protected final String TAG = "SongActivity";
@@ -18,6 +26,11 @@ public class SongActivity extends MusicPlayerNavigateActivity {
     private ListView songView;
     private SongEntryAdapter songAdapter;
 
+    /**
+     * On create will know if it's displaying a list of all songs or an album's songs from
+     * the intent passed in.
+     * @param savedInstanceState unused
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -32,6 +45,7 @@ public class SongActivity extends MusicPlayerNavigateActivity {
             }
         });
 
+        // check if it's from an album or should display the global list.
         String albumName;
         Bundle extras = getIntent().getExtras();
         if(extras == null) {
@@ -46,8 +60,8 @@ public class SongActivity extends MusicPlayerNavigateActivity {
             setTitle(albumName);
         }
 
+        // setup the UI
         songView = findViewById(R.id.song_list);
-
         songAdapter = new SongEntryAdapter(this, songList);
 
         songView.setAdapter(songAdapter);
@@ -74,18 +88,14 @@ public class SongActivity extends MusicPlayerNavigateActivity {
 
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        songAdapter.notifyDataSetChanged();
-    }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
 
+    /**
+     * Play a song. Called when user select a song on the page.
+     * @param song song to be played.
+     */
     private void play(Song song) {
+        Log.d(TAG, "Start playing song: " + song.getTitle());
         PositionPlayList ppl = new PositionPlayList(song);
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
         playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, ppl.getPositionList());
@@ -93,6 +103,9 @@ public class SongActivity extends MusicPlayerNavigateActivity {
         startService(playerIntent);
     }
 
+    /**
+     * Refresh the like/dislike status on resume
+     */
     @Override
     public void onResume() {
         // this refreshes the like/dislike status.

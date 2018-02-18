@@ -6,9 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -32,26 +29,49 @@ public class TextEntryAdapter<Item> extends BaseAdapter {
         context = c;
     }
 
+    /**
+     * Get the number of entries in the list
+     * @return size of the list
+     */
     @Override
     public int getCount() {
         return items.size();
     }
 
+    /**
+     * Get the item at position
+     * @param position position of the item to be acquired
+     * @return item at position @position, type Item
+     */
     @Override
     public Object getItem(int position) {
         return items.get(position);
     }
 
+    /**
+     * Unused.
+     * @param position
+     * @return
+     */
     @Override
     public long getItemId(int position) {
-        // TODO Auto-generated method stub
         return 0;
     }
 
+    /**
+     * A view holder class the hold the views of an entry.
+     */
     static class ViewHolder {
         TextView name;
     }
 
+    /**
+     * Get the view of a row. If not initialized, initizlize the UI
+     * @param position position of the row to be get
+     * @param convertView
+     * @param parent
+     * @return the row.
+     */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         //map to albums to layout

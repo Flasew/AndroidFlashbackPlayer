@@ -10,24 +10,31 @@ import android.content.res.AssetFileDescriptor;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * class MainActivity
+ * This class corresponds to the main page of the activity. It serves as the entry point
+ * of the entire application. Responsible for loading the songs, retrieving location and
+ * time histories, and any permission issue.
+ */
 public class MainActivity extends MusicPlayerNavigateActivity {
 
-    private static final String TAG = "MainActivity";
-    private static final int FBPLAYER_PERMISSIONS_REQUEST_LOCATION = 999;
+    private static final String TAG = "MainActivity";       // debug tag
+    private static final int FBPLAYER_PERMISSIONS_REQUEST_LOCATION = 999;  // location request code
 
+    /**
+     * On create of the main activity is called on application launch. This function will handle
+     * load songs and ask for permission of location.
+     * @param savedInstanceState savedInstanceState
+     */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,10 +98,14 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         }
     }
 
+    /**
+     * Request the location permission if it's not granted.
+     */
     public void requestLocationPermission() {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Location permission not granted, acquiring...");
 
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
@@ -151,16 +162,28 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         }
     }
 
+    /**
+     * Launch the song list page, when the song button is clicked.
+     */
     public void startSongActivity() {
         Intent intent = new Intent(this, SongActivity.class);
         startActivity(intent);
     }
 
+    /**
+     * Launch the Album list page, when the song button is clicked.
+     */
     public void startAlbumActivity() {
         Intent intent = new Intent(this, AlbumActivity.class);
         startActivity(intent);
     }
 
+    /**
+     * Recursively get a list of .mp3 files' paths stored in the assets folder.
+     * @param path root folder of the file listing
+     * @param result list used to store the file paths
+     * @return true if @path is a directory, false otherwise (used for recursion)
+     */
     private boolean listAssetFiles(String path, List<String> result) {
         Log.d(TAG, "In List assets\n");
         String [] list;
@@ -188,6 +211,11 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         return true;
     }
 
+    /**
+     * Get the list of song from the list of song paths by uusing MediaMetadataRetriever
+     * @param songPaths list of path to all the songs
+     * @return List of song
+     */
     private List<Song> getSongList(List<String> songPaths) {
 
         List<Song> songList = new ArrayList<>();
@@ -235,25 +263,15 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         return songList;
     }
 
-
+    /**
+     * Called when main activity exits.
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();
         // Commented out to keep functionality of music playing when exiting with back buttons
-        //stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
+        // stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
     }
 
-//    public boolean requestPermission() {
-//
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//                != PackageManager.PERMISSION_GRANTED &&
-//                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
-//                        PackageManager.PERMISSION_GRANTED) {
-//
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
-//            return true;
-//        }
-//        return false;
-//    }
 
 }

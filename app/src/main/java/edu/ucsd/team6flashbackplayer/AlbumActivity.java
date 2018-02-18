@@ -2,22 +2,27 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.constraint.ConstraintLayout;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.List;
 
+/**
+ * class Album activity.
+ * This class corresponds to the album page in the application.
+ * Consist of a list view of album entries.
+ */
 public class AlbumActivity extends MusicPlayerNavigateActivity {
 
-    protected final String TAG = "AlbumActivity";
+    protected final String TAG = "AlbumActivity";   // debug tag
 
+    /**
+     * On create of album activity. Initialize the UI and listeners of the album activity.
+     * @param savedInstanceState savedInstanceState from previous runs
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +43,7 @@ public class AlbumActivity extends MusicPlayerNavigateActivity {
 
         final ListView albumView = findViewById(R.id.album_list);
 
+        // populate the listview
         TextEntryAdapter<Album> albumAdt = new TextEntryAdapter<Album>(this, AlbumList.getAlbums() );
         albumView.setAdapter(albumAdt);
         albumView.setItemsCanFocus(false);
@@ -64,8 +70,12 @@ public class AlbumActivity extends MusicPlayerNavigateActivity {
         });
     }
 
+    /**
+     * Play an album by construct a PositionPlayList for this album and pass it to music service.
+     * @param album album to be played
+     */
     private void play(Album album) {
-
+        Log.d(TAG, "Start playing album: " + album.getName());
         PositionPlayList ppl = new PositionPlayList(album);
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
         playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, ppl.getPositionList());
@@ -74,7 +84,13 @@ public class AlbumActivity extends MusicPlayerNavigateActivity {
 
     }
 
+    /**
+     * Start a song activity when select an album entry. The song activity should have
+     * all the songs in this album and nothing else.
+     * @param album album selected.
+     */
     private void startSongActivity(Album album) {
+        Log.d(TAG, "Start SongActivity of album: " + album.getName());
         Intent intent = new Intent(this, SongActivity.class);
         intent.putExtra("albumName", album.getName());
         startActivity(intent);

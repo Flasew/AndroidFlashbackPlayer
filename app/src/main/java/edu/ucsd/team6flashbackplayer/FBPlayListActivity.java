@@ -1,30 +1,27 @@
 package edu.ucsd.team6flashbackplayer;
 
-import android.app.ListActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Flashback play list.
+ * Class FBPlaylistActivity
+ * This class correspond to the the Flashback mode play list page, which is
+ * avaliable when the user is in the flashback mode.
  */
 public class FBPlayListActivity extends AppCompatActivity {
 
-    public static final String FB_POS_LIST = "FBPosList";
+    public static final String FB_POS_LIST = "FBPosList";   // debug tag
     private TextEntryAdapter<Song> songAdapter;
     private ListView listView;
 
     /**
      * Set the list view.
      * Intent passed in should be the position list (array list)
-     *
-     * TODO: Register flashback list change listener
+     * There's really not too much worth logging here...
      * @param savedInstanceState saved instance state on last entry
      */
     @Override

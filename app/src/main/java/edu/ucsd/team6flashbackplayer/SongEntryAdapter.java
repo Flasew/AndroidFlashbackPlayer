@@ -15,42 +15,70 @@ import java.util.List;
  * Created by frankwang on 2/8/18.
  */
 
+/**
+ * class SongEntryAdapter
+ * Adapter class for en entry of a song in the song page. Consist a song name and two buttons
+ * of like and dislike.
+ */
 public class SongEntryAdapter extends BaseAdapter {
 
-    private List<Song> songList;
-    private LayoutInflater songInf;
     private static final String TAG = "SongEntryAdapter";
-    // Context for like/dislike buttons
-    private Context context;
 
-    public SongEntryAdapter(Context c, List<Song> theSongs){
-        songList=theSongs;
-        songInf=LayoutInflater.from(c);
+    private List<Song> songList;        // list of songs of the song lage
+    private LayoutInflater songInf;     // layout inflater
+    private Context context; // Context for like/dislike buttons
+
+    public SongEntryAdapter(Context c, List<Song> theSongs) {
+        songList = theSongs;
+        songInf = LayoutInflater.from(c);
         context = c;
         PreferenceButtons.setLocalBroadcastManager(c);
     }
 
+    /**
+     * Get the number of entries of this page
+     * @return number of entries
+     */
     @Override
     public int getCount() {
         return songList.size();
     }
 
+    /**
+     * Get a song at the location position
+     * @param position position of the entry
+     * @return a song object corresponding to the location.
+     */
     @Override
     public Object getItem(int position) {
         return songList.get(position);
     }
 
+    /**
+     * Unused
+     * @param position
+     * @return
+     */
     @Override
     public long getItemId(int position) {
-        // TODO Auto-generated method stub
         return 0;
     }
 
+    /**
+     * ViewHolder of a row of elements. Consist a Textview of song title and a
+     * pref. button group.
+     */
     static class ViewHolder {
         TextView title;
         PreferenceButtons buttons;
     }
-
+    /**
+     * Get the view of a row. If not initialized, initizlize the UI
+     * @param position position of the row to be get
+     * @param convertView
+     * @param parent
+     * @return the row.
+     */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         //map to song layout
@@ -63,7 +91,7 @@ public class SongEntryAdapter extends BaseAdapter {
         View row = convertView;
         Song currSong = songList.get(position);
 
-        Log.d(TAG, "Song status: Title: " + currSong.getTitle() + ",Like = " + currSong.isLiked() + ", dislike = " + currSong.isDisliked());
+        Log.d(TAG, "Song status: Title: " + currSong.getTitle() + ", like = " + currSong.isLiked() + ", dislike = " + currSong.isDisliked());
 
         //If the row is null, it means that we aren't recycling anything - so we have
         //to inflate the layout ourselves.

@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 /**
  * Class that include the common feature of the navigation pages,
- * including an FB-Button, a "currently playing" status bar.
+ * including a "currently playing" status bar.
  */
 public abstract class MusicPlayerNavigateActivity extends MusicPlayerActivity {
     protected ConstraintLayout currSong;  // current song status bar
@@ -42,7 +42,7 @@ public abstract class MusicPlayerNavigateActivity extends MusicPlayerActivity {
      * call back function when all songs finish playing.
      */
     @Override
-    protected void onSongFinish() {
+    protected void onAllSongsFinish() {
         resetSongStatusBar();
     }
 
@@ -56,7 +56,9 @@ public abstract class MusicPlayerNavigateActivity extends MusicPlayerActivity {
         currPlayingArtist.setText(NO_INFO);
     }
 
-    // start the current song activity page. Will not be called CurrSongActivity itself
+    /**
+     * start the current song activity page when the user tap on the song status bar.
+     */
     protected void startCurrSongActivity() {
         Intent intent = new Intent(this, CurrSongActivity.class);
         startActivity(intent);

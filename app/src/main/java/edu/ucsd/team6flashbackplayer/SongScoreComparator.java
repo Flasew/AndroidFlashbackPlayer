@@ -12,6 +12,10 @@ import static java.time.temporal.ChronoUnit.NANOS;
  * Created by HRZhang on 2/14/2018.(I know, I have no life...)
  */
 
+/**
+ * class SongScoreComparator
+ * A comparator class used for creating FB play list.
+ */
 public class SongScoreComparator implements Comparator<Integer> {
 
     private LatLng currLoc;
