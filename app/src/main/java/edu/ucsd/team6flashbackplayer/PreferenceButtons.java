@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
@@ -25,6 +26,13 @@ public class PreferenceButtons {
     private Song song;              // song corresponding to this  button group
     private ImageButton likeButton; // the like button
     private ImageButton dislikeButton;  // this dislike button
+
+    // drawables for button icon
+    private static Drawable heartRed;
+    private static Drawable heartGrey;
+    private static Drawable brokenHeartRed;
+    private static Drawable brokenHeartGrey;
+
     private static LocalBroadcastManager localBroadcastManager;  // broadcast for like and dislike
 
     // gets the context of the activities where the buttons are located to listen for values
@@ -40,6 +48,8 @@ public class PreferenceButtons {
         dislikeButton = dislike;
         buttonContext = context;
 
+        acquireDrawables();
+
         Log.d(TAG, "Buttons constructed for " + song.getTitle());
     }
 
@@ -47,8 +57,9 @@ public class PreferenceButtons {
     public PreferenceButtons(ImageButton like, ImageButton dislike, Context context) {
         likeButton = like;
         dislikeButton = dislike;
-        Log.d(TAG, "Buttons constructed, no song.");
         buttonContext = context;
+        acquireDrawables();
+        Log.d(TAG, "Buttons constructed, no song.");
 
     }
 
@@ -60,13 +71,13 @@ public class PreferenceButtons {
     // redraw the button UIs
     public void redrawButtons() {
         if (song == null) {
-            likeButton.setBackgroundColor(Color.GRAY);
-            dislikeButton.setBackgroundColor(Color.GRAY);
+            likeButton.setBackground(heartGrey);
+            dislikeButton.setBackground(brokenHeartGrey);
             Log.d(TAG, "Button UI Reset");
         }
         else {
-            likeButton.setBackgroundColor(song.isLiked()? Color.GREEN : Color.GRAY);
-            dislikeButton.setBackgroundColor(song.isDisliked()? Color.RED : Color.GRAY);
+            likeButton.setBackground(song.isLiked()? heartRed : heartGrey);
+            dislikeButton.setBackground(song.isDisliked()? brokenHeartRed : brokenHeartGrey);
             Log.d(TAG, "Button UI set on song " + song.getTitle());
             Log.d(TAG, "Song status: Like = " + song.isLiked() + ", dislike = " + song.isDisliked());
         }
@@ -137,6 +148,20 @@ public class PreferenceButtons {
         song.refreshJson();
         editor.putString(song.getId(),song.getJsonString());
         editor.apply();
+    }
+
+    /**
+     * Load the drawable resources from current context.
+     */
+    private void acquireDrawables() {
+        if (heartGrey == null)
+            heartGrey = buttonContext.getDrawable(R.drawable.ic_heart_grey);
+        if (heartRed == null)
+            heartRed = buttonContext.getDrawable(R.drawable.ic_heart_red);
+        if (brokenHeartGrey == null)
+            brokenHeartGrey = buttonContext.getDrawable(R.drawable.ic_broken_heart_grey);
+        if (brokenHeartRed == null)
+            brokenHeartRed = buttonContext.getDrawable(R.drawable.ic_broken_heart_red);
     }
 
 }

@@ -1,13 +1,16 @@
 package edu.ucsd.team6flashbackplayer;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.location.Location;
@@ -24,13 +27,9 @@ import android.util.Log;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.media.MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO;
 
 public class MusicPlayerService extends Service implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
@@ -68,6 +67,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private LatLng songLatLngCache;             // cache the location of a song on start playing
     private ZonedDateTime songDateTimeCache;    // cache the time of a song on start playing
 
+    // notification
+    private NotificationManager notificationManager;
+    private static final String NOTIFICATION_CHANNEL_ID = "musicPlayerChannel";
+    private static final String NOTIFICATION_CHANNEL_NAME = "MusicPlayer";
+    private static final int FOREGROUND_ID = 1;
+
     public MusicPlayerService() {
 
     }
@@ -77,13 +82,41 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+
+        // put the activity in foreground so it won't die
+        Intent notificationIntent = new Intent(this, MusicPlayerActivity.class);
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        if (notificationManager == null)
+            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID,
+                    NOTIFICATION_CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_DEFAULT);
+            channel.setDescription("Flashback Music Player");
+            channel.setSound(null, null);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+
+        Notification notification =
+                new Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
+                        .setContentTitle(getText(R.string.notification_title))
+                        .setContentText(getText(R.string.notification_message))
+                        .setSmallIcon(R.drawable.ic_player_icon)
+                        .setContentIntent(pendingIntent)
+
+                        .build();
+
+        startForeground(FOREGROUND_ID, notification);
+
         if (localBroadcastManager == null)
             localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
         if (locationManager == null)
             locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-
-        counter = 0;
 
         if (!locationListenerRegistered) {
             // If permission is granted, use the location.
@@ -112,17 +145,19 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             if (inList != null) {
                 initMediaPlayer();
                 if (!keepCurrSong || !mediaPlayer.isPlaying()) {
+                    counter = 0;
                     positionList = inList;
                     if (inList.size() == 0) {
                         stopMedia();
                         broadcastSongChange();
-                        stopSelf();
+                        stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
                     }
                     else
                         prepSongAsync();
                 }
                 else {
                     inList.add(0, positionList.get(counter));
+                    counter = 0;
                     positionList = inList;
                 }
             }
@@ -131,7 +166,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         } catch (NullPointerException | IndexOutOfBoundsException e) {
             stopMedia();
             broadcastSongChange();
-            stopSelf();
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
         }
 
 
@@ -157,7 +192,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         if (localBroadcastManager != null) {
             unregisterBroadcastReceivers();
         }
-
+        
         super.onDestroy();
     }
 
@@ -224,7 +259,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         //Invoked when playback of a media source has completed
 
         if (positionList.size() == 0) {
-            stopSelf();
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
             broadcastSongChange();
         }
         // The Song whose info we need to update
@@ -298,10 +333,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
         } catch (IOException e) {
             e.printStackTrace();
-            stopSelf();
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
         } catch (ArrayIndexOutOfBoundsException e) {
             broadcastSongChange();
-            stopSelf();
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
         }
         mediaPlayer.prepareAsync();
     }
@@ -325,7 +360,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             prepSongAsync();
         }
         else {
-            stopSelf();
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
             broadcastSongChange();
         }
     }
