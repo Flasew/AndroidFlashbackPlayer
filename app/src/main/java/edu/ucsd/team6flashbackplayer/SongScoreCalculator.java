@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import java.time.ZonedDateTime;
+import java.util.logging.Logger;
 
 /**
  * class SongScoreCalculator
@@ -37,6 +38,9 @@ public class SongScoreCalculator {
                 // calculate the distance
                 Location.distanceBetween(loc.latitude, loc.longitude, l.latitude, l.longitude, result);
                 // convert to feet
+                System.out.println("Location difference between (" + loc.latitude + ", " +
+                        loc.longitude + ") and (" + l.latitude + ", " + l.longitude +
+                        ") is " + result[0] * METER_TO_FEET);
                 if (result[0] * METER_TO_FEET <= range) {
                     score = 1;
                     break;
