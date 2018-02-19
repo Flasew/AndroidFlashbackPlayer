@@ -56,7 +56,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     private List<Song> songs = SongList.getSongs();     // global song list
     private int counter = 0;                        // current song position counter
-    private static List<Integer> positionList;      // list of songs to be played
+    private List<Integer> positionList;             // list of songs to be played
 
     private MediaPlayer mediaPlayer;                // media player that plays the song
 
@@ -132,7 +132,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             notificationManager.createNotificationChannel(channel);
         }
 
-        // noticication channel is needed for a foreground service
+        // notification channel is needed for a foreground service
         Notification notification =
                 new Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
                         .setContentTitle(getText(R.string.notification_title))
@@ -167,6 +167,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
 
         registerBroadcastReceivers();
+        initMediaPlayer();
 
         // get the playlist. Depending on the current player status and the intent specifying update or not,
         // The player will either cut the current playlist immediately or wait for the current song to
@@ -177,7 +178,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             boolean keepCurrSong = extras.getBoolean(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
 
             if (inList != null) {
-                initMediaPlayer();
+                Log.d(TAG, "Incoming list is not null, playing from list");
+
                 if (!keepCurrSong || !mediaPlayer.isPlaying()) {
 
                     counter = 0;
@@ -188,7 +190,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                         stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
                     }
                     else
-                        prepSongAsync();
+                        prepSongAsync(true);
                 }
                 else {
                     inList.add(0, positionList.get(counter));
@@ -196,12 +198,24 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                     positionList = inList;
                 }
             }
+            else {
+
+                int pos = extras.getInt(SongActivity.SINGLE_SONG_INTENT, -1);
+
+                Log.d(TAG, "Incoming list is null, playing a single song, position " + pos);
+
+                positionList = new ArrayList<>();
+                positionList.add(pos);
+                counter = 0;
+                prepSongAsync(false);
+            }
         }
         // Invalid intent: just stop and exit.
         catch (NullPointerException | IndexOutOfBoundsException e) {
+            Log.d(TAG, "Invalid incoming playlist, exiting...");
             stopMedia();
             broadcastSongChange();
-            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
+            stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
         }
 
 
@@ -398,16 +412,19 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
      * prepare the mediaPlayer to play song at current counter position
      * ignore the songs that are disliked.
      */
-    private void prepSongAsync() {
+    private void prepSongAsync(boolean skipDislike) {
         mediaPlayer.reset();
-
+        Log.d(TAG, "Entering prepSongAsync...");
         try {
             // Set the data source to the mediaFile location
             Song currSong = songs.get(positionList.get(counter));
+            Log.d(TAG, "Initial song of preparing: " + currSong.getTitle());
 
-            while (currSong.isDisliked()) {
-                counter += 1;
-                currSong = songs.get(positionList.get(counter));
+            if (skipDislike) {
+                while (currSong.isDisliked()) {
+                    counter += 1;
+                    currSong = songs.get(positionList.get(counter));
+                }
             }
 
             AssetFileDescriptor afd = getAssets().openFd(currSong.getId());
@@ -419,7 +436,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         } catch (IOException e) {
             e.printStackTrace();
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
-        } catch (ArrayIndexOutOfBoundsException e) {
+        } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
+
+            Log.d(TAG, "PrepSongAsync got invalid list, exiting...");
             broadcastSongChange();
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
         }
@@ -446,7 +465,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         counter += 1;
 
         if (counter < positionList.size()) {
-            prepSongAsync();
+            prepSongAsync(true);
         }
         else {
             broadcastSongChange();
