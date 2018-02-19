@@ -1,6 +1,5 @@
 package edu.ucsd.team6flashbackplayer;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,15 +14,15 @@ import java.util.List;
 public class SongList {
 
     // global song list
-    private static final List<Song> songs = new ArrayList<>();
+    private static List<Song> songs;
 
     /**
      * Constructor taking a list of songs to populate the song list. Can only be done once.
      * @param songs
      */
-    public SongList(List<Song> songs) {
-        if (SongList.songs.size() == 0)
-            SongList.songs.addAll(songs);
+    public static void initSongList(List<Song> songs) {
+        if (SongList.songs == null)
+            SongList.songs = songs;
     }
 
     /**

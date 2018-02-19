@@ -49,8 +49,8 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         List<String> songPaths = new ArrayList<>();
         listAssetFiles("", songPaths);
 
-        new SongList(getSongList(songPaths));
-        new AlbumList(SongList.getSongs());
+        SongList.initSongList(getSongList(songPaths));
+        AlbumList.initAlbumList(SongList.getSongs());
 
         currSong = findViewById(R.id.current_song);
         currSong.setOnClickListener(new View.OnClickListener() {
@@ -213,6 +213,9 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
     /**
      * Get the list of song from the list of song paths by uusing MediaMetadataRetriever
+     * For songs already have a history (i.e. sp found the history), populate such history
+     * using the json parser.
+     * Otherwise create a new entry in SP for this song.
      * @param songPaths list of path to all the songs
      * @return List of song
      */
@@ -241,7 +244,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                 String jsonInfo = sharedPref.getString(toAdd.getId(), null);
                 // Check if it exists or not - if not then we need to create it in the SharedPreferences
                 if (jsonInfo == null) {
-                    Log.d("SharedPref Exists","Null");
+                    Log.d(TAG, "SharedPref Exists: " + "Null");
                     // Add the initial metadata of the song to the shared preferences for metadata
                     SharedPreferences.Editor editor = sharedPref.edit();
                     // The info is keyed on the ID of the song(path name) and the json string is created on construction
@@ -250,8 +253,8 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                 }
                 // Else get the data and save it to the Song's fields
                 else {
-                    Log.d("SharedPref Exists", "Not Null");
-                    toAdd.jsonPopulate(jsonInfo);
+                    Log.d(TAG,"SharedPref Exists: " + "Not Null");
+                    SongJsonParser.jsonPopulate(toAdd, jsonInfo);
                 }
 
             }

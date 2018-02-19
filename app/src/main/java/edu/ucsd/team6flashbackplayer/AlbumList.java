@@ -24,14 +24,15 @@ public class AlbumList {
     private static final String TAG = "AlbumList";
 
     // global singleton list (hashmap) of albums
-    private static final HashMap<String, Album> albums = new HashMap<>();
+    private static HashMap<String, Album> albums;
 
     /**
-     * Constructor. Takes a global list of song and generate an album list.
+     * Takes a global list of song and generate an album list.
      * @param songs list of all the songs available
      */
-    public AlbumList(List<Song> songs) {
+    public static void initAlbumList(List<Song> songs) {
         Log.d(TAG, "Creating global album list...");
+        albums = new HashMap<>();
         loadFromSongList(songs);
     }
 
@@ -57,7 +58,7 @@ public class AlbumList {
      * Load the global album list from the global song list.
      * @param songs the list of all the songs.
      */
-    private void loadFromSongList(List<Song> songs) {
+    private static void loadFromSongList(List<Song> songs) {
         for (Song s: songs) {
             String albumName = s.getAlbum();
             Album album = albums.get(albumName);

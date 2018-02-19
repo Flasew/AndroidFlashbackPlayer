@@ -235,6 +235,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         super.onDestroy();
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent){
+        stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
+    }
+
     /* ---------------------OVERRIDE LOCATIONLISTENER------------------------ */
     /**
      * Update the current location.
@@ -543,8 +548,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         SharedPreferences.Editor editor = sp.edit();
         String json = sp.getString(song.getId(),null);
         Log.d(TAG, "Meta old: " + json);
-        song.updateLocTime(time,loc);
-        String newJson = song.jsonParse();
+        SongJsonParser.updateSongLocTime(song, time,loc);
+        String newJson = song.getJsonString();
 
         editor.putString(song.getId(), newJson);
         editor.apply();
