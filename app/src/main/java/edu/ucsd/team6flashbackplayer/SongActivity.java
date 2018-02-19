@@ -22,6 +22,8 @@ import java.util.List;
 public class SongActivity extends MusicPlayerNavigateActivity {
 
     protected final String TAG = "SongActivity";
+
+    static final String SINGLE_SONG_INTENT = "SingleSongIntent";
     private List<Song> songList;
     private ListView songView;
     private SongEntryAdapter songAdapter;
@@ -92,13 +94,17 @@ public class SongActivity extends MusicPlayerNavigateActivity {
 
     /**
      * Play a song. Called when user select a song on the page.
+     * This method will pass the song as a single integer, so the MPService can know it's a
+     * single song and will still play it even if it's disliked.
      * @param song song to be played.
      */
     private void play(Song song) {
         Log.d(TAG, "Start playing song: " + song.getTitle());
         PositionPlayList ppl = new PositionPlayList(song);
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
-        playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, ppl.getPositionList());
+        playerIntent.putExtra(SINGLE_SONG_INTENT, ppl.getPositionList().get(0));
+
+        playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, null);
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
         startService(playerIntent);
     }
