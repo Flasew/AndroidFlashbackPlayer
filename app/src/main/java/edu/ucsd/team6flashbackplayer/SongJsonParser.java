@@ -177,7 +177,7 @@ public class SongJsonParser {
      * like button of the Song was clicked (doesn't necessarily mean always will be liked)
      * @param s song whose json string is to be set.
      */
-    private static void refreshJson(Song s) {
+    public static void refreshJson(Song s) {
         s.setJsonString(jsonParse(s));
     }
 }
