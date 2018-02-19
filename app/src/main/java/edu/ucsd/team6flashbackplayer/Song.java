@@ -1,18 +1,21 @@
 package edu.ucsd.team6flashbackplayer;
 
 import com.google.android.gms.maps.model.LatLng;
-import java.io.Serializable;
-import java.time.DayOfWeek;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashSet;
+// JSON parsing - for SharedPreferences
+import com.eclipsesource.json.*;
 
 /**
  * Created by frankwang on 2/6/18.
+ * JSON edits by alice on 2/14/18
  */
 
-public final class Song implements Serializable {
-    private final String ID;      // URI seems to be taken...
+public final class Song {
+
+    private static final String NO_INFO = "---";     // noinfo string
+
+    private final String ID;
     private final String TITLE;
     private final String ARTIST;
     private final String ALBUM;
@@ -20,11 +23,11 @@ public final class Song implements Serializable {
     // latest information, about last played. Put here in case we use
     // unordered data structures and would be unable to track the information.
     // ZonedDateTime stores everything we need about time
-    private LatLng latestLoc;  // perhaps string of longitude & latitude?
+    private LatLng latestLoc;  // lat and long in doubles
     private ZonedDateTime latestTime;
 
     // all history of location of longitude and latitude
-    private Collection<LatLng> locHist;
+    private HashSet<LatLng> locHist;
     // day of week and time of day, by their nature, could be implemented
     // as boolean arrays to achieve the fastest speed.
     private boolean[] timeHist;
@@ -34,7 +37,16 @@ public final class Song implements Serializable {
     private boolean liked;
     private boolean disliked;
 
-    // Ctor
+    // json sting of this song.
+    private String jsonString;
+
+    /**
+     * Constructor. Takes song's relevant information and make a new song object
+     * @param id id of the song. for now it's the path.
+     * @param title title of the song
+     * @param artist artist created the song
+     * @param album album the song belongs to
+     */
     public Song(String id, String title, String artist, String album) {
         ID = id;
         TITLE = title;
@@ -44,8 +56,7 @@ public final class Song implements Serializable {
         latestLoc = null;
         latestTime = null;
 
-        // let's say array list first...
-        locHist = new ArrayList<LatLng>();
+        locHist = new HashSet<LatLng>();
 
         timeHist = new boolean[3];
         dayHist  = new boolean[8];
@@ -58,36 +69,42 @@ public final class Song implements Serializable {
 
         liked = false;
         disliked = false;
+
+        // Parse the default fields into JSON on creation
+        jsonString = SongJsonParser.jsonParse(this);
     }
 
     // getters of const fields
     public String getId()      { return ID; }
-    public String getTitle()   { return TITLE; }
-    public String getAlbum()   { return ALBUM; }
-    public String getArtist()  { return ARTIST; }
+    public String getTitle()   { return TITLE != null ? TITLE : NO_INFO; }
+    public String getAlbum()   { return ALBUM != null ? ALBUM : NO_INFO; }
+    public String getArtist()  { return ARTIST != null ? ARTIST : NO_INFO; }
 
     // getter & setter methods of location and time
     public LatLng getLatestLoc()              { return latestLoc; }
     public ZonedDateTime getLatestTime()      { return latestTime; }
 
-    // following setters set the latest fields and add them to the history collection
+    // following setters set the latest fields and add them to the history set
     // Location should be made immutable.
     public void setLatestLoc(LatLng l) {
         latestLoc = l;
-        locHist.add(l);
+    }
+    public void setLocHist(HashSet<LatLng> l) {
+        locHist = l;
     }
 
     public void setLatestTime(ZonedDateTime t) {
         latestTime = t;
-        timeHist[timeOfDay(t.getHour())] = true;
-        dayHist[t.getDayOfWeek().getValue()] = true;
     }
-    
+
     public boolean[] getTimeHist()         { return timeHist; }
+    public void setTimeHist(boolean[] history) { timeHist = history; }
     public boolean[] getDayHist()          { return dayHist; }
-    public Collection<LatLng> getLocHist() { return locHist; }
-    // like and dislike
-    // NEW: like and dislike detailed implementation moved to songprefernce class
+    public void setDayHist(boolean[] history) { dayHist = history; }
+
+    public HashSet<LatLng> getLocHist() { return locHist; }
+
+    // NEW: like and dislike detailed implementation moved to SongPreference class
     public void setLike(boolean l)     { liked = l; }
     public void setDislike(boolean l)  { disliked = l; }
 
@@ -95,13 +112,37 @@ public final class Song implements Serializable {
     public boolean isLiked()        {return liked; }
     public boolean isDisliked()     {return disliked; }
 
-    private static int timeOfDay(int h) {
-        if (5 <= h && h < 11)
-            return -1;
-        if (11 <= h && h < 17)
+    // Getters and setters for the Json string
+    public void setJsonString(String json) {
+        jsonString = json;
+    }
+    public String getJsonString() {return jsonString; }
+
+
+    /** To determine what time of day a song was listened to split into
+     * Three sections of the day (morning, afternoon, night)
+     * @int hour
+     * @return int representing the enum of the time of day
+     * 0 for morning, 1 for afternoon, 2 for night
+     */
+    public static int timeOfDay(int h) {
+        // Between 5 AM and 11 AM
+        if (h >= 5 && h < 11)
             return 0;
-        return 1;
+        // Between 11 AM and 5 PM
+        if (h >= 11 && h < 17)
+            return 1;
+        // Else between 5 PM and 5 AM
+        return 2;
     }
 
+    /**
+     * toString will get the title of the song.
+     * @return title of song
+     */
+    @Override
+    public String toString() {
+        return getTitle();
+    }
 
 }
