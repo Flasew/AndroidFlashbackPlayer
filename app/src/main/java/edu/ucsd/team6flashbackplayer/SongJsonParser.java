@@ -163,8 +163,10 @@ public class SongJsonParser {
             s.getDayHist()[time.getDayOfWeek().getValue()] = true;
         }
 
-        s.setLatestLoc(loc);
-        s.getLocHist().add(loc);
+        if (loc != null) {
+            s.getLocHist().add(loc);
+            s.setLatestLoc(loc);
+        }
 
         // Update the jsonString
         refreshJson(s);

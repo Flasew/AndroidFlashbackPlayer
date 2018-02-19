@@ -37,6 +37,10 @@ public class SongScoreCalculator {
                 // calculate the distance
                 Location.distanceBetween(loc.latitude, loc.longitude, l.latitude, l.longitude, result);
                 // convert to feet
+                Log.d(TAG, "Location between (" + loc.latitude + ", " +
+                    loc.longitude + ") and (" + l.latitude + ", " + l.longitude +
+                    " is " +result[0] * METER_TO_FEET + " feet.");
+
                 if (result[0] * METER_TO_FEET <= range) {
                     score = 1;
                     break;
