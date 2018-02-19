@@ -185,7 +185,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
      * @return true if @path is a directory, false otherwise (used for recursion)
      */
     private boolean listAssetFiles(String path, List<String> result) {
-        Log.d(TAG, "In List assets\n");
+        Log.d(TAG, "In List assets");
         String [] list;
         try {
             list = getAssets().list(path);
@@ -193,7 +193,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                 // This is a folder
                 for (String file : list) {
                     String fname = (path.equals("")) ? path + file : path + "/" + file;
-                    Log.d(TAG, fname+"\n");
+                    Log.d(TAG, fname);
 
                     if (!listAssetFiles(fname, result))
                         return false;

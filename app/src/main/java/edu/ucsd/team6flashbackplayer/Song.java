@@ -1,7 +1,6 @@
 package edu.ucsd.team6flashbackplayer;
 
 import com.google.android.gms.maps.model.LatLng;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 // JSON parsing - for SharedPreferences
@@ -15,8 +14,7 @@ import com.eclipsesource.json.*;
 public final class Song {
 
     private static final String NO_INFO = "---";     // noinfo string
-    private static final double NO_LOC = 1000;
-    private static final int NO_TIME = 10000;
+
     private final String ID;
     private final String TITLE;
     private final String ARTIST;
