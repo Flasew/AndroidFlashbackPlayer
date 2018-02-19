@@ -1,6 +1,7 @@
 package edu.ucsd.team6flashbackplayer;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +19,9 @@ import java.util.List;
  * @param <Item> Item type for returning in getItem method.
  */
 public class TextEntryAdapter<Item> extends BaseAdapter {
+
+    private static final String TAG = "TextEntryAdapter";
+
     private List<Item> items;
     private LayoutInflater layoutInflater;
     private Context context;
@@ -78,6 +82,9 @@ public class TextEntryAdapter<Item> extends BaseAdapter {
 
         View row = convertView;
         final Item currItem = items.get(position);
+
+        Log.d(TAG, "Position: " + position);
+        Log.d(TAG, "Text: " + currItem.toString());
 
         if(row == null) {
 

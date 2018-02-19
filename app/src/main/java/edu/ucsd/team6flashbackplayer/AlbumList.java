@@ -68,8 +68,11 @@ public class AlbumList {
                 album = new Album(albumName);
                 album.addSong(s);
                 albums.put(albumName, album);
+                Log.d(TAG, "Added album " + album.getName());
+                Log.d(TAG, "Added song " + s.getTitle() + " to album " + album.getName());
             }
             else {
+                Log.d(TAG, "Added song " + s.getTitle() + " to album " + album.getName());
                 album.addSong(s);
             }
         }

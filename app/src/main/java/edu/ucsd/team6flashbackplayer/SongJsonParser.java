@@ -19,7 +19,6 @@ import java.util.HashSet;
  */
 public class SongJsonParser {
 
-    private static final String NO_INFO = "---";     // noinfo string
     private static final double NO_LOC = 1000;
     private static final int NO_TIME = 10000;
 

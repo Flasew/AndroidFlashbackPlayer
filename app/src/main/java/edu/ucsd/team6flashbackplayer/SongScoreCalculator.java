@@ -13,7 +13,7 @@ import java.time.ZonedDateTime;
  */
 public class SongScoreCalculator {
 
-    static final double METER_TO_FEET = 3.2808399;  // convertion
+    static final double METER_TO_FEET = 3.2808399;  // conversion
     private static final String TAG = "SongScoreCalculator";
     private static int range = 1000;    // range of location considered to be scored.
 
@@ -55,7 +55,7 @@ public class SongScoreCalculator {
      */
     private static int todScore(Song s, ZonedDateTime t) {
         int score = 0;
-        if (s.getTimeHist()[timeOfDay(t.getHour())])
+        if (s.getTimeHist()[Song.timeOfDay(t.getHour())])
             score = 1;
         Log.d(TAG, "Song " + s.getTitle() + " gets a time of day score " + score);
         return score;
@@ -86,16 +86,4 @@ public class SongScoreCalculator {
         return locScore(s, l) + todScore(s, t) + dowScore(s, t);
     }
 
-    /**
-     * Returns the time of day period of time t
-     * @param h 24-format hour
-     * @return which period this hour is in.
-     */
-    private static int timeOfDay(int h) {
-        if (5 <= h && h < 11)
-            return 0;
-        if (11 <= h && h < 17)
-            return 1;
-        return 2;
-    }
 }
