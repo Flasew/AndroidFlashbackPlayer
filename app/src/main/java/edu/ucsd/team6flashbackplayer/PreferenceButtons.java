@@ -135,9 +135,11 @@ public class PreferenceButtons {
             @Override
             public void onClick(View v) {
                 SongPreference.dislike(song);
-                Intent intent = new Intent(PREF_DISLIKED_BROADCAST);
-                intent.putExtra(PREF_DISLIKED_BROADCAST, SongList.getSongs().indexOf(song));
-                localBroadcastManager.sendBroadcast(intent);
+                if (song.isDisliked()) {
+                    Intent intent = new Intent(PREF_DISLIKED_BROADCAST);
+                    intent.putExtra(PREF_DISLIKED_BROADCAST, SongList.getSongs().indexOf(song));
+                    localBroadcastManager.sendBroadcast(intent);
+                }
                 // Updated SharedPreferences to account for Dislike change
                 updateSharedPreferences();
 
