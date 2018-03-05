@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -25,6 +26,7 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +41,11 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
     private static final String TAG = "MainActivity";       // debug tag
     private static final int FBPLAYER_PERMISSIONS_REQUEST_LOCATION = 999;  // location request code
+    private static final int FBPLAYER_PERMISSIONS_REQUEST_EXT_STORE = 998; // external storage
+    private static final int FBPLAYER_PERMISSIONS_REQUEST_ALL = 997; // external storage
 
-    static final int RC_SIGN_IN = 9000;
+    // sign in result id code
+    private static final int RC_SIGN_IN = 9000;
 
     // google sign in options used for sign in.
     private GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -64,13 +69,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         setContentView(R.layout.activity_main);
 
         // Check for/request location permission
-        requestLocationPermission();
-
-        List<String> songPaths = new ArrayList<>();
-        listAssetFiles("", songPaths);
-
-        SongList.initSongList(getSongList(songPaths));
-        AlbumList.initAlbumList(SongList.getSongs());
+        requestAllPermission();
 
         currSong = findViewById(R.id.current_song);
         currSong.setOnClickListener(new View.OnClickListener() {
@@ -206,31 +205,35 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
 
     /**
-     * Request the location permission if it's not granted.
+     * Request the permission if it's not granted.
      */
-    public void requestLocationPermission() {
+    public void requestAllPermission() {
         if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION)
+                Manifest.permission.ACCESS_FINE_LOCATION +
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Location permission not granted, acquiring...");
+            Log.d(TAG, "permission not granted, acquiring...");
 
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    Manifest.permission.ACCESS_FINE_LOCATION) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
 
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
                 new AlertDialog.Builder(this)
-                        .setTitle(R.string.loc_req_title)
-                        .setMessage(R.string.loc_req_txt)
+                        .setTitle(R.string.perm_req_title)
+                        .setMessage(R.string.perm_req_txt)
                         .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 //Prompt the user once explanation has been shown
                                 ActivityCompat.requestPermissions(MainActivity.this,
-                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                        FBPLAYER_PERMISSIONS_REQUEST_LOCATION);
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                        FBPLAYER_PERMISSIONS_REQUEST_ALL);
                             }
                         })
                         .create()
@@ -240,11 +243,16 @@ public class MainActivity extends MusicPlayerNavigateActivity {
             } else {
                 // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        FBPLAYER_PERMISSIONS_REQUEST_LOCATION);
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        FBPLAYER_PERMISSIONS_REQUEST_ALL);
             }
         }
+        else {
+            initSongAndAlbumList();
+        }
     }
+
 
     /**
      * Called when permission request is finished. In this case only for logging
@@ -257,13 +265,15 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case FBPLAYER_PERMISSIONS_REQUEST_LOCATION: {
+
+            case FBPLAYER_PERMISSIONS_REQUEST_ALL: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    Log.d(TAG, "Location permission granted");
+                    Log.d(TAG, "All permission granted");
 
+                    initSongAndAlbumList();
                 }
             }
         }
@@ -319,6 +329,49 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     }
 
     /**
+     * Recursively list of MP3 files from a directory (path), and store the path string in the
+     * result argument.
+     * @param path root path
+     * @param result output parameter of the strings
+     * @return true if @path is a directory, false otherwise (used for recursion)
+     */
+    private boolean listMp3Files(String path, List<String> result) {
+
+        Log.d(TAG, "In List File, absolute path " + path);
+        File f = new File(path);
+        Log.d(TAG, "In List File, is dir " + f.isDirectory());
+        Log.d(TAG, "In List File, is file " + f.isFile());
+
+        String [] list;
+
+        try {
+            list = f.list();
+            Log.d(TAG, "In List File, list is null: " + (list == null));
+
+            if (list != null) {
+                // This is a folder
+                for (String file : list) {
+                    String fname = (path + "/" + file);
+                    Log.d(TAG, fname);
+
+                    if (!listMp3Files(file, result))
+                        return false;
+                    else {
+                        if (fname.length() > 3 &&
+                                fname.substring(fname.length() - 3).toLowerCase().equals("mp3")) {
+                            result.add(fname);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Get the list of song from the list of song paths by uusing MediaMetadataRetriever
      * For songs already have a history (i.e. sp found the history), populate such history
      * using the json parser.
@@ -335,9 +388,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             for (String path: songPaths) {
                 Log.d(TAG, "Processing " + path);
-                AssetFileDescriptor descriptor = getAssets().openFd(path);
-                mmr.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
-                descriptor.close();
+                mmr.setDataSource(path);
 
                 Song toAdd = new Song(
                         path,
@@ -367,11 +418,23 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
             }
         }
-        catch (IOException e) {
+        catch (Exception e) {
             e.printStackTrace();
         }
 
         return songList;
+    }
+
+    /**
+     * Populate the global song and album list.
+     */
+    private void initSongAndAlbumList() {
+        List<String> songPaths = new ArrayList<>();
+        listMp3Files(Environment
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString(), songPaths);
+
+        SongList.initSongList(getSongList(songPaths));
+        AlbumList.initAlbumList(SongList.getSongs());
     }
 
     /**

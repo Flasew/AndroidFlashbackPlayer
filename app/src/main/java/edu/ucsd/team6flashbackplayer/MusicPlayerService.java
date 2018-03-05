@@ -427,8 +427,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                 }
             }
 
-            AssetFileDescriptor afd = getAssets().openFd(currSong.getId());
-            mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            mediaPlayer.setDataSource(currSong.getId());
 
             mediaPlayer.prepareAsync();
             Log.d(TAG, "Preparing song " + currSong.getTitle());

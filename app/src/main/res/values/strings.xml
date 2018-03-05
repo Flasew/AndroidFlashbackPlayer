@@ -19,5 +19,9 @@
     <string name="notification_title">Flashback Player</string>
     <string name="notification_message">Flashback Player is running</string>
     <string name="welcome_info">Hello, %1$s!</string>
+    <string name="storage_req_title">Storage access</string>
+    <string name="storage_req_txt">Need permission to ext storage</string>
+    <string name="perm_req_title">Permission Request</string>
+    <string name="perm_req_txt">Permission request</string>
 
 </resources>
