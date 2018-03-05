@@ -11,7 +11,7 @@ import com.eclipsesource.json.*;
  * JSON edits by alice on 2/14/18
  */
 
-public final class Song {
+public class Song {
 
     private static final String NO_INFO = "---";     // noinfo string
 

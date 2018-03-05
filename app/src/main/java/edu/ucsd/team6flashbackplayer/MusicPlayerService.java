@@ -174,7 +174,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         // finish and start the new list.
         try {
             Bundle extras = intent.getExtras();
-            ArrayList<Integer> inList = extras.getIntegerArrayList(PositionPlayList.POS_LIST_INTENT);
+            ArrayList<Integer> inList = extras.getIntegerArrayList(PositionPlayListFactory.POS_LIST_INTENT);
             boolean keepCurrSong = extras.getBoolean(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
 
             if (inList != null) {

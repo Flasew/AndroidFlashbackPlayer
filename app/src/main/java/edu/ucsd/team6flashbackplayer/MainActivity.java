@@ -15,6 +15,16 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +39,16 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
     private static final String TAG = "MainActivity";       // debug tag
     private static final int FBPLAYER_PERMISSIONS_REQUEST_LOCATION = 999;  // location request code
+
+    static final int RC_SIGN_IN = 9000;
+
+    // google sign in options used for sign in.
+    private GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build();
+    // GoogleSignIn relevant information.
+    private GoogleSignInClient mGoogleSignInClient;
+    private GoogleSignInAccount account;
 
     /**
      * On create of the main activity is called on application launch. This function will handle
@@ -78,6 +98,15 @@ public class MainActivity extends MusicPlayerNavigateActivity {
             }
         });
 
+        // google sign in.
+        // Build a GoogleSignInClient with the options specified by gso.
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        // Check for existing Google Sign In account, if the user is already signed in
+        // the GoogleSignInAccount will be non-null.
+        account = GoogleSignIn.getLastSignedInAccount(this);
+
+        updateUI(account);
 
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
@@ -97,6 +126,84 @@ public class MainActivity extends MusicPlayerNavigateActivity {
             startCurrSongActivity();
         }
     }
+
+    /**
+     * Google signin
+     */
+    private void signIn() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    /**
+     * Handle activity's result, for google sign in result.
+     * @param requestCode result request code, tied to activity
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
+        }
+    }
+
+    /**
+     * handle google sign in result
+     * @param completedTask
+     */
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+
+            // Signed in successfully, show authenticated UI.
+            updateUI(account);
+        } catch (ApiException e) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
+            updateUI(null);
+        }
+    }
+
+    /**
+     * Update the UI of the sign in button reigon. If not signed in, display a sign in button;
+     * otherwise display the welcome message.
+     * @param account google account object
+     */
+    private void updateUI(GoogleSignInAccount account) {
+        SignInButton signInButton = findViewById(R.id.sign_in_button);
+        TextView welcomeText = findViewById(R.id.signed_in_text);
+
+        // if the user already signed in, display the welcome message.
+        if (account != null) {
+            welcomeText.setText(String.format(
+                    getResources().getString(R.string.welcome_info),
+                    account.getDisplayName()));
+            welcomeText.setVisibility(View.VISIBLE);
+            signInButton.setVisibility(View.GONE);
+        }
+
+        // otherwise show the sign in button
+        else {
+            signInButton.setVisibility(View.VISIBLE);
+            signInButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    signIn();
+                }
+            });
+            welcomeText.setVisibility(View.GONE);
+            signInButton.setVisibility(View.VISIBLE);
+        }
+    }
+
 
     /**
      * Request the location permission if it's not granted.
@@ -227,6 +334,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         try {
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             for (String path: songPaths) {
+                Log.d(TAG, "Processing " + path);
                 AssetFileDescriptor descriptor = getAssets().openFd(path);
                 mmr.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
                 descriptor.close();

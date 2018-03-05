@@ -58,6 +58,29 @@
         app:layout_constraintTop_toBottomOf="@id/main_songs"
         app:layout_constraintVertical_bias="0.1"/>
 
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/sign_in_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/current_song"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/main_albums"
+        app:layout_constraintVertical_bias="0.9"/>
+
+    <TextView
+        android:id="@+id/signed_in_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="17sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/current_song"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/main_albums"
+        app:layout_constraintVertical_bias="0.9"/>
+
     <include layout="@layout/current_song"
         android:id="@+id/current_song"/>
 

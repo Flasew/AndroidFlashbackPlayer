@@ -100,11 +100,11 @@ public class SongActivity extends MusicPlayerNavigateActivity {
      */
     private void play(Song song) {
         Log.d(TAG, "Start playing song: " + song.getTitle());
-        PositionPlayList ppl = new PositionPlayList(song);
+        PositionPlayListFactory ppl = new PositionPlayListFactory(song);
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
         playerIntent.putExtra(SINGLE_SONG_INTENT, ppl.getPositionList().get(0));
 
-        playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, null);
+        playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, null);
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
         startService(playerIntent);
     }

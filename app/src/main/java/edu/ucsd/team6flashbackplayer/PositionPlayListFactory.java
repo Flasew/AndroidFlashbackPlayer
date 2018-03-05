@@ -11,12 +11,12 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 
 /**
- * class PositionPlayList
+ * class PositionPlayListFactory
  * PPL means the position of the songs in the global songlist. This class is used to generate
  * such a list from a list of songs or relevant information (Album, time/loc, etc.)
  * In this way we can easily pass these data across activities and services.
  */
-public class PositionPlayList {
+public class PositionPlayListFactory {
 
     static final String POS_LIST_INTENT = "posList";     // label of position playlist intents.
 
@@ -30,7 +30,7 @@ public class PositionPlayList {
      * the position of the song in the global list.
      * @param song song of this ppl.
      */
-    public PositionPlayList(Song song) {
+    public PositionPlayListFactory(Song song) {
         Log.d(TAG, "Generating playlist for song " + song.getTitle());
         positionList.add(songs.indexOf(song));
     }
@@ -39,7 +39,7 @@ public class PositionPlayList {
      * Create a ppl from an album. An arraylist of all songs' position in the album.
      * @param album album of this ppl
      */
-    public PositionPlayList(Album album) {
+    public PositionPlayListFactory(Album album) {
         Log.d(TAG, "Generating playlist for album " + album.getName());
         for (Song song: album.getSongs()) {
             positionList.add(songs.indexOf(song));
@@ -53,7 +53,7 @@ public class PositionPlayList {
      * @param currLoc location when entering flashback mode
      * @param currTime time when entering flashback mode
      */
-    public PositionPlayList(LatLng currLoc, ZonedDateTime currTime ){
+    public PositionPlayListFactory(LatLng currLoc, ZonedDateTime currTime ){
 
         Log.d(TAG, "Generating FB playlist...");
         Queue<Integer> pq = new PriorityQueue<Integer>(new SongScoreComparator(currLoc, currTime));

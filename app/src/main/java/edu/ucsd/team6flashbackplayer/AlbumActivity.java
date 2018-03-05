@@ -71,14 +71,14 @@ public class AlbumActivity extends MusicPlayerNavigateActivity {
     }
 
     /**
-     * Play an album by construct a PositionPlayList for this album and pass it to music service.
+     * Play an album by construct a PositionPlayListFactory for this album and pass it to music service.
      * @param album album to be played
      */
     private void play(Album album) {
         Log.d(TAG, "Start playing album: " + album.getName());
-        PositionPlayList ppl = new PositionPlayList(album);
+        PositionPlayListFactory ppl = new PositionPlayListFactory(album);
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
-        playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, ppl.getPositionList());
+        playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, ppl.getPositionList());
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
         startService(playerIntent);
 

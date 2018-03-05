@@ -18,5 +18,6 @@
     <string name="fbList_activity_title">Current Flashback Playlist</string>
     <string name="notification_title">Flashback Player</string>
     <string name="notification_message">Flashback Player is running</string>
+    <string name="welcome_info">Hello, %1$s!</string>
 
 </resources>

@@ -11,7 +11,7 @@ import java.util.List;
 
 import edu.ucsd.team6flashbackplayer.Album;
 import edu.ucsd.team6flashbackplayer.MainActivity;
-import edu.ucsd.team6flashbackplayer.PositionPlayList;
+import edu.ucsd.team6flashbackplayer.PositionPlayListFactory;
 import edu.ucsd.team6flashbackplayer.Song;
 import edu.ucsd.team6flashbackplayer.SongList;
 
@@ -26,7 +26,7 @@ public class JUnitTestPositionPlaylist {
     Song b;
     Song c;
     Album album;
-    PositionPlayList ppl;
+    PositionPlayListFactory ppl;
     ArrayList<Integer> mockList;
     List<Song> list;
 
@@ -46,7 +46,7 @@ public class JUnitTestPositionPlaylist {
 
         album = new Album("Name", SongList.getSongs());
 
-        ppl = new PositionPlayList(album);
+        ppl = new PositionPlayListFactory(album);
 
         mockList = new ArrayList<>();
         mockList.add(0);

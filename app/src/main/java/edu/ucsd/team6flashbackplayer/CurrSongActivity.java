@@ -324,7 +324,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     /**
      * Enters the flashback mode.
      * Registers the time-change listeners.
-     * Acquire a FB playlist via PositionPlayList and pass it to the MusicService
+     * Acquire a FB playlist via PositionPlayListFactory and pass it to the MusicService
      * (delegated to startMusicPlayerServiceFBMode).
      */
     private void enableFBMode() {
@@ -383,7 +383,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         // pass empty playlist to signal no song should be played
         ArrayList<Integer> stoplist = new ArrayList<>();
         Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
-        playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, stoplist);
+        playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, stoplist);
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, true);
         startService(playerIntent);
 
@@ -401,10 +401,10 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private void startMusicPlayerServiceFBMode(boolean update) {
 
         try {
-            PositionPlayList ppl = new PositionPlayList(lastLatLngCache, ZonedDateTime.now());
+            PositionPlayListFactory ppl = new PositionPlayListFactory(lastLatLngCache, ZonedDateTime.now());
             Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
             positionList = ppl.getPositionList();
-            playerIntent.putIntegerArrayListExtra(PositionPlayList.POS_LIST_INTENT, positionList);
+            playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, positionList);
             playerIntent.putExtra(MainActivity.START_MUSICSERVICE_KEEP_CURRPLAY, update);
             startService(playerIntent);
 
