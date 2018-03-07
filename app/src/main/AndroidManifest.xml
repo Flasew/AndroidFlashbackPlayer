@@ -31,7 +31,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SongActivity" />
+        <activity android:name=".SongActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
         <activity android:name=".AlbumActivity" />
         <activity android:name=".CurrSongActivity" />
 

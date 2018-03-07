@@ -12,6 +12,7 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -151,7 +152,7 @@ public class WebMusicDownloader {
 
         @Override
         protected void onPreExecute() {
-
+            Toast.makeText(associatedDownloader.context, "Downloading finished.", Toast.LENGTH_SHORT).show();
         }
 
         @Override

@@ -4,8 +4,12 @@ package edu.ucsd.team6flashbackplayer;
  * Created by frankwang on 2/17/18.
  */
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.support.constraint.ConstraintLayout;
+import android.util.Log;
 import android.widget.TextView;
 
 /**
@@ -14,6 +18,36 @@ import android.widget.TextView;
  */
 public abstract class MusicPlayerNavigateActivity extends MusicPlayerActivity {
     protected ConstraintLayout currSong;  // current song status bar
+
+    // broadcast receiver for currently playing song updated
+    protected BroadcastReceiver fileDownloadedBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "File downloaded roadcast received");
+            onFileDownloaded();
+        }
+    };
+
+    /**
+     * Register broadcast receiver on start
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        localBroadcastManager.registerReceiver(fileDownloadedBroadcastReceiver,
+                new IntentFilter(DownloadedFileHandlerStrategy.BROADCAST_FILE_HANDLED)
+        );
+    }
+
+
+    /**
+     * Unregister the bcast receiver on stop.
+     */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        localBroadcastManager.unregisterReceiver(fileDownloadedBroadcastReceiver);
+    }
 
     /**
      * Reset the status bar on resume
@@ -63,5 +97,7 @@ public abstract class MusicPlayerNavigateActivity extends MusicPlayerActivity {
         Intent intent = new Intent(this, CurrSongActivity.class);
         startActivity(intent);
     }
+
+    protected abstract void onFileDownloaded();
 
 }

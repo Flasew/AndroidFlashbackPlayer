@@ -65,7 +65,6 @@ public class DownloadedSongHandler implements DownloadedFileHandlerStrategy {
         // otherwise move the file
         else {
             fileInDownloadDir.renameTo(fileInMusicDir);
-            Toast.makeText(context, filename + "added to the music library", Toast.LENGTH_SHORT).show();
             return new LinkedList<>(Arrays.asList(filename));
         }
     }

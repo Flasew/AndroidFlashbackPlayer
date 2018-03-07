@@ -426,7 +426,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                 }
             }
 
-            mediaPlayer.setDataSource(currSong.getPath());
+            mediaPlayer.setDataSource(MusicPlayerActivity.MUSIC_DIR + "/" + currSong.getPath());
 
             mediaPlayer.prepareAsync();
             Log.d(TAG, "Preparing song " + currSong.getTitle());

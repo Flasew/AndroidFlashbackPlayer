@@ -47,8 +47,8 @@ public interface DownloadedFileHandlerStrategy {
 
     default String makeDirStr(String path, String... subDir) {
 
-        for (String s: subDir) {
-            path += "/" + subDir;
+        for (int i = 0; i < subDir.length; i++) {
+            path += "/" + subDir[i];
         }
 
         return path;

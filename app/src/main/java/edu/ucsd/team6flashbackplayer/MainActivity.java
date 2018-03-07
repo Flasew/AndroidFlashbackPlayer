@@ -130,40 +130,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         }
     }
 
-    /**
-     * Create the menu of the app
-     * @param menu menu object
-     * @return ignored
-     */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
 
-    /**
-     * Handles menu item click. In this case both are for download.
-     * @param item item clicked
-     * @return result of handle
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //
-        if (id == R.id.download_songs) {
-            return true;
-        }
-        else if (id == R.id.download_albums) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 
 
     /**
@@ -376,7 +343,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                     else {
                         if (fname.length() > 3 &&
                                 fname.substring(fname.length() - 3).toLowerCase().equals("mp3")) {
-                            result.add(fname);
+                            result.add(fname.replaceAll("^" + MUSIC_DIR, ""));
                         }
                     }
                 }
@@ -404,8 +371,8 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         try {
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             for (String path: songPaths) {
-                Log.d(TAG, "Processing " + path);
-                mmr.setDataSource(path);
+                Log.d(TAG, "Processing " + MUSIC_DIR + "/" + path);
+                mmr.setDataSource(MUSIC_DIR + "/" + path);
 
                 Song toAdd = new Song(
                         path,
@@ -454,6 +421,13 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         AlbumList.initAlbumList(SongList.getSongs());
     }
 
+    /**
+     * Main would do noting (no UI update) after file download.
+     */
+    @Override
+    protected void onFileDownloaded() {
+
+    }
 
 
 }

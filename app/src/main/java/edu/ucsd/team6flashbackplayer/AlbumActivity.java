@@ -96,4 +96,12 @@ public class AlbumActivity extends MusicPlayerNavigateActivity {
         startActivity(intent);
     }
 
+    /**
+     * TODO
+     */
+    @Override
+    protected void onFileDownloaded() {
+
+    }
+
 }

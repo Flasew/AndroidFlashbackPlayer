@@ -1,12 +1,18 @@
 package edu.ucsd.team6flashbackplayer;
 
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.webkit.DownloadListener;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import java.util.List;
@@ -19,7 +25,7 @@ import java.util.List;
  * It can also be invoked from an album activity, in which it will
  * display a list of songs in this album
  */
-public class SongActivity extends MusicPlayerNavigateActivity {
+public class SongActivity extends MusicPlayerNavigateActivity implements DownloadDialogFragment.DownloadDialogListener {
 
     protected final String TAG = "SongActivity";
 
@@ -27,6 +33,7 @@ public class SongActivity extends MusicPlayerNavigateActivity {
     private List<Song> songList;
     private ListView songView;
     private SongEntryAdapter songAdapter;
+    private WebMusicDownloader downloader;
 
     /**
      * On create will know if it's displaying a list of all songs or an album's songs from
@@ -38,6 +45,9 @@ public class SongActivity extends MusicPlayerNavigateActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_song);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         currSong = findViewById(R.id.current_song);
         currSong.setOnClickListener(new View.OnClickListener() {
@@ -88,6 +98,49 @@ public class SongActivity extends MusicPlayerNavigateActivity {
             }
         });
 
+        downloader = new WebMusicDownloader(
+                new NormalModeDownloadedFileHandlerDecorator(
+                        new DownloadedSongHandler(this)
+                )
+        );
+
+    }
+
+    /**
+     * Create the menu of the app
+     * @param menu menu object
+     * @return ignored
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_song, menu);
+        return true;
+    }
+
+    /**
+     * Handles menu item click. In this case both are for download.
+     * @param item item clicked
+     * @return result of handle
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //
+        if (id == R.id.sort_holder) {
+            return true;
+        }
+
+        else if (id == R.id.add_song) {
+            DialogFragment downloadDialog = new DownloadDialogFragment();
+            downloadDialog.show(getFragmentManager(), getResources().getString(R.string.download_song));
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
 
@@ -119,5 +172,34 @@ public class SongActivity extends MusicPlayerNavigateActivity {
         super.onResume();
         songAdapter.notifyDataSetChanged();
         Log.d(TAG, "On resume of song activity called.");
+    }
+
+    /**
+     * Song activity should update the list of songs when files are downloaded
+     */
+    protected void onFileDownloaded() {
+        songAdapter.notifyDataSetChanged();
+        Log.d(TAG, "List updated after file download.w");
+    }
+
+    /**
+     * Listener of user clicking download button in dialog
+     * @param dialog dialog fragment
+     */
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        EditText urlField = dialog.getDialog().findViewById(R.id.download_url);
+        String url = urlField.getText().toString();
+        downloader.downloadFromUrl(url);
+        dialog.dismiss();
+    }
+
+    /**
+     * Listener of user clicking cancel button in dialog
+     * @param dialog dialog fragment
+     */
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+        dialog.dismiss();
     }
 }

@@ -25,5 +25,12 @@
     <string name="perm_req_txt">Permission request</string>
     <string name="download_song">ADD SONG</string>
     <string name="download_album">ADD ALBUM</string>
+    <string name="download_hint">Paste the URL here...</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="cancel">Cancel</string>
+    <string name="download">Download</string>
+    <string name="download_msg">Download...</string>
 
 </resources>

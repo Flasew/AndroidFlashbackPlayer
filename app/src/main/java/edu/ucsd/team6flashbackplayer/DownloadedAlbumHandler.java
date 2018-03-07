@@ -83,6 +83,7 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
 
     /**
      * Unzip a zipfile to path/zipname.strip("zip")
+     * unzipping adapted from https://stackoverflow.com/questions/3382996/how-to-unzip-files-programmatically-in-android
      * @param path root path of the zip file
      * @param zipname file name of the zip file
      * @return List of unzipped file paths.
