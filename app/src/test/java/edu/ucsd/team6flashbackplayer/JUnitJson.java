@@ -4,7 +4,6 @@ import com.google.android.gms.maps.model.LatLng;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.Rule;
 import org.junit.Assert;
 
 import java.time.ZoneId;
@@ -49,7 +48,7 @@ public class JUnitJson {
         SongJsonParser.jsonPopulate(song1, jsonString1);
 
         // Check the fields - these stay the same as the original
-        Assert.assertEquals("song1-id",song1.getId());
+        Assert.assertEquals("song1-id",song1.getPath());
         Assert.assertEquals("A", song1.getTitle());
         Assert.assertEquals("A", song1.getArtist());
         Assert.assertEquals("A", song1.getAlbum());

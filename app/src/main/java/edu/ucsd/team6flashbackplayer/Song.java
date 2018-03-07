@@ -15,7 +15,7 @@ public class Song {
 
     private static final String NO_INFO = "---";     // noinfo string
 
-    private final String ID;
+    private final String PATH;
     private final String TITLE;
     private final String ARTIST;
     private final String ALBUM;
@@ -42,13 +42,13 @@ public class Song {
 
     /**
      * Constructor. Takes song's relevant information and make a new song object
-     * @param id id of the song. for now it's the path.
+     * @param path id of the song. for now it's the path.
      * @param title title of the song
      * @param artist artist created the song
      * @param album album the song belongs to
      */
-    public Song(String id, String title, String artist, String album) {
-        ID = id;
+    public Song(String path, String title, String artist, String album) {
+        PATH = path;
         TITLE = title;
         ARTIST = artist;
         ALBUM = album;
@@ -75,7 +75,7 @@ public class Song {
     }
 
     // getters of const fields
-    public String getId()      { return ID; }
+    public String getPath()    { return PATH; }
     public String getTitle()   { return TITLE != null ? TITLE : NO_INFO; }
     public String getAlbum()   { return ALBUM != null ? ALBUM : NO_INFO; }
     public String getArtist()  { return ARTIST != null ? ARTIST : NO_INFO; }

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -22,6 +23,7 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
 
     // global strings
     // if the service should finish the current song for a new start command.
+    static final String MUSIC_DIR = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath();
     static final String START_MUSICSERVICE_KEEP_CURRPLAY = "cutPlaying";
     static final String BROADCAST_REQUEST_SONG_UPDATE = "reqUpdate";
     static final String FLASHBACK_SHAREDPREFERENCE_NAME = "mode";

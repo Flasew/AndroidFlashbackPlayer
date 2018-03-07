@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.AssetFileDescriptor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -347,7 +346,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         updateLocTime(toUpdate, songDateTimeCache, songLatLngCache);
         /*SharedPreferences sp = getSharedPreferences("metadata", MODE_PRIVATE);
         int trackNum = mp.getSelectedTrack(MEDIA_TRACK_TYPE_AUDIO);
-        String a = sp.getString(songs.get(trackNum).getId(),null);
+        String a = sp.getString(songs.get(trackNum).getPath(),null);
         Log.d("meta", a);*/
 
         nextSong();
@@ -427,7 +426,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                 }
             }
 
-            mediaPlayer.setDataSource(currSong.getId());
+            mediaPlayer.setDataSource(currSong.getPath());
 
             mediaPlayer.prepareAsync();
             Log.d(TAG, "Preparing song " + currSong.getTitle());
@@ -564,12 +563,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     public void updateLocTime(Song song, ZonedDateTime time, LatLng loc) {
         SharedPreferences sp = getSharedPreferences("metadata", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
-        String json = sp.getString(song.getId(),null);
+        String json = sp.getString(song.getPath(),null);
         Log.d(TAG, "Meta old: " + json);
         SongJsonParser.updateSongLocTime(song, time,loc);
         String newJson = song.getJsonString();
 
-        editor.putString(song.getId(), newJson);
+        editor.putString(song.getPath(), newJson);
         editor.apply();
         Log.d(TAG, "Meta new: " + newJson);
     }

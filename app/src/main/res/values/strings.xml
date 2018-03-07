@@ -23,5 +23,7 @@
     <string name="storage_req_txt">Need permission to ext storage</string>
     <string name="perm_req_title">Permission Request</string>
     <string name="perm_req_txt">Permission request</string>
+    <string name="download_song">ADD SONG</string>
+    <string name="download_album">ADD ALBUM</string>
 
 </resources>

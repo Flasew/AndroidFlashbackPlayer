@@ -6,14 +6,16 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.AssetFileDescriptor;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -27,7 +29,6 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,6 +68,9 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         // set title and layout of this activity
         setTitle(R.string.main_activity_title);
         setContentView(R.layout.activity_main);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         // Check for/request location permission
         requestAllPermission();
@@ -124,6 +128,52 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         if (flashBackMode) {
             startCurrSongActivity();
         }
+    }
+
+    /**
+     * Create the menu of the app
+     * @param menu menu object
+     * @return ignored
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    /**
+     * Handles menu item click. In this case both are for download.
+     * @param item item clicked
+     * @return result of handle
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //
+        if (id == R.id.download_songs) {
+            return true;
+        }
+        else if (id == R.id.download_albums) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
+    /**
+     * Called when main activity exits.
+     */
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Commented out to keep functionality of music playing when exiting with back buttons
+        // stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
     }
 
     /**
@@ -296,39 +346,6 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     }
 
     /**
-     * Recursively get a list of .mp3 files' paths stored in the assets folder.
-     * @param path root folder of the file listing
-     * @param result list used to store the file paths
-     * @return true if @path is a directory, false otherwise (used for recursion)
-     */
-    private boolean listAssetFiles(String path, List<String> result) {
-        Log.d(TAG, "In List assets");
-        String [] list;
-        try {
-            list = getAssets().list(path);
-            if (list.length > 0) {
-                // This is a folder
-                for (String file : list) {
-                    String fname = (path.equals("")) ? path + file : path + "/" + file;
-                    Log.d(TAG, fname);
-
-                    if (!listAssetFiles(fname, result))
-                        return false;
-                    else {
-                        if (file.length() > 3 &&
-                                file.substring(file.length() - 3).toLowerCase().equals("mp3")) {
-                            result.add(fname);
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * Recursively list of MP3 files from a directory (path), and store the path string in the
      * result argument.
      * @param path root path
@@ -400,14 +417,14 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
                 // Try to get the song information from Shared Preferences metadata
                 SharedPreferences sharedPref = getSharedPreferences("metadata", MODE_PRIVATE);
-                String jsonInfo = sharedPref.getString(toAdd.getId(), null);
+                String jsonInfo = sharedPref.getString(toAdd.getPath(), null);
                 // Check if it exists or not - if not then we need to create it in the SharedPreferences
                 if (jsonInfo == null) {
                     Log.d(TAG, "SharedPref Exists: " + "Null");
                     // Add the initial metadata of the song to the shared preferences for metadata
                     SharedPreferences.Editor editor = sharedPref.edit();
                     // The info is keyed on the ID of the song(path name) and the json string is created on construction
-                    editor.putString(toAdd.getId(), toAdd.getJsonString());
+                    editor.putString(toAdd.getPath(), toAdd.getJsonString());
                     editor.apply();
                 }
                 // Else get the data and save it to the Song's fields
@@ -437,15 +454,6 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         AlbumList.initAlbumList(SongList.getSongs());
     }
 
-    /**
-     * Called when main activity exits.
-     */
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        // Commented out to keep functionality of music playing when exiting with back buttons
-        // stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
-    }
 
 
 }

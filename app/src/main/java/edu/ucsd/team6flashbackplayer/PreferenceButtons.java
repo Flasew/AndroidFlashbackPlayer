@@ -168,7 +168,7 @@ public class PreferenceButtons {
         SharedPreferences.Editor editor = sp.edit();
         // refresh the json object with new values for the Song object
         SongJsonParser.refreshJson(song);
-        editor.putString(song.getId(),song.getJsonString());
+        editor.putString(song.getPath(),song.getJsonString());
         editor.apply();
     }
 
