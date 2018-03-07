@@ -29,7 +29,8 @@ import android.widget.Toast;
  */
 public class WebMusicDownloader {
 
-    static final String DOWNLOAD_DIR = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+    static final String DOWNLOAD_DIR =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
 
     private static final String TAG = "WebMucicDownloader";
 
@@ -75,16 +76,21 @@ public class WebMusicDownloader {
         String filename = URLUtil.guessFileName(url, null, fileExtenstion);
         Log.d(TAG, "Filename of the file to be downloaded: " + filename);
 
-        // create a downlad request.
-        DownloadManager.Request request = new DownloadManager.Request(uri);
-        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
-        request.setTitle("Music Player Downloading");
-        request.setDescription("Downloading " + filename);
-        request.setVisibleInDownloadsUi(true);
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "/"  + filename);
+        try {
+            // create a downlad request.
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+            request.setTitle("Music Player Downloading");
+            request.setDescription("Downloading " + filename);
+            request.setVisibleInDownloadsUi(true);
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "/" + filename);
 
 
-        requestIds.put(downloadManager.enqueue(request), UrlFnamePair.mkpair(url, filename));
+            requestIds.put(downloadManager.enqueue(request), UrlFnamePair.mkpair(url, filename));
+        }
+        catch (IllegalArgumentException e) {
+            Toast.makeText(context, "Invalid URL.", Toast.LENGTH_SHORT).show();
+        }
 
     }
 

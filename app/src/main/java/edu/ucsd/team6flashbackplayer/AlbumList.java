@@ -1,6 +1,5 @@
 package edu.ucsd.team6flashbackplayer;
 
-import android.nfc.Tag;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ public class AlbumList {
     public static void initAlbumList(List<Song> songs) {
         Log.d(TAG, "Creating global album list...");
         albums = new HashMap<>();
-        loadFromSongList(songs);
+        addFromSongList(songs);
     }
 
     /**
@@ -55,26 +54,34 @@ public class AlbumList {
     }
 
     /**
-     * Load the global album list from the global song list.
+     * Load the album list from a song list.
      * @param songs the list of all the songs.
      */
-    private static void loadFromSongList(List<Song> songs) {
+    public static void addFromSongList(List<Song> songs) {
         for (Song s: songs) {
-            String albumName = s.getAlbum();
-            Album album = albums.get(albumName);
-            // if we've never seen this album, create it and add the song.
-            // other wise just add the song.
-            if (album == null) {
-                album = new Album(albumName);
-                album.addSong(s);
-                albums.put(albumName, album);
-                Log.d(TAG, "Added album " + album.getName());
-                Log.d(TAG, "Added song " + s.getTitle() + " to album " + album.getName());
-            }
-            else {
-                Log.d(TAG, "Added song " + s.getTitle() + " to album " + album.getName());
-                album.addSong(s);
-            }
+            addFromSong(s);
+        }
+    }
+
+    /**
+     * add a song to the album list
+     * @param song song to be added
+     */
+    public static void addFromSong(Song song) {
+        String albumName = song.getAlbum();
+        Album album = albums.get(albumName);
+        // if we've never seen this album, create it and add the song.
+        // other wise just add the song.
+        if (album == null) {
+            album = new Album(albumName);
+            album.addSong(song);
+            albums.put(albumName, album);
+            Log.d(TAG, "Added album " + album.getName());
+            Log.d(TAG, "Added song " + song.getTitle() + " to album " + album.getName());
+        }
+        else {
+            Log.d(TAG, "Added song " + song.getTitle() + " to album " + album.getName());
+            album.addSong(song);
         }
     }
 }

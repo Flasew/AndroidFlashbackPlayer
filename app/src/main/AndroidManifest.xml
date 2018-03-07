@@ -33,7 +33,8 @@
         </activity>
         <activity android:name=".SongActivity"
             android:theme="@style/AppTheme.NoActionBar"/>
-        <activity android:name=".AlbumActivity" />
+        <activity android:name=".AlbumActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
         <activity android:name=".CurrSongActivity" />
 
         <service

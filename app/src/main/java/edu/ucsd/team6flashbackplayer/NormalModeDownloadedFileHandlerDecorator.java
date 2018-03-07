@@ -31,9 +31,10 @@ public class NormalModeDownloadedFileHandlerDecorator extends DownloadedFileHand
         LinkedList<String> copiedFiles = fileHandler.process(url, filename);
 
         // make song objects, add them to the global song list.
-        try {
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            for (String path: copiedFiles) {
+
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        for (String path: copiedFiles) {
+            try {
                 String fullpath = makeDirStr(MusicPlayerActivity.MUSIC_DIR, path);
                 Log.d(TAG, "Processing " + fullpath);
                 mmr.setDataSource(fullpath);
@@ -46,6 +47,8 @@ public class NormalModeDownloadedFileHandlerDecorator extends DownloadedFileHand
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
 
                 FirebaseSongList.addSong(toAdd);
+                AlbumList.addFromSong(toAdd);
+
 
                 // Try to get the song information from Shared Preferences metadata
                 SharedPreferences sharedPref = getContext().getSharedPreferences("metadata", MODE_PRIVATE);
@@ -61,16 +64,14 @@ public class NormalModeDownloadedFileHandlerDecorator extends DownloadedFileHand
                 }
                 // Else get the data and save it to the Song's fields
                 else {
-                    Log.d(TAG,"SharedPref Exists: " + "Not Null");
+                    Log.d(TAG, "SharedPref Exists: " + "Not Null");
                     SongJsonParser.jsonPopulate(toAdd, jsonInfo);
                 }
-
+            }
+            catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
         return copiedFiles;
     }
 

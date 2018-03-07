@@ -5,6 +5,10 @@ package edu.ucsd.team6flashbackplayer;
  */
 
 import android.content.Context;
+import android.util.Log;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -22,6 +26,8 @@ import java.util.zip.ZipInputStream;
  */
 public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
 
+    private static final String TAG = "DownloadedAlbumHandler";
+
     private Context context;
     /**
      * Constructor that takes a context.
@@ -38,30 +44,43 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
     @Override
     public LinkedList<String> process(String url, String filename) {
 
-        String unzipFolderStr = filename.replaceAll(".zip$", "");
-        File albumFolder = new File(makeDirStr(MusicPlayerActivity.MUSIC_DIR, unzipFolderStr));
-        albumFolder.mkdirs();
+        String unzipFolderStr = filename.replaceAll("\\.zip$", "");
 
         LinkedList<String> unzippedFiles = unpackZip(WebMusicDownloader.DOWNLOAD_DIR, filename);
         LinkedList<String> copiedFiles = new LinkedList<>();
 
         // copy over the files.
         for (String songFilename: unzippedFiles) {
+
+            if (!FilenameUtils.getExtension(songFilename).toLowerCase().equals("mp3") ||
+                    songFilename.matches(".*__MAXOSX.*"))
+                continue;
+
+            Log.d(TAG, "Handling unzipped file " + songFilename);
+
             File fileInMusicDir = new File(makeDirStr(MusicPlayerActivity.MUSIC_DIR, songFilename));
             File fileInDownloadDir = new File(makeDirStr(WebMusicDownloader.DOWNLOAD_DIR, songFilename));
 
             // if the same file (or at least with the same name) already exist in music dir,
             // ignore this file.
             // otherwise move the file
+            Log.d(TAG, fileInMusicDir.getAbsolutePath()+".exists(): " +fileInMusicDir.exists());
+            Log.d(TAG, fileInDownloadDir.getAbsolutePath()+".exists(): " +fileInDownloadDir.exists());
+
             if (!fileInMusicDir.exists()) {
+                fileInMusicDir.getParentFile().mkdirs();
                 if (fileInDownloadDir.renameTo(fileInMusicDir)) {
-                    copiedFiles.add(makeDirStr(songFilename));
+                    copiedFiles.add(songFilename);
                 }
             }
         }
 
         // delete the unzipped folder
         (new File(makeDirStr(WebMusicDownloader.DOWNLOAD_DIR, unzipFolderStr))).delete();
+
+        for (String s: copiedFiles) {
+            Log.d(TAG, "Files copied over: " + s);
+        }
 
         return copiedFiles;
     }
@@ -99,7 +118,7 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
 
         try {
             String filename;
-            is = new FileInputStream(path + zipname);
+            is = new FileInputStream(makeDirStr(path, zipname));
             zis = new ZipInputStream(new BufferedInputStream(is));
             ZipEntry ze;
             byte[] buffer = new byte[1024];
@@ -128,6 +147,7 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
                 zis.closeEntry();
 
                 result.add(makeDirStr(unzipFolder, filename));
+                Log.d(TAG, makeDirStr(unzipFolder, filename) + " extracted.");
             }
 
             zis.close();

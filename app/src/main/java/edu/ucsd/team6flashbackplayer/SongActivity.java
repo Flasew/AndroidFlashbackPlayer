@@ -34,6 +34,8 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
     private ListView songView;
     private SongEntryAdapter songAdapter;
     private WebMusicDownloader downloader;
+    private boolean enableMenuOpts = false;     // should the options for sorting/download be enabled?
+                                                // no if start from album.
 
     /**
      * On create will know if it's displaying a list of all songs or an album's songs from
@@ -50,11 +52,8 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
         setSupportActionBar(toolbar);
 
         currSong = findViewById(R.id.current_song);
-        currSong.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        currSong.setOnClickListener(v -> {
                 startCurrSongActivity();
-            }
         });
 
         // check if it's from an album or should display the global list.
@@ -65,12 +64,17 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
             songList = SongList.getSongs();
             // set title of this activity
             setTitle(R.string.song_activity_title);
+            enableMenuOpts = true;
         } else {
             albumName = extras.getString("albumName");
             songList = AlbumList.getAlbum(albumName).getSongs();
+
             // set title of this activity
             setTitle(albumName);
+            enableMenuOpts = false;
         }
+
+        invalidateOptionsMenu();
 
         // setup the UI
         songView = findViewById(R.id.song_list);
@@ -78,13 +82,10 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
 
         songView.setAdapter(songAdapter);
         songView.setItemsCanFocus(false);
-        songView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        songView.setOnItemClickListener((parent, view, position, id) -> {
                 Song listItem = (Song)songView.getItemAtPosition(position);
                 Log.d(TAG, "Song: " + listItem.getTitle());
                 play(listItem);
-            }
         });
 
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
@@ -114,7 +115,8 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_song, menu);
+        if (enableMenuOpts)
+            getMenuInflater().inflate(R.menu.menu_song, menu);
         return true;
     }
 

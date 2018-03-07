@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 
 /**
@@ -65,7 +66,7 @@ public class DownloadedSongHandler implements DownloadedFileHandlerStrategy {
         // otherwise move the file
         else {
             fileInDownloadDir.renameTo(fileInMusicDir);
-            return new LinkedList<>(Arrays.asList(filename));
+            return new LinkedList<>(Collections.singletonList(filename));
         }
     }
 

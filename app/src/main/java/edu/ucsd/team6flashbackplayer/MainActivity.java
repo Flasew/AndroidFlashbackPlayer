@@ -338,12 +338,12 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                     String fname = (path + "/" + file);
                     Log.d(TAG, fname);
 
-                    if (!listMp3Files(file, result))
+                    if (!listMp3Files(fname, result))
                         return false;
                     else {
                         if (fname.length() > 3 &&
                                 fname.substring(fname.length() - 3).toLowerCase().equals("mp3")) {
-                            result.add(fname.replaceAll("^" + MUSIC_DIR, ""));
+                            result.add(fname.replaceAll("^" + MUSIC_DIR + "/", ""));
                         }
                     }
                 }
