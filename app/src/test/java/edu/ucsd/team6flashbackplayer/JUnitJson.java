@@ -4,7 +4,6 @@ import com.google.android.gms.maps.model.LatLng;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.Rule;
 import org.junit.Assert;
 
 import java.time.ZoneId;
@@ -49,7 +48,7 @@ public class JUnitJson {
         SongJsonParser.jsonPopulate(song1, jsonString1);
 
         // Check the fields - these stay the same as the original
-        Assert.assertEquals("song1-id",song1.getId());
+        Assert.assertEquals("song1-id",song1.getPath());
         Assert.assertEquals("A", song1.getTitle());
         Assert.assertEquals("A", song1.getArtist());
         Assert.assertEquals("A", song1.getAlbum());
@@ -75,7 +74,6 @@ public class JUnitJson {
         Assert.assertArrayEquals(new boolean[] {false,false,false,false,false,false,true,true}, song1.getDayHist());
     }
 
-
     @Test
     public void testUpdateLocTime() {
         ZonedDateTime newTime = ZonedDateTime.of(2017, 2, 12, 3, 12, 32, 555000000, zone);
@@ -96,5 +94,19 @@ public class JUnitJson {
         // Check the dayHist and timeHist arrays
         Assert.assertArrayEquals(correct, song1.getTimeHist());
         Assert.assertArrayEquals(correctDay, song1.getDayHist());
+    }
+
+    @Test
+    public void testRefreshJson() {
+        //If you just set the values seperately it won't refresh the json string of the song
+        song1.setLike(false);
+        song1.setDislike(true);
+
+        String newJson = SongJsonParser.jsonParse(song1);
+        // Check that the json is refreshed after the call to refresh is made only
+        Assert.assertNotEquals(newJson, song1.getJsonString());
+
+        SongJsonParser.refreshJson(song1);
+        Assert.assertEquals(newJson, song1.getJsonString());
     }
 }

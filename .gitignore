@@ -65,5 +65,6 @@ fastlane/test_output
 fastlane/readme.md
 
 app/src/main/res/temp/
+
+app/src/main/assets/*.mp3
 *.mp3
-app/src/main/assets/*/*.mp3

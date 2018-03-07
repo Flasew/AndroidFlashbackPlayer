@@ -34,6 +34,14 @@ public class TextEntryAdapter<Item> extends BaseAdapter {
     }
 
     /**
+     * Change the items stored
+     * @param items new list of items
+     */
+    public void setItems(List<Item> items) {
+        this.items = items;
+    }
+
+    /**
      * Get the number of entries in the list
      * @return size of the list
      */

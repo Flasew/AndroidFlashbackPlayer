@@ -1,3 +1,4 @@
+
 apply plugin: 'com.android.application'
 
 android {
@@ -19,6 +20,10 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
@@ -28,9 +33,10 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    compile 'com.google.android.gms:play-services-auth:11.8.0'
     compile 'com.android.support:support-v4:26.+'
     compile 'com.android.support:design:26.+'
     implementation 'com.google.android.gms:play-services-maps:11.8.0'
     implementation files('libs/minimal-json-0.9.5.jar')
-
+    implementation files('libs/commons-io-2.6.jar')
 }

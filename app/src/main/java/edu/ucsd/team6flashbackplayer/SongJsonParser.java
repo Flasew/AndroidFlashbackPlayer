@@ -98,7 +98,7 @@ public class SongJsonParser {
         // The builder for the entire JSON string
         JsonObject builder = new JsonObject();
 
-        builder.add("ID", s.getId());
+        builder.add("Path", s.getPath());
         builder.add("Title", s.getTitle());
         builder.add("Album", s.getAlbum());
         builder.add("Artist", s.getArtist());
@@ -177,7 +177,7 @@ public class SongJsonParser {
      * like button of the Song was clicked (doesn't necessarily mean always will be liked)
      * @param s song whose json string is to be set.
      */
-    private static void refreshJson(Song s) {
+    public static void refreshJson(Song s) {
         s.setJsonString(jsonParse(s));
     }
 }
