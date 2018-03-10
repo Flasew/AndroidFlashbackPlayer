@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Environment;
@@ -27,9 +28,15 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -56,6 +63,10 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private GoogleSignInAccount account;
 
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference userRef = database.getReference("users");
+    AssetManager assetManager;
+
     /**
      * On create of the main activity is called on application launch. This function will handle
      * load songs and ask for permission of location.
@@ -64,6 +75,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        assetManager = getAssets(); // for generating alias in User
 
         // set title and layout of this activity
         setTitle(R.string.main_activity_title);
@@ -71,6 +83,11 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // Initialize the list of Users from Firebase
+        Users.loadUsers();
+        // Intialize the songs from Firebase
+        FirebaseSongList.populateFromFirebase();
 
         // Check for/request location permission
         requestAllPermission();
@@ -108,7 +125,6 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         // Check for existing Google Sign In account, if the user is already signed in
         // the GoogleSignInAccount will be non-null.
         account = GoogleSignIn.getLastSignedInAccount(this);
-
         updateUI(account);
 
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
@@ -178,8 +194,10 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
 
-            // Signed in successfully, show authenticated UI.
+            // Signed in successfully, show authenticated UI. (this also sets the global User)
             updateUI(account);
+
+
         } catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
@@ -188,8 +206,33 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         }
     }
 
+    /* This doesn't work because of the nature of Firebase asynchronous calls
+    private void setGlobalUser(String id) {
+        // First try to get the User from the global list
+        User tryToGet = Users.getUser(id);
+
+        // If the User doesn't exist in the global list
+        if (tryToGet == null) {
+            Log.d(TAG, "User does not exist " + id);
+            // Create based on the account logged in
+            User newUser = new User(account.getDisplayName(), id, assetManager);
+            User.setSelf(newUser);
+            Log.d(TAG, "Logged in user " + newUser.getId());
+
+            // Add this user to Firebase
+            userRef.child(id).setValue(newUser);
+            // Also add this user to the global song list
+            Users.addUser(id, newUser);
+        }
+        // else set current User to the User obtained from the Users list (in Firebase)
+        else {
+            Log.d(TAG, "User already existed in Firebase " + tryToGet.getId());
+            User.setSelf(tryToGet);
+        }
+    } */
+
     /**
-     * Update the UI of the sign in button reigon. If not signed in, display a sign in button;
+     * Update the UI of the sign in button region. If not signed in, display a sign in button;
      * otherwise display the welcome message.
      * @param account google account object
      */
@@ -199,6 +242,9 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
         // if the user already signed in, display the welcome message.
         if (account != null) {
+            // load in User object for the global User (from Firebase)
+            User.loadUser(account, assetManager);
+
             welcomeText.setText(String.format(
                     getResources().getString(R.string.welcome_info),
                     account.getDisplayName()));
@@ -317,9 +363,10 @@ public class MainActivity extends MusicPlayerNavigateActivity {
      * result argument.
      * @param path root path
      * @param result output parameter of the strings
+     * @param ids ouput for the ids generated from hashing files
      * @return true if @path is a directory, false otherwise (used for recursion)
      */
-    private boolean listMp3Files(String path, List<String> result) {
+    private boolean listMp3Files(String path, List<String> result, List<String> ids) {
 
         Log.d(TAG, "In List File, absolute path " + path);
         File f = new File(path);
@@ -338,12 +385,17 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                     String fname = (path + "/" + file);
                     Log.d(TAG, fname);
 
-                    if (!listMp3Files(fname, result))
+                    if (!listMp3Files(fname, result, ids))
                         return false;
                     else {
                         if (fname.length() > 3 &&
                                 fname.substring(fname.length() - 3).toLowerCase().equals("mp3")) {
+
                             result.add(fname.replaceAll("^" + MUSIC_DIR + "/", ""));
+                            ids.add(getMd5OfFile(fname));
+
+                            Log.d("File Id", getMd5OfFile(fname));
+
                         }
                     }
                 }
@@ -356,16 +408,53 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     }
 
     /**
+     * Generate a MD5 Hash value based on the file located at a given file path
+     * Adapted from https://stackoverflow.com/questions/13152736/
+     * @param filePath the location of the file to get a hash value for
+     * @return the String that is the MD5 hash
+     */
+    private static String getMd5OfFile(String filePath)
+    {
+        String returnVal = "";
+        try
+        {
+            InputStream input   = new FileInputStream(filePath);
+            byte[]        buffer  = new byte[1024];
+            MessageDigest md5Hash = MessageDigest.getInstance("MD5");
+            int           numRead = 0;
+            while (numRead != -1)
+            {
+                numRead = input.read(buffer);
+                if (numRead > 0)
+                {
+                    md5Hash.update(buffer, 0, numRead);
+                }
+            }
+            input.close();
+
+            byte [] md5Bytes = md5Hash.digest();
+            for (int i=0; i < md5Bytes.length; i++)
+            {
+                returnVal += Integer.toString( ( md5Bytes[i] & 0xff ) + 0x100, 16).substring( 1 );
+            }
+        }
+        catch(Throwable t) {t.printStackTrace();}
+        return returnVal.toUpperCase();
+    }
+
+    /**
      * Get the list of song from the list of song paths by uusing MediaMetadataRetriever
      * For songs already have a history (i.e. sp found the history), populate such history
      * using the json parser.
      * Otherwise create a new entry in SP for this song.
      * @param songPaths list of path to all the songs
+     * @param songIDs list of song ids corresponding to all song paths in songPaths
      * @return List of song
      */
-    private List<Song> getSongList(List<String> songPaths) {
+    private List<Song> getSongList(List<String> songPaths, List<String> songIDs) {
 
         List<Song> songList = new ArrayList<>();
+        Iterator<String> idIter = songIDs.iterator();
 
         // load to song class with metadata
         try {
@@ -375,13 +464,16 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                 mmr.setDataSource(MUSIC_DIR + "/" + path);
 
                 Song toAdd = new Song(
+                        "",
                         path,
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE),
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST),
-                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
+                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM),
+                        idIter.next());
 
                 songList.add(toAdd);
 
+                /*
                 // Try to get the song information from Shared Preferences metadata
                 SharedPreferences sharedPref = getSharedPreferences("metadata", MODE_PRIVATE);
                 String jsonInfo = sharedPref.getString(toAdd.getPath(), null);
@@ -398,7 +490,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                 else {
                     Log.d(TAG,"SharedPref Exists: " + "Not Null");
                     SongJsonParser.jsonPopulate(toAdd, jsonInfo);
-                }
+                }*/
 
             }
         }
@@ -414,10 +506,12 @@ public class MainActivity extends MusicPlayerNavigateActivity {
      */
     private void initSongAndAlbumList() {
         List<String> songPaths = new ArrayList<>();
+        List<String> songIDs = new ArrayList<>();
         listMp3Files(Environment
-                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString(), songPaths);
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString(), songPaths, songIDs);
 
-        SongList.initSongList(getSongList(songPaths));
+        List<Song> songs = getSongList(songPaths, songIDs);
+        SongList.initSongList(songs);
         AlbumList.initAlbumList(SongList.getSongs());
     }
 

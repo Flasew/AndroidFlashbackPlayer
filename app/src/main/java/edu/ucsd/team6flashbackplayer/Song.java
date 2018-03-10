@@ -20,6 +20,10 @@ public class Song {
     private final String ARTIST;
     private final String ALBUM;
 
+    private String id;
+    private String url;
+    private String LastPlayedUserUid;
+
     // latest information, about last played. Put here in case we use
     // unordered data structures and would be unable to track the information.
     // ZonedDateTime stores everything we need about time
@@ -39,6 +43,7 @@ public class Song {
 
     // json sting of this song.
     private String jsonString;
+
 
     /**
      * Constructor. Takes song's relevant information and make a new song object
@@ -74,6 +79,36 @@ public class Song {
         jsonString = SongJsonParser.jsonParse(this);
     }
 
+    /**
+     * Constructor. Makes a new Song object based on relevant fiels - for use with FIREBASE
+     * @param url the url from where the song was downloaded
+     * @param path the path the song is
+     * @param title title of the song
+     * @param artist artist of the song
+     * @param album album that the song is in
+     * @param id a hash generated from the file itself
+     */
+    public Song(String url, String path, String title, String artist, String album, String id) {
+        PATH = path;
+        TITLE = title;
+        ARTIST = artist;
+        ALBUM = album;
+
+        latestLoc = null;
+        latestTime = null;
+
+        locHist = new HashSet<LatLng>();
+
+        this.url = url;
+        this.id = id;
+        this.LastPlayedUserUid = "";
+
+        liked = false;
+        disliked = false;
+
+        jsonString = SongJsonParser.jsonParseFirebase(this);
+    }
+
     // getters of const fields
     public String getPath()    { return PATH; }
     public String getTitle()   { return TITLE != null ? TITLE : NO_INFO; }
@@ -81,42 +116,52 @@ public class Song {
     public String getArtist()  { return ARTIST != null ? ARTIST : NO_INFO; }
 
     // getter & setter methods of location and time
-    public LatLng getLatestLoc()              { return latestLoc; }
-    public ZonedDateTime getLatestTime()      { return latestTime; }
-
     // following setters set the latest fields and add them to the history set
     // Location should be made immutable.
+    public LatLng getLatestLoc()              { return latestLoc; }
     public void setLatestLoc(LatLng l) {
         latestLoc = l;
     }
+
+    public HashSet<LatLng> getLocHist() { return locHist; }
     public void setLocHist(HashSet<LatLng> l) {
         locHist = l;
     }
 
+    public ZonedDateTime getLatestTime()      { return latestTime; }
     public void setLatestTime(ZonedDateTime t) {
         latestTime = t;
     }
 
     public boolean[] getTimeHist()         { return timeHist; }
     public void setTimeHist(boolean[] history) { timeHist = history; }
+
     public boolean[] getDayHist()          { return dayHist; }
     public void setDayHist(boolean[] history) { dayHist = history; }
 
-    public HashSet<LatLng> getLocHist() { return locHist; }
+    // getter
+    public boolean isLiked()        { return liked; }
+    public boolean isDisliked()     { return disliked; }
 
     // NEW: like and dislike detailed implementation moved to SongPreference class
     public void setLike(boolean l)     { liked = l; }
     public void setDislike(boolean l)  { disliked = l; }
-
-    // getter
-    public boolean isLiked()        {return liked; }
-    public boolean isDisliked()     {return disliked; }
 
     // Getters and setters for the Json string
     public void setJsonString(String json) {
         jsonString = json;
     }
     public String getJsonString() {return jsonString; }
+
+    // Getters and setters for new fields (id, url, lastplayeduserid)
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getUrl() { return url; }
+    public void setUrl(String url) { this.url = url; }
+
+    public String getLastPlayedUserUid() { return LastPlayedUserUid; }
+    public void setLastPlayedUserUid(String lastPlayedUserUid) { LastPlayedUserUid = lastPlayedUserUid; }
 
 
     /** To determine what time of day a song was listened to split into

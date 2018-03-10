@@ -39,34 +39,23 @@ public class NormalModeDownloadedFileHandlerDecorator extends DownloadedFileHand
                 Log.d(TAG, "Processing " + fullpath);
                 mmr.setDataSource(fullpath);
 
-                SharedSong toAdd = new SharedSong(
+                String id = SongJsonParser.getMd5OfFile(fullpath);
+
+                Song toAdd = new Song(
                         url,
                         path,
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE),
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST),
-                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
+                        mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM),
+                        id);
 
-                FirebaseSongList.addSong(toAdd);
+                FirebaseSongList.addSongToLocalList(toAdd);
                 AlbumList.addFromSong(toAdd);
 
+                Log.d("Downloaded song id is: ", id);
+                Log.d("Song is titled ", toAdd.getTitle());
+                FirebaseSongList.addSongToFirebase(toAdd);
 
-                // Try to get the song information from Shared Preferences metadata
-                SharedPreferences sharedPref = getContext().getSharedPreferences("metadata", MODE_PRIVATE);
-                String jsonInfo = sharedPref.getString(toAdd.getPath(), null);
-                // Check if it exists or not - if not then we need to create it in the SharedPreferences
-                if (jsonInfo == null) {
-                    Log.d(TAG, "SharedPref Exists: " + "Null");
-                    // Add the initial metadata of the song to the shared preferences for metadata
-                    SharedPreferences.Editor editor = sharedPref.edit();
-                    // The info is keyed on the ID of the song(path name) and the json string is created on construction
-                    editor.putString(toAdd.getPath(), toAdd.getJsonString());
-                    editor.apply();
-                }
-                // Else get the data and save it to the Song's fields
-                else {
-                    Log.d(TAG, "SharedPref Exists: " + "Not Null");
-                    SongJsonParser.jsonPopulate(toAdd, jsonInfo);
-                }
             }
             catch (Exception e) {
                 e.printStackTrace();
