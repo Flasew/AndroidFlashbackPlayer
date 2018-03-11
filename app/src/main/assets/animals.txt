@@ -1,0 +1,28 @@
+Cat
+Dog
+Kitten
+Puppy
+Panda
+Bear
+Hedgehog
+Polar bear
+Penguin
+Koala
+Sloth
+Tiger
+Raccoon
+Giraffe
+Otter
+Seal
+Squirrel
+Turtle
+Goat
+Hamster
+Sheep
+Llama
+Hippo
+Elephant
+Owl
+Duck
+Sea Lion
+Alpaca

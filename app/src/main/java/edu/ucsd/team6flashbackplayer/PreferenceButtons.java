@@ -124,8 +124,11 @@ public class PreferenceButtons {
                 // Actual setting of class values is done here
                 SongPreference.like(song);
                 // Updated SharedPreferences to account for Like change
-                updateSharedPreferences();
-                //Log.d("LIKE", song.getJsonString());
+                // updateSharedPreferences();
+
+                // Update Firebase to account for Like change
+                FirebaseSongList.changePreference(song);
+
                 redrawButtons();
             }
         });
@@ -141,8 +144,10 @@ public class PreferenceButtons {
                     localBroadcastManager.sendBroadcast(intent);
                 }
                 // Updated SharedPreferences to account for Dislike change
-                updateSharedPreferences();
+                // updateSharedPreferences();
 
+                // Update Firebase to account for Dislike change
+                FirebaseSongList.changePreference(song);
                 redrawButtons();
             }
         });

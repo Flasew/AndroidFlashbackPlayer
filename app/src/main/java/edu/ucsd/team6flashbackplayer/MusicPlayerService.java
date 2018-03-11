@@ -565,11 +565,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         SharedPreferences.Editor editor = sp.edit();
         String json = sp.getString(song.getPath(),null);
         Log.d(TAG, "Meta old: " + json);
-        SongJsonParser.updateSongLocTime(song, time,loc);
-        String newJson = song.getJsonString();
+        // SongJsonParser.updateSongLocTime(song, time,loc);
 
-        editor.putString(song.getPath(), newJson);
-        editor.apply();
+        //editor.putString(song.getPath(), newJson);
+        //editor.apply();
+
+        // Update for Firebase
+        FirebaseSongList.updateHistory(song, time, loc);
+        FirebaseSongList.updateUserHistory(song);
+
+        String newJson = song.getJsonString();
         Log.d(TAG, "Meta new: " + newJson);
     }
 
