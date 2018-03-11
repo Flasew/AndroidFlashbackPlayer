@@ -90,13 +90,10 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
 
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
-        flashBackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                editor.putBoolean("mode" , true);
-                editor.apply();
-                startCurrSongActivity();
-            }
+        flashBackButton.setOnClickListener( v -> {
+            editor.putBoolean("mode" , true);
+            editor.apply();
+            startCurrSongActivity();
         });
 
         downloader = new WebMusicDownloader(

@@ -2,11 +2,13 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.app.DialogFragment;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.MediaMetadataRetriever;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
@@ -24,11 +26,27 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.people.v1.People;
+import com.google.api.services.people.v1.PeopleScopes;
+import com.google.api.services.people.v1.model.EmailAddress;
+import com.google.api.services.people.v1.model.ListConnectionsResponse;
+import com.google.api.services.people.v1.model.Person;
 
 import java.io.File;
+import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,12 +67,15 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     private static final int RC_SIGN_IN = 9000;
 
     // google sign in options used for sign in.
-    private GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .build();
+    private GoogleSignInOptions gso;
     // GoogleSignIn relevant information.
     private GoogleSignInClient mGoogleSignInClient;
     private GoogleSignInAccount account;
+    private String serverAuthCode;
+    private AsyncSetupAccount apf;    // used to prevent mem leak.
+
+    private List<Person> friends;   // list of people fetched from google account,
+                                    // might be unnecessary as a field
 
     /**
      * On create of the main activity is called on application launch. This function will handle
@@ -64,6 +85,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
 
         // set title and layout of this activity
         setTitle(R.string.main_activity_title);
@@ -76,51 +98,43 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         requestAllPermission();
 
         currSong = findViewById(R.id.current_song);
-        currSong.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startCurrSongActivity();
-            }
-        });
+        currSong.setOnClickListener(v -> startCurrSongActivity());
 
         resetSongStatusBar();
 
         Button songButton = findViewById(R.id.main_songs);
-        songButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startSongActivity();
-            }
-        });
+        songButton.setOnClickListener(v -> startSongActivity());
 
         Button albumButton = findViewById(R.id.main_albums);
-        albumButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startAlbumActivity();
-            }
-        });
+        albumButton.setOnClickListener(v -> startAlbumActivity());
 
+        // sign in this thing...
         // google sign in.
+        gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestServerAuthCode(getString(R.string.client_id))
+                .requestEmail()
+                .requestScopes(new Scope(Scopes.PROFILE),
+                        new Scope(PeopleScopes.CONTACTS_READONLY),
+                        new Scope(PeopleScopes.USER_EMAILS_READ),
+                        new Scope(PeopleScopes.USERINFO_PROFILE))
+                .build();
         // Build a GoogleSignInClient with the options specified by gso.
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         // Check for existing Google Sign In account, if the user is already signed in
         // the GoogleSignInAccount will be non-null.
-        account = GoogleSignIn.getLastSignedInAccount(this);
+        trySilentSignIn();
 
-        updateUI(account);
+        apf = new AsyncSetupAccount(this);
+        apf.execute();
 
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
 
-        flashBackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                editor.putBoolean("mode" , true);
-                editor.apply();
-                startCurrSongActivity();
-            }
+        flashBackButton.setOnClickListener(v -> {
+            editor.putBoolean("mode", true);
+            editor.apply();
+            startCurrSongActivity();
         });
 
         // lanuch fb mode if it was in it.
@@ -130,8 +144,31 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         }
     }
 
+    private void trySilentSignIn() {
+        Task<GoogleSignInAccount> task = mGoogleSignInClient.silentSignIn();
+        if (task.isSuccessful()) {
+            // There's immediate result available.
+            Log.d(TAG, "Silent sign in succeeded");
+            account = task.getResult();
+        } else {
+            // There's no immediate result ready
 
-
+            task.addOnCompleteListener(t -> {
+                try {
+                    account = t.getResult(ApiException.class);
+                } catch (ApiException apiException) {
+                    // You can get from apiException.getStatusCode() the detailed error code
+                    // e.g. GoogleSignInStatusCodes.SIGN_IN_REQUIRED means user needs to take
+                    // explicit action to finish sign-in;
+                    // Please refer to GoogleSignInStatusCodes Javadoc for details
+                    account = null;
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                    account = null;
+                }
+            });
+        }
+    }
 
     /**
      * Called when main activity exits.
@@ -139,17 +176,52 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (apf != null) {
+            apf.cancel(true);
+            apf = null;
+        }
         // Commented out to keep functionality of music playing when exiting with back buttons
         // stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
     }
 
+
     /**
-     * Google signin
+     * Create the menu of the app
+     * @param menu menu object
+     * @return ignored
      */
-    private void signIn() {
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
     }
+
+    /**
+     * Handles menu item click. In this case both are for download.
+     * @param item item clicked
+     * @return result of handle
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        // enable a user time or set back to the system time.
+        if (id == R.id.pick_fixed_time) {
+            DialogFragment downloadDialog = new DateTimeSetterDialogFragment();
+            downloadDialog.show(getFragmentManager(), getResources().getString(R.string.pick_time));
+        }
+
+        else if (id == R.id.use_sys_time){
+            AppTime.unsetFixedTime();
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
 
     /**
      * Handle activity's result, for google sign in result.
@@ -169,107 +241,6 @@ public class MainActivity extends MusicPlayerNavigateActivity {
             handleSignInResult(task);
         }
     }
-
-    /**
-     * handle google sign in result
-     * @param completedTask
-     */
-    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
-        try {
-            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-
-            // Signed in successfully, show authenticated UI.
-            updateUI(account);
-        } catch (ApiException e) {
-            // The ApiException status code indicates the detailed failure reason.
-            // Please refer to the GoogleSignInStatusCodes class reference for more information.
-            Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
-            updateUI(null);
-        }
-    }
-
-    /**
-     * Update the UI of the sign in button reigon. If not signed in, display a sign in button;
-     * otherwise display the welcome message.
-     * @param account google account object
-     */
-    private void updateUI(GoogleSignInAccount account) {
-        SignInButton signInButton = findViewById(R.id.sign_in_button);
-        TextView welcomeText = findViewById(R.id.signed_in_text);
-
-        // if the user already signed in, display the welcome message.
-        if (account != null) {
-            welcomeText.setText(String.format(
-                    getResources().getString(R.string.welcome_info),
-                    account.getDisplayName()));
-            welcomeText.setVisibility(View.VISIBLE);
-            signInButton.setVisibility(View.GONE);
-        }
-
-        // otherwise show the sign in button
-        else {
-            signInButton.setVisibility(View.VISIBLE);
-            signInButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    signIn();
-                }
-            });
-            welcomeText.setVisibility(View.GONE);
-            signInButton.setVisibility(View.VISIBLE);
-        }
-    }
-
-
-    /**
-     * Request the permission if it's not granted.
-     */
-    public void requestAllPermission() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION +
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "permission not granted, acquiring...");
-
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION) ||
-                    ActivityCompat.shouldShowRequestPermissionRationale(this,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.perm_req_title)
-                        .setMessage(R.string.perm_req_txt)
-                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                //Prompt the user once explanation has been shown
-                                ActivityCompat.requestPermissions(MainActivity.this,
-                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                        FBPLAYER_PERMISSIONS_REQUEST_ALL);
-                            }
-                        })
-                        .create()
-                        .show();
-
-
-            } else {
-                // No explanation needed, we can request the permission.
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        FBPLAYER_PERMISSIONS_REQUEST_ALL);
-            }
-        }
-        else {
-            initSongAndAlbumList();
-        }
-    }
-
 
     /**
      * Called when permission request is finished. In this case only for logging
@@ -296,22 +267,197 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         }
     }
 
+    //--------------------------------------GOOGLE SIGNIN------------------------------------------
     /**
-     * Launch the song list page, when the song button is clicked.
+     * Set up the up based on account. If the account is null ust update ui, otherwise also
+     * populate the users.
      */
-    public void startSongActivity() {
-        Intent intent = new Intent(this, SongActivity.class);
-        startActivity(intent);
+    private void setupWithAccount() {
+
+        Log.d(TAG, "Account is null: " + (account == null) );
+        if (account != null) {
+            Log.d(TAG, "Account name: " + account.getDisplayName());
+            Log.d(TAG, "Account email: " + account.getEmail());
+        }
+
+        if (account != null) {
+
+            serverAuthCode = account.getServerAuthCode();
+            Log.d(TAG, "Server Auth code is: " + (serverAuthCode != null ? serverAuthCode : "null"));
+
+            try {
+                People peopleService = setupPeople(MainActivity.this, serverAuthCode);
+                ListConnectionsResponse response = peopleService.people().connections()
+                        .list("people/me")
+                        .setRequestMaskIncludeField("person.names,person.emailAddresses")
+                        .execute();
+
+                List<Person> connections = response.getConnections();
+
+                // populate the global user list here
+                for (Person p: connections) {
+                    if (!p.isEmpty()) {
+                        List<EmailAddress> emails = p.getEmailAddresses();
+                        if (emails != null) {
+                            Log.d(TAG, p.getNames().get(0).getDisplayName() + " has email: " + emails.get(0).getValue());
+                        }
+                    }
+                }
+
+            }
+            catch (IOException e) {
+                // overtime or something. Handle properly.
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
-     * Launch the Album list page, when the song button is clicked.
+     * Google signin
      */
-    public void startAlbumActivity() {
-        Intent intent = new Intent(this, AlbumActivity.class);
-        startActivity(intent);
+    private void signIn() {
+        Log.d(TAG, "Starting sign in... ");
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
+    /**
+     * handle google sign in result
+     * @param completedTask
+     */
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            account = completedTask.getResult(ApiException.class);
+            // Signed in successfully, show authenticated UI.
+            apf = new AsyncSetupAccount(this);
+            apf.execute();
+        } catch (ApiException e) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
+            account = null;
+            apf = new AsyncSetupAccount(this);
+            apf.execute();
+        }
+    }
+
+    /**
+     * Update the UI of the sign in button reigon. If not signed in, display a sign in button;
+     * otherwise display the welcome message.
+     */
+    private void updateSignInUI() {
+        SignInButton signInButton = findViewById(R.id.sign_in_button);
+        TextView welcomeText = findViewById(R.id.signed_in_text);
+
+        Log.d(TAG, "Updateing sign in ui, account is null: " + (account == null));
+        // if the user already signed in, display the welcome message.
+        if (account != null) {
+            welcomeText.setText(String.format(
+                    getResources().getString(R.string.welcome_info),
+                    account.getDisplayName()));
+            welcomeText.setVisibility(View.VISIBLE);
+            signInButton.setVisibility(View.GONE);
+        }
+
+        // otherwise show the sign in button
+        else {
+            signInButton.setVisibility(View.VISIBLE);
+            signInButton.setOnClickListener(v -> signIn());
+            welcomeText.setVisibility(View.GONE);
+            signInButton.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
+     * Set up the people API. Tutorial obtained from
+     * https://developers.google.com/people/v1/getting-started and
+     * http://blog.iamsuleiman.com/people-api-android-tutorial-2/
+     * TODO: consider put this part in async task.
+     * @param context context used to setup people api
+     * @param serverAuthCode server auth code of the account
+     * @return people object set up
+     * @throws IOException
+     */
+    public People setupPeople(Context context, String serverAuthCode) throws IOException {
+        HttpTransport httpTransport = new NetHttpTransport();
+        JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+
+        // Redirect URL for web based applications.
+        // Can be empty too.
+        String redirectUrl = "urn:ietf:wg:oauth:2.0:oob";
+
+        // STEP 1
+        GoogleTokenResponse tokenResponse = new GoogleAuthorizationCodeTokenRequest(
+                httpTransport,
+                jsonFactory,
+                context.getString(R.string.client_id),
+                context.getString(R.string.client_sec),
+                serverAuthCode,
+                redirectUrl).execute();
+
+        // STEP 2
+        GoogleCredential credential = new GoogleCredential.Builder()
+                .setClientSecrets(context.getString(R.string.client_id),
+                        context.getString(R.string.client_sec))
+                .setTransport(httpTransport)
+                .setJsonFactory(jsonFactory)
+                .build();
+
+        credential.setFromTokenResponse(tokenResponse);
+
+        // STEP 3 get the people object
+        return new People.Builder(httpTransport, jsonFactory, credential).build();
+    }
+
+
+    //--------------------------------------PERMISSION------------------------------------------
+    /**
+     * Request the permission if it's not granted.
+     */
+    public void requestAllPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION +
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "permission not granted, acquiring...");
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.perm_req_title)
+                        .setMessage(R.string.perm_req_txt)
+                        .setPositiveButton(R.string.ok, (dialogInterface, i) -> {
+                                //Prompt the user once explanation has been shown
+                                ActivityCompat.requestPermissions(MainActivity.this,
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                        FBPLAYER_PERMISSIONS_REQUEST_ALL);
+                        })
+                        .create()
+                        .show();
+
+
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        FBPLAYER_PERMISSIONS_REQUEST_ALL);
+            }
+        }
+        else {
+            initSongAndAlbumList();
+        }
+    }
+
+    //---------------------------------------INIT SONG/ALBUMS---------------------------------------
     /**
      * Recursively list of MP3 files from a directory (path), and store the path string in the
      * result argument.
@@ -421,12 +567,60 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         AlbumList.initAlbumList(SongList.getSongs());
     }
 
+    //---------------------------------------OTHER SHIT---------------------------------------
+
+    /**
+     * Launch the song list page, when the song button is clicked.
+     */
+    public void startSongActivity() {
+        Intent intent = new Intent(this, SongActivity.class);
+        startActivity(intent);
+    }
+
+    /**
+     * Launch the Album list page, when the song button is clicked.
+     */
+    public void startAlbumActivity() {
+        Intent intent = new Intent(this, AlbumActivity.class);
+        startActivity(intent);
+    }
+
     /**
      * Main would do noting (no UI update) after file download.
      */
     @Override
     protected void onFileDownloaded() {
 
+    }
+
+    private static class AsyncSetupAccount extends AsyncTask<Void, Void, Void> {
+
+        private WeakReference<MainActivity> associatedMainActivity;
+        public AsyncSetupAccount(MainActivity m) {
+            associatedMainActivity = new WeakReference<>(m);
+        }
+
+        @Override
+        protected Void doInBackground(Void... ignored) {
+            associatedMainActivity.get().setupWithAccount();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void ignored) {
+            Log.d(TAG, "Account async task finished...");
+            associatedMainActivity.get().updateSignInUI();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            Log.d(TAG, "Account async task started...");
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... ignored) {
+
+        }
     }
 
 

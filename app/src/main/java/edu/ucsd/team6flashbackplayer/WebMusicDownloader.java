@@ -138,6 +138,9 @@ public class WebMusicDownloader {
     }
 
 
+    /**
+     * AsyncTask class for song unzipping (file processing in general)
+     */
     private static class AsyncFileProcessor extends AsyncTask<String, Void, Void> {
 
         private WebMusicDownloader associatedDownloader;
@@ -154,6 +157,7 @@ public class WebMusicDownloader {
         @Override
         protected void onPostExecute(Void ignored) {
             associatedDownloader.broadcastFileHandled();
+            associatedDownloader = null;
         }
 
         @Override

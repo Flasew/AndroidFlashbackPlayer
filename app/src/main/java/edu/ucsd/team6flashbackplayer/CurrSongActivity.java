@@ -401,7 +401,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private void startMusicPlayerServiceFBMode(boolean update) {
 
         try {
-            PositionPlayListFactory ppl = new PositionPlayListFactory(lastLatLngCache, ZonedDateTime.now());
+            PositionPlayListFactory ppl = new PositionPlayListFactory(lastLatLngCache, AppTime.getInstance());
             Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
             positionList = ppl.getPositionList();
             playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, positionList);

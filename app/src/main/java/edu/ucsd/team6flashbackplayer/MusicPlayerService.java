@@ -317,7 +317,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             Log.d(TAG, "Location cache updated: Null.");
         }
 
-        songDateTimeCache = ZonedDateTime.now();
+        songDateTimeCache = AppTime.getInstance();
 
         // update UI by broadcast
         broadcastSongChange();
