@@ -139,10 +139,6 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         // the GoogleSignInAccount will be non-null.
         trySilentSignIn();
 
-        apf = new AsyncSetupAccount(this);
-        apf.execute();
-
-
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
 
@@ -159,27 +155,34 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         }
     }
 
-    private void trySilentSignIn() {
+    private synchronized void trySilentSignIn() {
         Task<GoogleSignInAccount> task = mGoogleSignInClient.silentSignIn();
+
         if (task.isSuccessful()) {
             // There's immediate result available.
             Log.d(TAG, "Silent sign in succeeded");
             account = task.getResult();
+            executeAccountUpdateAsync();
         } else {
             // There's no immediate result ready
-
+            Log.d(TAG, "Silent sign in taking long...");
             task.addOnCompleteListener(t -> {
                 try {
                     account = t.getResult(ApiException.class);
+                    Log.d(TAG, "Silent sign in successful...");
                 } catch (ApiException apiException) {
                     // You can get from apiException.getStatusCode() the detailed error code
                     // e.g. GoogleSignInStatusCodes.SIGN_IN_REQUIRED means user needs to take
                     // explicit action to finish sign-in;
                     // Please refer to GoogleSignInStatusCodes Javadoc for details
                     account = null;
+                    Log.d(TAG, "Silent sign failed.");
                 } catch (Throwable throwable) {
                     throwable.printStackTrace();
                     account = null;
+                }
+                finally {
+                    executeAccountUpdateAsync();
                 }
             });
         }
@@ -327,6 +330,13 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         }
     }
 
+    /**
+     * Start the async account update thing.
+     */
+    private void executeAccountUpdateAsync() {
+        apf = new AsyncSetupAccount(this);
+        apf.execute();
+    }
     /**
      * Google signin
      */
