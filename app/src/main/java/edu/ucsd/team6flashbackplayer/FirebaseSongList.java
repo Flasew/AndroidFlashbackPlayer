@@ -25,7 +25,8 @@ public class FirebaseSongList {
 
     private static List<Song> firebaseSongList = new ArrayList<Song>();
 
-    private static FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+    public static String firebaseURL = "https://cse-110-team-project-team-6.firebaseio.com/";
+    private static FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance(firebaseURL);
     private static DatabaseReference songsReference = firebaseDatabase.getReference("songs");
 
     /**

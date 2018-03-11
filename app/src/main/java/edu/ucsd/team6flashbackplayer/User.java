@@ -166,7 +166,7 @@ public class User {
      * @param assetManager AssetManager to read in files from assets folders to generate alias if necessary
      */
     public static void loadUser(GoogleSignInAccount acc, AssetManager assetManager) {
-        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance(FirebaseSongList.firebaseURL);
         DatabaseReference databaseReference = firebaseDatabase.getReference("users").child(acc.getId());
 
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {

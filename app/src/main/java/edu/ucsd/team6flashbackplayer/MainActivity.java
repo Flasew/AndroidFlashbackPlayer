@@ -48,8 +48,6 @@ import com.google.api.services.people.v1.model.Person;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -85,8 +83,6 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     private List<Person> friends;   // list of people fetched from google account,
                                     // might be unnecessary as a field
 
-    FirebaseDatabase database = FirebaseDatabase.getInstance();
-    DatabaseReference userRef = database.getReference("users");
     AssetManager assetManager;
 
     /**

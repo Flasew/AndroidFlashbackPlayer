@@ -24,7 +24,7 @@ import java.util.Map;
 public class Users {
     private static HashMap<String, User> users = new HashMap<>();
 
-    private static FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+    private static FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance(FirebaseSongList.firebaseURL);
     private static DatabaseReference databaseReference = firebaseDatabase.getReference("users");
 
 
