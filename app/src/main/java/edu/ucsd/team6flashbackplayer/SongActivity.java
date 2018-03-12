@@ -56,6 +56,8 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
                 startCurrSongActivity();
         });
 
+        setControlButtonsUI();
+
         // check if it's from an album or should display the global list.
         String albumName;
         Bundle extras = getIntent().getExtras();

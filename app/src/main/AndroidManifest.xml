@@ -35,7 +35,8 @@
             android:theme="@style/AppTheme.NoActionBar"/>
         <activity android:name=".AlbumActivity"
             android:theme="@style/AppTheme.NoActionBar"/>
-        <activity android:name=".CurrSongActivity" />
+        <activity android:name=".CurrSongActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
 
         <service
             android:name=".MusicPlayerService"

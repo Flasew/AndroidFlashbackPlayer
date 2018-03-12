@@ -114,7 +114,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         currSong = findViewById(R.id.current_song);
         currSong.setOnClickListener(v -> startCurrSongActivity());
 
-        resetSongStatusBar();
+        setControlButtonsUI();
 
         Button songButton = findViewById(R.id.main_songs);
         songButton.setOnClickListener(v -> startSongActivity());
@@ -313,11 +313,13 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                 List<Person> connections = response.getConnections();
 
                 // populate the global user list here
-                for (Person p: connections) {
-                    if (!p.isEmpty()) {
-                        List<EmailAddress> emails = p.getEmailAddresses();
-                        if (emails != null) {
-                            Log.d(TAG, p.getNames().get(0).getDisplayName() + " has email: " + emails.get(0).getValue());
+                if (connections != null) {
+                    for (Person p : connections) {
+                        if (!p.isEmpty()) {
+                            List<EmailAddress> emails = p.getEmailAddresses();
+                            if (emails != null) {
+                                Log.d(TAG, p.getNames().get(0).getDisplayName() + " has email: " + emails.get(0).getValue());
+                            }
                         }
                     }
                 }

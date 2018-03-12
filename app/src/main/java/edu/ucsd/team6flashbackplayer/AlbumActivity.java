@@ -43,14 +43,9 @@ public class AlbumActivity extends MusicPlayerNavigateActivity implements Downlo
         setSupportActionBar(toolbar);
 
         currSong = findViewById(R.id.current_song);
-        currSong.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startCurrSongActivity();
-            }
-        });
+        currSong.setOnClickListener(v -> startCurrSongActivity());
 
-        resetSongStatusBar();
+        setControlButtonsUI();
 
         final ListView albumView = findViewById(R.id.album_list);
 
@@ -58,26 +53,20 @@ public class AlbumActivity extends MusicPlayerNavigateActivity implements Downlo
         albumAdt = new TextEntryAdapter<Album>(this, AlbumList.getAlbums() );
         albumView.setAdapter(albumAdt);
         albumView.setItemsCanFocus(false);
-        albumView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        albumView.setOnItemClickListener((parent, view, position, id) -> {
                 Log.d(TAG, "On click listener.");
                 Album listItem = (Album)albumView.getItemAtPosition(position);
                 Log.d(TAG, "Album" + listItem.getName());
                 play(listItem);
                 startSongActivity(listItem);
-            }
         });
 
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
-        flashBackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        flashBackButton.setOnClickListener(v -> {
                 editor.putBoolean("mode" , true);
                 editor.apply();
                 startCurrSongActivity();
-            }
         });
 
         downloader = new WebMusicDownloader(
@@ -111,14 +100,9 @@ public class AlbumActivity extends MusicPlayerNavigateActivity implements Downlo
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //
-        if (id == R.id.sort_holder) {
-            return true;
-        }
-
-        else if (id == R.id.add_album) {
+        if (id == R.id.add_album) {
             DialogFragment downloadDialog = new DownloadDialogFragment();
-            downloadDialog.show(getFragmentManager(), getResources().getString(R.string.download_song));
+            downloadDialog.show(getFragmentManager(), getResources().getString(R.string.download_album));
         }
 
         return super.onOptionsItemSelected(item);

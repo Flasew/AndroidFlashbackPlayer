@@ -2,7 +2,8 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     <android.support.constraint.Guideline
         android:id="@+id/guidelineL10"
@@ -36,13 +37,12 @@
         android:id="@+id/song_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:padding="@dimen/fab_margin"
+        android:padding="@dimen/curr_page_margin"
         android:singleLine="true"
         android:ellipsize="marquee"
         android:marqueeRepeatLimit ="marquee_forever"
         android:focusable="false"
         android:focusableInTouchMode="false"
-
         android:scrollHorizontally="true"
         android:textSize="15sp"
         android:textColor="#000000"
@@ -52,13 +52,13 @@
         app:layout_constraintRight_toRightOf="@id/guidelineR10"
         app:layout_constraintTop_toBottomOf="@id/fb_button"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.1" />
+        app:layout_constraintVertical_bias="0.04" />
 
     <TextView
         android:id="@+id/song_artist"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:padding="@dimen/fab_margin"
+        android:padding="@dimen/curr_page_margin"
         android:textSize="15sp"
         android:textColor="#000000"
         android:singleLine="true"
@@ -75,6 +75,28 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0"/>
 
+    <TextView
+        android:id="@+id/song_album"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/curr_page_margin"
+        android:textSize="15sp"
+        android:textColor="#000000"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit ="marquee_forever"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:scrollHorizontally="true"
+        android:text="---"
+        android:gravity="center_horizontal"
+        app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
+        app:layout_constraintRight_toRightOf="@id/guidelineR10"
+        app:layout_constraintTop_toBottomOf="@id/song_artist"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0"/>
+
+
     <ImageButton
         android:id="@+id/like_button"
         android:layout_width="60dp"
@@ -83,10 +105,10 @@
         android:padding="@dimen/entry_margin"
         app:layout_constraintRight_toRightOf="@id/guidelineR10"
         app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
-        app:layout_constraintTop_toBottomOf="@id/song_artist"
+        app:layout_constraintTop_toBottomOf="@id/song_album"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.2"
-        app:layout_constraintVertical_bias="0.1"/>
+        app:layout_constraintVertical_bias="0.05"/>
 
     <ImageButton
         android:id="@+id/dislike_button"
@@ -96,16 +118,16 @@
         android:padding="@dimen/entry_margin"
         app:layout_constraintRight_toRightOf="@id/guidelineR10"
         app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
-        app:layout_constraintTop_toBottomOf="@id/song_artist"
+        app:layout_constraintTop_toBottomOf="@id/song_album"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.8"
-        app:layout_constraintVertical_bias="0.1"/>
+        app:layout_constraintVertical_bias="0.05"/>
 
     <TextView
         android:id="@+id/location_lab"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingVertical="@dimen/fab_margin"
+        android:paddingVertical="@dimen/curr_page_margin"
         android:textSize="15sp"
         android:textColor="#000000"
         android:text="@string/location"
@@ -119,8 +141,8 @@
         android:id="@+id/location_txt"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/fab_margin"
-        android:paddingVertical="@dimen/fab_margin"
+        android:layout_marginStart="@dimen/curr_page_margin"
+        android:paddingVertical="@dimen/curr_page_margin"
         android:textSize="15sp"
         android:textColor="#000000"
         android:singleLine="true"
@@ -138,16 +160,52 @@
         app:layout_constraintVertical_bias="0.1"/>
 
     <TextView
+        android:id="@+id/user_lab"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingVertical="@dimen/curr_page_margin"
+        android:textSize="15sp"
+        android:textColor="#000000"
+        android:text="@string/user_last"
+        android:gravity="center_horizontal"
+        app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
+        app:layout_constraintTop_toBottomOf="@id/location_lab"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/user_txt"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/curr_page_margin"
+        android:paddingVertical="@dimen/curr_page_margin"
+        android:textSize="15sp"
+        android:textColor="#000000"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit ="marquee_forever"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:scrollHorizontally="true"
+        android:text="@string/no_history"
+        android:gravity="start"
+        app:layout_constraintLeft_toRightOf="@id/location_lab"
+        app:layout_constraintRight_toRightOf="@id/guidelineR10"
+        app:layout_constraintTop_toBottomOf="@id/location_lab"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.0"/>
+
+    <TextView
         android:id="@+id/time_lab"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingTop="@dimen/fab_margin"
+        android:paddingTop="@dimen/curr_page_margin"
         android:textSize="15sp"
         android:textColor="#000000"
         android:text="@string/time"
         android:gravity="center_horizontal"
         app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
-        app:layout_constraintTop_toBottomOf="@id/location_lab"
+        app:layout_constraintTop_toBottomOf="@id/user_lab"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0" />
 
@@ -155,7 +213,7 @@
         android:id="@+id/time_date_txt"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingTop="@dimen/fab_margin"
+        android:paddingTop="@dimen/curr_page_margin"
         android:textSize="15sp"
         android:textColor="#000000"
         android:singleLine="true"
@@ -168,7 +226,7 @@
         android:gravity="start"
         app:layout_constraintLeft_toLeftOf="@id/location_txt"
         app:layout_constraintRight_toRightOf="@id/guidelineR10"
-        app:layout_constraintTop_toBottomOf="@id/location_lab"
+        app:layout_constraintTop_toBottomOf="@id/user_lab"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0"/>
 
@@ -176,7 +234,7 @@
         android:id="@+id/time_clock_txt"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingTop="@dimen/fab_margin"
+        android:paddingTop="@dimen/curr_page_margin"
         android:textSize="15sp"
         android:textColor="#000000"
         android:singleLine="true"
@@ -193,17 +251,43 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0"/>
 
-    <Button
-        android:id="@+id/show_playlist"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/showplaylist"
-        android:visibility="gone"
-        app:layout_constraintLeft_toLeftOf="@id/guidelineL10"
-        app:layout_constraintRight_toRightOf="@id/guidelineR10"
+    <!--<Button-->
+        <!--android:id="@+id/show_playlist"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="@string/showplaylist"-->
+        <!--android:visibility="gone"-->
+        <!--app:layout_constraintLeft_toLeftOf="@id/guidelineL10"-->
+        <!--app:layout_constraintRight_toRightOf="@id/guidelineR10"-->
+        <!--app:layout_constraintTop_toBottomOf="@id/time_clock_txt"-->
+        <!--app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--app:layout_constraintVertical_bias="0.6"-->
+        <!--/>-->
+
+    <ImageView
+        android:id="@+id/pause_play"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@null"
+        android:src="@drawable/ic_play_arrow_blue_24dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@id/time_clock_txt"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.6"
-        />
+        app:layout_constraintVertical_bias=".2"
+        app:layout_constraintHorizontal_bias="0.35"/>
+
+    <ImageView
+        android:id="@+id/skip"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@null"
+        android:src="@drawable/ic_skip_next_blue_24dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/time_clock_txt"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias=".2"
+        app:layout_constraintHorizontal_bias="0.65"/>
 
 </android.support.constraint.ConstraintLayout>

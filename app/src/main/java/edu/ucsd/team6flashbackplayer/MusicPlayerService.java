@@ -48,6 +48,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     // label of broadcasting song change.
     static String BROADCAST_SONG_CHANGE = "uiUpdate";
+    static String BROADCAST_SONG_CHANGE_POSITION = "mediaPlayerPosition";
+    static String BROADCAST_SONG_CHANGE_STATUS = "mediaPlayerStatus";
 
     private final static String TAG = "MusicPlayerService";
 
@@ -92,6 +94,15 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private static final String NOTIFICATION_CHANNEL_ID = "musicPlayerChannel";
     private static final String NOTIFICATION_CHANNEL_NAME = "MusicPlayer";
     private static final int FOREGROUND_ID = 1;
+    
+    // control
+    private BroadcastReceiver songContolReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+              onSongControl(intent.getIntExtra(ControlButtons.CTRL_BROADCAST, -1)) ;   
+        }
+    };
+    private boolean songControlReceiverRegistered = false;
 
     public MusicPlayerService() {
 
@@ -454,6 +465,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     /**
+     * Pause the media.
+     */
+    private void pauseMedia() {
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+            Log.d(TAG, "Media player paused");
+        }
+    }
+
+    /**
      * play the next song of this list.
      * If there's no more songs, stop the service and broadcast -1 to
      * indicate all songs are finished.
@@ -483,6 +504,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
 
+
+
     /* ---------------------BROADCAST RELATIVE------------------------ */
 
 
@@ -491,15 +514,18 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
      */
     public void broadcastSongChange() {
         int index;
+        boolean playerStatus;
         try {
             index = positionList.get(counter);
-
+            playerStatus = mediaPlayer.isPlaying();
         }
-        catch (IndexOutOfBoundsException | NullPointerException e) {
+        catch (IndexOutOfBoundsException | NullPointerException | IllegalStateException e ) {
             index = -1;
+            playerStatus = false;
         }
         Intent intent = new Intent(BROADCAST_SONG_CHANGE);
-        intent.putExtra(BROADCAST_SONG_CHANGE, index);
+        intent.putExtra(BROADCAST_SONG_CHANGE_POSITION, index);
+        intent.putExtra(BROADCAST_SONG_CHANGE_STATUS, playerStatus);
         localBroadcastManager.sendBroadcast(intent);
         Log.d(TAG, "Broadcast song change, position " + index + ", this instance " + this);
     }
@@ -523,6 +549,35 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     /**
+     * "Callback funciton" for a song control event
+     * @param controlCode code of this control
+     */
+    private void onSongControl(int controlCode) {
+        if (mediaPlayer == null)
+            return;
+
+        switch (controlCode) {
+            case ControlButtons.CTRL_PAUSE_PLAY:
+                if (mediaPlayer.isPlaying()) {
+                    pauseMedia();
+                }
+
+                else {
+                    playMedia();
+                }
+                break;
+
+            case ControlButtons.CTRL_SKIP:
+                nextSong();
+                break;
+
+            default:
+                break;
+
+        }
+    }
+
+    /**
      * Register the broadcast receiver callbacks for the service.
      * Currently includes songUpdateRequest and songDisliked
      */
@@ -539,6 +594,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                     new IntentFilter(PreferenceButtons.PREF_DISLIKED_BROADCAST));
             songDislikeReceiverRegistered = true;
         }
+
+        if (!songControlReceiverRegistered) {
+            localBroadcastManager.registerReceiver(songContolReceiver,
+                    new IntentFilter(ControlButtons.CTRL_BROADCAST));
+            songControlReceiverRegistered = true;
+        }
     }
 
     /**
@@ -549,6 +610,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         songUpdateReceiverRegistered = false;
         localBroadcastManager.unregisterReceiver(songDislikedReceiver);
         songDislikeReceiverRegistered = false;
+        localBroadcastManager.unregisterReceiver(songContolReceiver);
+        songControlReceiverRegistered = false;
     }
 
     /* ---------------------UPDATE SONG SP------------------------ */

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "657172641436",
+    "project_id": "team6flashbackpl-1520234910335"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:657172641436:android:f9fc9fa66851ac8d",
+        "android_client_info": {
+          "package_name": "edu.ucsd.team6flashbackplayer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "657172641436-eqt3f4cgpqo1lddl9pm2h1ir2cg573s0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ucsd.team6flashbackplayer",
+            "certificate_hash": "dfbc10c785a55f937c064cac537483455506a4ff"
+          }
+        },
+        {
+          "client_id": "657172641436-03j27eicvaog1lqfg90svd4vjistdgkr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKXoFO7vT6TI_1MvanrGrB2QCG3x39g_k"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

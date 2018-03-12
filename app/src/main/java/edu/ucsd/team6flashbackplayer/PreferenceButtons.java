@@ -118,9 +118,7 @@ public class PreferenceButtons {
             return;
         }
 
-        likeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        likeButton.setOnClickListener(v -> {
                 // Actual setting of class values is done here
                 SongPreference.like(song);
                 // Updated SharedPreferences to account for Like change
@@ -130,13 +128,10 @@ public class PreferenceButtons {
                 FirebaseSongList.changePreference(song);
 
                 redrawButtons();
-            }
         });
 
         // broadcast a song is disliked
-        dislikeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        dislikeButton.setOnClickListener(v -> {
                 SongPreference.dislike(song);
                 if (song.isDisliked()) {
                     Intent intent = new Intent(PREF_DISLIKED_BROADCAST);
@@ -149,7 +144,6 @@ public class PreferenceButtons {
                 // Update Firebase to account for Dislike change
                 FirebaseSongList.changePreference(song);
                 redrawButtons();
-            }
         });
         Log.d(TAG, "Button listener set for " + song.getTitle());
     }
