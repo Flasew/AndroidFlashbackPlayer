@@ -51,13 +51,15 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     static String BROADCAST_SONG_CHANGE_POSITION = "mediaPlayerPosition";
     static String BROADCAST_SONG_CHANGE_STATUS = "mediaPlayerStatus";
 
+    static String BROADCAST_SONG_LIST = "currPositionPlayList";
+
     private final static String TAG = "MusicPlayerService";
 
     private final IBinder iBinder = new LocalBinder();  // unused
 
     private List<Song> songs = SongList.getSongs();     // global song list
     private int counter = 0;                        // current song position counter
-    private List<Integer> positionList;             // list of songs to be played
+    private ArrayList<Integer> positionList;             // list of songs to be played
 
     private MediaPlayer mediaPlayer;                // media player that plays the song
 
@@ -84,7 +86,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     // location
     private LocationManager locationManager;
-    private static Location currLoc;            // current location updated with location
+    private Location currLoc;            // current location updated with location
     private LatLng songLatLngCache;             // cache the location of a song on start playing
     private ZonedDateTime songDateTimeCache;    // cache the time of a song on start playing
     private boolean locationListenerRegistered = false;
@@ -103,6 +105,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
     };
     private boolean songControlReceiverRegistered = false;
+
+    // song list
+    private BroadcastReceiver songListRequestReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            broadcastSongList();
+        }
+    };
+
+    private boolean songListRequestReceiverRegistered = false;
 
     public MusicPlayerService() {
 
@@ -515,6 +527,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     public void broadcastSongChange() {
         int index;
         boolean playerStatus;
+
         try {
             index = positionList.get(counter);
             playerStatus = mediaPlayer.isPlaying();
@@ -528,6 +541,15 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         intent.putExtra(BROADCAST_SONG_CHANGE_STATUS, playerStatus);
         localBroadcastManager.sendBroadcast(intent);
         Log.d(TAG, "Broadcast song change, position " + index + ", this instance " + this);
+    }
+
+    /**
+     * Broadcast the current playlist when requested.
+     */
+    private void broadcastSongList() {
+        Intent intent = new Intent(BROADCAST_SONG_LIST);
+        intent.putIntegerArrayListExtra(BROADCAST_SONG_LIST, positionList);
+        localBroadcastManager.sendBroadcast(intent);
     }
 
     /**
@@ -600,6 +622,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                     new IntentFilter(ControlButtons.CTRL_BROADCAST));
             songControlReceiverRegistered = true;
         }
+
+        if (!songListRequestReceiverRegistered) {
+            localBroadcastManager.registerReceiver(songListRequestReceiver,
+                    new IntentFilter(ControlButtons.CTRL_BROADCAST));
+            songControlReceiverRegistered = true;
+        }
+
     }
 
     /**
