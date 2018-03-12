@@ -43,7 +43,7 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".FBPlayListActivity"></activity>
+        <activity android:name=".PlayListActivity"></activity>
     </application>
 
 </manifest>

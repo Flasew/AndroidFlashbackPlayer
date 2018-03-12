@@ -2,7 +2,6 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.Manifest;
 import android.app.AlarmManager;
-import android.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -54,6 +53,8 @@ import java.util.List;
  */
 public class CurrSongActivity extends MusicPlayerActivity implements LocationListener {
 
+    static final String PLAYLIST_REQUEST = "playlistRequest";
+
     private static final String TAG = "CurrSongActivity";   // debug tag
 
     // Intent label for the intents passed to the AlarmReceiver indicating
@@ -63,10 +64,6 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private final int[] UPDATE_TIME = {0};
     private boolean flashBackMode;          // if FB is enabled
 
-    // position playlist of the flashback mode. used to display the playlist in
-    // FB mode.
-    private ArrayList<Integer> positionList;
-
     // UI elements
     private Button flashBackButton;
     private TextView timeClockView;
@@ -74,6 +71,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private TextView locationTextView;
     private TextView songTitleView;
     private TextView songArtistView;
+    private TextView songAlbumView;
     private TextView lastUserView;
     private PreferenceButtons preferenceButtons;
 
@@ -123,6 +121,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         locationTextView = findViewById(R.id.location_txt);
         songTitleView = findViewById(R.id.song_name);
         songArtistView = findViewById(R.id.song_artist);
+        songAlbumView = findViewById(R.id.song_album);
         lastUserView = findViewById(R.id.user_txt);
         preferenceButtons = new PreferenceButtons(
                 (ImageButton) findViewById(R.id.like_button),
@@ -242,6 +241,8 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         songTitleView.setSelected(true);
         songArtistView.setText(currSong.getArtist());
         songArtistView.setSelected(true);
+        songAlbumView.setText(currSong.getAlbum());
+        songAlbumView.setSelected(true);
         locationTextView.setText(getStrAddress(currSong.getLatestLoc()));
         locationTextView.setSelected(true);
         timeDateView.setText(getStrDate(currSong.getLatestTime()));
@@ -373,8 +374,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
      * Start the FBListActivity which is a listview of current playlist of the flashback mode.
      */
     private void startFBListActivity() {
-        Intent intent = new Intent(CurrSongActivity.this, FBPlayListActivity.class);
-        intent.putIntegerArrayListExtra(FBPlayListActivity.FB_POS_LIST, positionList);
+        Intent intent = new Intent(CurrSongActivity.this, PlayListActivity.class);
         startActivity(intent);
     }
 
@@ -458,14 +458,16 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         try {
             PositionPlayListFactory ppl = new PositionPlayListFactory(lastLatLngCache, AppTime.getInstance());
             Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
-            positionList = ppl.getPositionList();
+            ArrayList<Integer> positionList = ppl.getPositionList();
             playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, positionList);
             playerIntent.putExtra(MainActivity.START_MUSICSERVICE_KEEP_CURRPLAY, update);
             startService(playerIntent);
 
             // send a toast for updated list
-            if (update)
+            if (update) {
                 Toast.makeText(this, "Playlist updated", Toast.LENGTH_SHORT).show();
+                broadcastPlaylistRequest();
+            }
 
             Log.d(TAG, "Flashback mode service started.");
         }
@@ -534,6 +536,12 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         return zdt.format(
                 DateTimeFormatter.ofPattern("hh:mm a")
         );
+    }
+
+    private void broadcastPlaylistRequest() {
+        Intent intent = new Intent(PLAYLIST_REQUEST);
+        localBroadcastManager.sendBroadcast(intent);
+        Log.d(TAG, "Broadcast playlist request");
     }
 
     /**

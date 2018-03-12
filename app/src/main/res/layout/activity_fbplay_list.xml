@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="edu.ucsd.team6flashbackplayer.FBPlayListActivity">
+    tools:context="edu.ucsd.team6flashbackplayer.PlayListActivity">
 
     <include layout="@layout/content_fbplay_list"></include>
 

@@ -547,6 +547,14 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
      * Broadcast the current playlist when requested.
      */
     private void broadcastSongList() {
+        Log.d(TAG, "Broadcasting song list");
+
+        Log.d(TAG, "positionList is null: " + (positionList == null));
+        if (positionList != null)
+            for(int i: positionList) {
+                Log.d(TAG, "PosList has item " + i);
+            }
+
         Intent intent = new Intent(BROADCAST_SONG_LIST);
         intent.putIntegerArrayListExtra(BROADCAST_SONG_LIST, positionList);
         localBroadcastManager.sendBroadcast(intent);
@@ -625,7 +633,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
         if (!songListRequestReceiverRegistered) {
             localBroadcastManager.registerReceiver(songListRequestReceiver,
-                    new IntentFilter(ControlButtons.CTRL_BROADCAST));
+                    new IntentFilter(CurrSongActivity.PLAYLIST_REQUEST));
             songControlReceiverRegistered = true;
         }
 
@@ -641,6 +649,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         songDislikeReceiverRegistered = false;
         localBroadcastManager.unregisterReceiver(songContolReceiver);
         songControlReceiverRegistered = false;
+        localBroadcastManager.unregisterReceiver(songListRequestReceiver);
+        songListRequestReceiverRegistered = false;
     }
 
     /* ---------------------UPDATE SONG SP------------------------ */
