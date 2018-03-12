@@ -18,6 +18,7 @@ import android.widget.TextView;
  */
 public abstract class MusicPlayerNavigateActivity extends MusicPlayerActivity {
     protected ConstraintLayout currSong;  // current song status bar
+    protected ControlButtons controlButtons;       // control button for skip and pause
 
     // broadcast receiver for currently playing song updated
     protected BroadcastReceiver fileDownloadedBroadcastReceiver = new BroadcastReceiver() {
@@ -62,7 +63,7 @@ public abstract class MusicPlayerNavigateActivity extends MusicPlayerActivity {
      * @param position position of the new song in the global playlist.
      */
     @Override
-    protected void onSongUpdate(int position) {
+    protected void onSongUpdate(int position, boolean status) {
         TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
         TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
         Song currSong = SongList.getSongs().get(position);
@@ -70,6 +71,15 @@ public abstract class MusicPlayerNavigateActivity extends MusicPlayerActivity {
         String artist = currSong.getArtist();
         currPlayingName.setText(title);
         currPlayingArtist.setText(artist);
+
+        if (status) {
+            controlButtons.setPause();
+        }
+        else {
+            controlButtons.setPlay();
+        }
+
+        controlButtons.setButtonListeners();
     }
 
     /**
@@ -88,6 +98,20 @@ public abstract class MusicPlayerNavigateActivity extends MusicPlayerActivity {
         TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
         currPlayingName.setText(NO_INFO);
         currPlayingArtist.setText(NO_INFO);
+        controlButtons.setPlay();
+        controlButtons.unsetButtonListeners();
+    }
+
+    /**
+     * Set the control buttons UI
+     */
+    protected void setControlButtonsUI() {
+        controlButtons = new ControlButtons(this,
+                findViewById(R.id.pause_play),
+                findViewById(R.id.skip),
+                getDrawable(R.drawable.ic_pause_black_24dp),
+                getDrawable(R.drawable.ic_play_arrow_black_24dp),
+                getDrawable(R.drawable.ic_skip_next_black_24dp));
     }
 
     /**

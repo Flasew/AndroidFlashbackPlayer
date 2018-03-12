@@ -29,5 +29,19 @@
     <string name="cancel">Cancel</string>
     <string name="download">Download</string>
     <string name="download_msg">Download...</string>
+    <string name="fixed_time">Pick a fixed App time...</string>
+    <string name="sys_time">Use System Time</string>
+    <string name="pick_time">Pick a fixed time...</string>
+
+    <!--<string name="client_id">657172641436-03j27eicvaog1lqfg90svd4vjistdgkr.apps.googleusercontent.com</string>-->
+    <!--<string name="client_sec">mfHZRa8yqr1BhvnwevefdOKm</string>-->
+
+    <string name="client_id">977220768554-pht867dr5ek1ugo14p1t9uh72mlnf7ve.apps.googleusercontent.com</string>
+    <string name="client_sec">8o4r1H61igOxEqEnIaijYFiR</string>
+
+    <!--<string name="android_client_id">657172641436-eqt3f4cgpqo1lddl9pm2h1ir2cg573s0.apps.googleusercontent.com</string>-->
+    <string name="user_last">Played by:</string>
+    <string name="show_playlist">Show Playlist</string>
+    <!--<string name="client_sec">mfHZRa8yqr1BhvnwevefdOKm</string>-->
 
 </resources>

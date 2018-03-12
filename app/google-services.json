@@ -1,0 +1,103 @@
+//{
+//  "project_info": {
+//    "project_number": "657172641436",
+//    "project_id": "team6flashbackpl-1520234910335"
+//  },
+//  "client": [
+//    {
+//      "client_info": {
+//        "mobilesdk_app_id": "1:657172641436:android:f9fc9fa66851ac8d",
+//        "android_client_info": {
+//          "package_name": "edu.ucsd.team6flashbackplayer"
+//        }
+//      },
+//      "oauth_client": [
+//        {
+//          "client_id": "657172641436-eqt3f4cgpqo1lddl9pm2h1ir2cg573s0.apps.googleusercontent.com",
+//          "client_type": 1,
+//          "android_info": {
+//            "package_name": "edu.ucsd.team6flashbackplayer",
+//            "certificate_hash": "dfbc10c785a55f937c064cac537483455506a4ff"
+//          }
+//        },
+//        {
+//          "client_id": "657172641436-03j27eicvaog1lqfg90svd4vjistdgkr.apps.googleusercontent.com",
+//          "client_type": 3
+//        }
+//      ],
+//      "api_key": [
+//        {
+//          "current_key": "AIzaSyDKXoFO7vT6TI_1MvanrGrB2QCG3x39g_k"
+//        }
+//      ],
+//      "services": {
+//        "analytics_service": {
+//          "status": 1
+//        },
+//        "appinvite_service": {
+//          "status": 1,
+//          "other_platform_oauth_client": []
+//        },
+//        "ads_service": {
+//          "status": 1
+//        }
+//      }
+//    }
+//  ],
+//  "configuration_version": "1"
+//}
+{
+  "project_info": {
+    "project_number": "977220768554",
+    "firebase_url": "https://cse-110-team-project-team-6.firebaseio.com",
+    "project_id": "cse-110-team-project-team-6",
+    "storage_bucket": "cse-110-team-project-team-6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:977220768554:android:f9fc9fa66851ac8d",
+        "android_client_info": {
+          "package_name": "edu.ucsd.team6flashbackplayer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "977220768554-p03vcv18tjublnsj736nnsmnvo7m5v8a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.ucsd.team6flashbackplayer",
+            "certificate_hash": "f0659079ee93b903e04216479dcc7baa425995b4"
+          }
+        },
+        {
+          "client_id": "977220768554-rugn4t0nits3pnhohtvirqcjk0e5cajs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABCfZxuK_pE1OWE38BjlaIKSnB36mK4bU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "977220768554-rugn4t0nits3pnhohtvirqcjk0e5cajs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

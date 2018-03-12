@@ -37,9 +37,10 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "Broadcast received");
-            int pos = intent.getIntExtra(MusicPlayerService.BROADCAST_SONG_CHANGE, -1);
+            int pos = intent.getIntExtra(MusicPlayerService.BROADCAST_SONG_CHANGE_POSITION, -1);
+            boolean status = intent.getBooleanExtra(MusicPlayerService.BROADCAST_SONG_CHANGE_STATUS, false);
             if (pos != -1) {
-                onSongUpdate(pos);
+                onSongUpdate(pos, status);
             }
             else {
                 onAllSongsFinish();
@@ -108,8 +109,9 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
      * When a song is updated, onSongUpdate should update all the relevant UI.
      * need to be implemented in specific class since there's view change
      * @param position position of the song in the global song list.
+     * @param status is the song playing
      */
-    protected abstract void onSongUpdate(int position);
+    protected abstract void onSongUpdate(int position, boolean status);
 
     /**
      * When all songs finished playing in this positionlist, -1 will be broadcasted

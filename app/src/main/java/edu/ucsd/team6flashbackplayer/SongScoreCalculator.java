@@ -57,10 +57,33 @@ public class SongScoreCalculator {
      * @param t time to be asserted
      * @return Time of day score.
      */
-    private static int todScore(Song s, ZonedDateTime t) {
+    private static int weekScore(Song s, ZonedDateTime t) {
         int score = 0;
-        if (s.getTimeHist()[Song.timeOfDay(t.getHour())])
+        ZonedDateTime sTime = s.getLatestTime();
+        t = t.minusWeeks(1);
+        if (sTime.getDayOfYear() > t.getDayOfYear()) {
             score = 1;
+        }
+        else if(sTime.getDayOfYear() == t.getDayOfYear()) {
+            if(sTime.getHour() > t.getHour()){
+                score = 1;
+            }
+            else if(sTime.getHour() == t.getHour()){
+                if(sTime.getMinute() > t.getMinute()){
+                    score = 1;
+                }
+                else if(sTime.getMinute() == t.getMinute()){
+                    if(sTime.getSecond() > t.getSecond()){
+                        score = 1;
+                    }
+                    else if(sTime.getSecond() == t.getSecond()){
+                        if(sTime.getNano() > t.getNano()){
+                            score = 1;
+                        }
+                    }
+                }
+            }
+        }
         Log.d(TAG, "Song " + s.getTitle() + " gets a time of day score " + score);
         return score;
     }
@@ -87,7 +110,7 @@ public class SongScoreCalculator {
      * @return total score.
      */
     public static int calcScore(Song s, LatLng l, ZonedDateTime t) {
-        return locScore(s, l) + todScore(s, t) + dowScore(s, t);
+        return locScore(s, l) + weekScore(s, t) + dowScore(s, t);
     }
 
 }

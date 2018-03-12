@@ -111,6 +111,9 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
 
         // folder to unzip to
         String unzipFolder = zipname.replaceAll(".zip$", "");
+        File unzipFolderFile = new File(makeDirStr(path, unzipFolder));
+        unzipFolderFile.mkdirs();
+
         LinkedList<String> result = new LinkedList<>();
 
         InputStream is;

@@ -16,7 +16,10 @@ import android.location.LocationManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -50,18 +53,16 @@ import java.util.List;
  */
 public class CurrSongActivity extends MusicPlayerActivity implements LocationListener {
 
+    static final String PLAYLIST_REQUEST = "playlistRequest";
+
     private static final String TAG = "CurrSongActivity";   // debug tag
 
     // Intent label for the intents passed to the AlarmReceiver indicating
     // which time it arrived
     private static final String FB_LIST_UPDATE_TIME_INDEX = "FBUpdateTimeIndex";
     // time for update the "time of day" period. 0 handles day change.
-    private final int[] UPDATE_TIME = {0, 5, 11, 17};
+    private final int[] UPDATE_TIME = {0};
     private boolean flashBackMode;          // if FB is enabled
-
-    // position playlist of the flashback mode. used to display the playlist in
-    // FB mode.
-    private ArrayList<Integer> positionList;
 
     // UI elements
     private Button flashBackButton;
@@ -70,8 +71,11 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private TextView locationTextView;
     private TextView songTitleView;
     private TextView songArtistView;
+    private TextView songAlbumView;
+    private TextView lastUserView;
     private PreferenceButtons preferenceButtons;
-    private Button playListButton;
+
+    private ControlButtons controlButtons;
 
     // location manager to listen for location update & receiver
     private LocationManager locationManager;
@@ -97,6 +101,8 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
 
         // set title of this activity
         setTitle(R.string.curr_song_activity_title);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         // BCM
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
@@ -115,6 +121,8 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         locationTextView = findViewById(R.id.location_txt);
         songTitleView = findViewById(R.id.song_name);
         songArtistView = findViewById(R.id.song_artist);
+        songAlbumView = findViewById(R.id.song_album);
+        lastUserView = findViewById(R.id.user_txt);
         preferenceButtons = new PreferenceButtons(
                 (ImageButton) findViewById(R.id.like_button),
                 (ImageButton) findViewById(R.id.dislike_button),
@@ -123,14 +131,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         preferenceButtons.redrawButtons();
         PreferenceButtons.setLocalBroadcastManager(this);
         flashBackButton = findViewById(R.id.fb_button);
-        playListButton = findViewById(R.id.show_playlist);
-        playListButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startFBListActivity();
-            }
-        });
-
+        setControlButtonsUI();
 
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         flashBackMode = fbModeSharedPreferences.getBoolean("mode", false);
@@ -174,6 +175,15 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
 
     }
 
+    private void setControlButtonsUI() {
+        controlButtons = new ControlButtons(this,
+                findViewById(R.id.pause_play),
+                findViewById(R.id.skip),
+                getDrawable(R.drawable.ic_pause_blue_24dp),
+                getDrawable(R.drawable.ic_play_arrow_blue_24dp),
+                getDrawable(R.drawable.ic_skip_next_blue_24dp));
+    }
+
     /**
      * Disabled the back button when FB mode is enabled.
      */
@@ -185,11 +195,42 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     }
 
     /**
+     * Create the menu of the app
+     * @param menu menu object
+     * @return ignored
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_playing, menu);
+        return true;
+    }
+
+    /**
+     * Handles menu item click. In this case both are for download.
+     * @param item item clicked
+     * @return result of handle
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        if (id == R.id.show_playlist) {
+            startFBListActivity();
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
      * Called when a song update broadcast is received. Re-populate the UI field.
      * @param position Position of the new song in the global playlist.
      */
     @Override
-    protected void onSongUpdate(int position) {
+    protected void onSongUpdate(int position, boolean status) {
 
         final Song currSong = SongList.getSongs().get(position);
         Log.d(TAG, "Updating UI information to song " + currSong.getTitle());
@@ -198,6 +239,8 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         songTitleView.setSelected(true);
         songArtistView.setText(currSong.getArtist());
         songArtistView.setSelected(true);
+        songAlbumView.setText(currSong.getAlbum());
+        songAlbumView.setSelected(true);
         locationTextView.setText(getStrAddress(currSong.getLatestLoc()));
         locationTextView.setSelected(true);
         timeDateView.setText(getStrDate(currSong.getLatestTime()));
@@ -207,6 +250,15 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         preferenceButtons.setSong(currSong);
         preferenceButtons.setButtonListeners();
         preferenceButtons.redrawButtons();
+
+        if (status) {
+            controlButtons.setPause();
+        }
+        else {
+            controlButtons.setPlay();
+        }
+
+        controlButtons.setButtonListeners();
     }
 
     /**
@@ -226,6 +278,9 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         preferenceButtons.setSong(null);
         preferenceButtons.removeButtonListeners();
         preferenceButtons.redrawButtons();
+
+        controlButtons.setPlay();
+        controlButtons.unsetButtonListeners();
 
     }
 
@@ -316,8 +371,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
      * Start the FBListActivity which is a listview of current playlist of the flashback mode.
      */
     private void startFBListActivity() {
-        Intent intent = new Intent(CurrSongActivity.this, FBPlayListActivity.class);
-        intent.putIntegerArrayListExtra(FBPlayListActivity.FB_POS_LIST, positionList);
+        Intent intent = new Intent(CurrSongActivity.this, PlayListActivity.class);
         startActivity(intent);
     }
 
@@ -350,7 +404,6 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
 
         // redraw the buttons
         flashBackButton.setBackground(getDrawable(R.drawable.fb_enabled));
-        playListButton.setVisibility(View.VISIBLE);
 
         // force a location update to enter the flachback mode play list
         startMusicPlayerServiceFBMode(false);
@@ -378,7 +431,6 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
 
         // redraw button
         flashBackButton.setBackground(getDrawable(R.drawable.fb_disabled));
-        playListButton.setVisibility(View.GONE);
 
         // pass empty playlist to signal no song should be played
         ArrayList<Integer> stoplist = new ArrayList<>();
@@ -401,16 +453,18 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private void startMusicPlayerServiceFBMode(boolean update) {
 
         try {
-            PositionPlayListFactory ppl = new PositionPlayListFactory(lastLatLngCache, ZonedDateTime.now());
+            PositionPlayListFactory ppl = new PositionPlayListFactory(lastLatLngCache, AppTime.getInstance());
             Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
-            positionList = ppl.getPositionList();
+            ArrayList<Integer> positionList = ppl.getPositionList();
             playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, positionList);
             playerIntent.putExtra(MainActivity.START_MUSICSERVICE_KEEP_CURRPLAY, update);
             startService(playerIntent);
 
             // send a toast for updated list
-            if (update)
+            if (update) {
                 Toast.makeText(this, "Playlist updated", Toast.LENGTH_SHORT).show();
+                broadcastPlaylistRequest();
+            }
 
             Log.d(TAG, "Flashback mode service started.");
         }
@@ -479,6 +533,12 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         return zdt.format(
                 DateTimeFormatter.ofPattern("hh:mm a")
         );
+    }
+
+    private void broadcastPlaylistRequest() {
+        Intent intent = new Intent(PLAYLIST_REQUEST);
+        localBroadcastManager.sendBroadcast(intent);
+        Log.d(TAG, "Broadcast playlist request");
     }
 
     /**
