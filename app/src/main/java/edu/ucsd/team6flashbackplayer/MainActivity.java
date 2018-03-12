@@ -53,6 +53,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -82,6 +83,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
     private List<Person> friends;   // list of people fetched from google account,
                                     // might be unnecessary as a field
+    private HashMap<String, String> friendsMap = new HashMap<>();
 
     AssetManager assetManager;
 
@@ -95,13 +97,15 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         super.onCreate(savedInstanceState);
         assetManager = getAssets(); // for generating alias in User
 
-
         // set title and layout of this activity
         setTitle(R.string.main_activity_title);
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        //Trying doing this before Firebase init
+        initSongAndAlbumList();
 
         // Initialize the list of Users from Firebase
         Users.loadUsers();
@@ -318,8 +322,9 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                         if (!p.isEmpty()) {
                             List<EmailAddress> emails = p.getEmailAddresses();
                             if (emails != null) {
-                                Log.d(TAG, p.getNames().get(0).getDisplayName() + " has email: " + emails.get(0).getValue());
+                                Log.d(TAG, "Friend " + p.getNames().get(0).getDisplayName() + " has email: " + emails.get(0).getValue());
                             }
+                            friendsMap.put(User.EncodeString(emails.get(0).getValue()),p.getNames().get(0).getDisplayName());
                         }
                     }
                 }
@@ -408,7 +413,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         // if the user already signed in, display the welcome message.
         if (account != null) {
             // load in User object for the global User (from Firebase)
-            User.loadUser(account, assetManager);
+            User.loadUser(account, assetManager, friendsMap);
 
             welcomeText.setText(String.format(
                     getResources().getString(R.string.welcome_info),

@@ -3,8 +3,6 @@ package edu.ucsd.team6flashbackplayer;
 import com.google.android.gms.maps.model.LatLng;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
-// JSON parsing - for SharedPreferences
-import com.eclipsesource.json.*;
 
 /**
  * Created by frankwang on 2/6/18.
@@ -101,7 +99,7 @@ public class Song {
 
         this.url = url;
         this.id = id;
-        this.LastPlayedUserUid = "";
+        this.LastPlayedUserUid = NO_INFO;
 
         liked = false;
         disliked = false;

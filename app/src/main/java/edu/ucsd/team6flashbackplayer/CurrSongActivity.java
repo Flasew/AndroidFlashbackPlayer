@@ -74,6 +74,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private TextView locationTextView;
     private TextView songTitleView;
     private TextView songArtistView;
+    private TextView lastUserView;
     private PreferenceButtons preferenceButtons;
 
     private ControlButtons controlButtons;
@@ -122,6 +123,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         locationTextView = findViewById(R.id.location_txt);
         songTitleView = findViewById(R.id.song_name);
         songArtistView = findViewById(R.id.song_artist);
+        lastUserView = findViewById(R.id.user_txt);
         preferenceButtons = new PreferenceButtons(
                 (ImageButton) findViewById(R.id.like_button),
                 (ImageButton) findViewById(R.id.dislike_button),
@@ -233,6 +235,8 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
 
         final Song currSong = SongList.getSongs().get(position);
         Log.d(TAG, "Updating UI information to song " + currSong.getTitle());
+        Log.d(TAG, "The id of the song is " + currSong.getId());
+        lastUserView.setText(User.displayString(currSong.getLastPlayedUserUid()));
 
         songTitleView.setText(currSong.getTitle());
         songTitleView.setSelected(true);
@@ -272,6 +276,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         locationTextView.setText(NO_INFO);
         timeDateView.setText(NO_INFO);
         timeClockView.setText(NO_INFO);
+        lastUserView.setText(NO_INFO);
         preferenceButtons.setSong(null);
         preferenceButtons.removeButtonListeners();
         preferenceButtons.redrawButtons();

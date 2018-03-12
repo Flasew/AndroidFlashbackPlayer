@@ -29,9 +29,11 @@ public class User {
 
     private String fullName;
     private String alias;
-    private String id;
+    private String id; // The id is the email that the user has
     private ArrayList<String> songListPlayed;
     private HashMap<String, List<Boolean>> songListPref;
+    // Key is the friend's ID aka email and Value is the friend's given name
+    private HashMap<String, String> friendsMap;
 
     /**
      * Default constructor for necessary for Firebase
@@ -50,15 +52,18 @@ public class User {
         this.id = id;
         alias = generateAlias(assetManager);
 
-        songListPlayed = new ArrayList<String>();
+        // Add dummy values to both songListPlayed and songListPref - this just makes sure that
+        // These fields are always present in Firebase so that they get initialized on load from Firebase
+        songListPlayed = new ArrayList<>();
+        songListPlayed.add("-"); // if you put a number it will mistake it for a HashMap.. :/
 
         songListPref = new HashMap<>();
-        // This is purely used for testing purposes as of now.. will remove later
-        String abc = "---";
+        String dummy = "-";
         ArrayList<Boolean> newList = new ArrayList<Boolean>();
         newList.add(false);
         newList.add(false);
-        songListPref.put(abc, newList);
+        songListPref.put(dummy, newList);
+
     }
 
     // Public getters and setters for all the fields of the class - necessary to store User in Firebase
@@ -80,6 +85,9 @@ public class User {
 
     public HashMap<String, List<Boolean>> getSongListPref() { return songListPref; }
     public void setSongListPref(HashMap<String, List<Boolean>> songListPref) { this.songListPref = songListPref; }
+
+    public HashMap<String, String> getFriendsMap() { return friendsMap; }
+    public void setFriendsMap(HashMap<String, String> friendsMap) { this.friendsMap = friendsMap; }
 
     public static User getSelf() {
         return self;
@@ -165,9 +173,9 @@ public class User {
      * @param acc The google account which is the User currently signed in
      * @param assetManager AssetManager to read in files from assets folders to generate alias if necessary
      */
-    public static void loadUser(GoogleSignInAccount acc, AssetManager assetManager) {
+    public static void loadUser(GoogleSignInAccount acc, AssetManager assetManager, HashMap<String,String> friendEmails) {
         FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance(FirebaseSongList.firebaseURL);
-        DatabaseReference databaseReference = firebaseDatabase.getReference("users").child(acc.getId());
+        DatabaseReference databaseReference = firebaseDatabase.getReference("users").child(User.EncodeString(acc.getEmail()));
 
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -177,9 +185,18 @@ public class User {
 
                 // If the User doesn't exist then create a new one and add it to lists
                 if (aUser == null) {
-                    String id = acc.getId();
+                    String id = acc.getEmail();
                     // Create the User and add to Firebase and Users list
                     User newUser = new User(acc.getDisplayName(), id, assetManager);
+                    // Set the friends map to the map that is passed in from MainActivity
+                    if(friendEmails.isEmpty()) {
+                        friendEmails.put("-","-");
+                        newUser.setFriendsMap(friendEmails);
+                    }
+                    else {
+                        newUser.setFriendsMap(friendEmails);
+                    }
+
                     User.setSelf(newUser);
 
                     // Add this user to Firebase
@@ -201,5 +218,53 @@ public class User {
                 //
             }
         });
+    }
+
+    /**
+     * Returns a string to be displayed when given a specific user id
+     * checks if friend, self, never played, non friend
+     * @param lastPlayedUid the user id of a user
+     * @return the display string for a user based on the user id given
+     */
+    public static String displayString(String lastPlayedUid) {
+        User currentUser = User.getSelf();
+
+        // Check if the user id is the same as the one logged in (then display you)
+        if (lastPlayedUid.equals(currentUser.getId())) {
+            return "you";
+        }
+        // Check if it is played by a friend
+        // Note that in the friend hash maps the keys are in their encoded versions (for storage purposes)
+        else if (currentUser.getFriendsMap().keySet().contains(User.EncodeString(lastPlayedUid))) {
+            // If so then return the name of that friend (Stored in this hashmap)
+            return currentUser.getFriendsMap().get(User.EncodeString(lastPlayedUid));
+        }
+        // If the song was never played before
+        else if (lastPlayedUid.equals("---")) {
+            return "---";
+        }
+        // If it is not played by you, or in friends list, or never played, it was played by another user
+        // so get the alias of the user based on given user id
+        else {
+            return Users.getUser(lastPlayedUid).getAlias();
+        }
+    }
+
+    /**
+     * Replaces the . in a string with ,
+     * @param string string to encode
+     * @return a string that has . replaced with ,
+     */
+    public static String EncodeString(String string) {
+        return string.replace(".", ",");
+    }
+
+    /**
+     * Replaces the , in a string with .
+     * @param string string to decode
+     * @return a string that has , replaced with .
+     */
+    public static String DecodeString(String string) {
+        return string.replace(",", ".");
     }
 }

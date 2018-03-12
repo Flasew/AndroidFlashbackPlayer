@@ -52,8 +52,10 @@ public class Users {
                     HashMap<String, User> userMap = new HashMap<>();
                     for (String key : userHashMap.keySet()) {
                         User usr = (User) userHashMap.get(key);
-                        userMap.put(key,usr);
-                        Log.d("Key, Name", key + " " + usr.getFullName() + usr.getAlias());
+                        // Decode the key which is the email but with ,
+                        String newKey = User.DecodeString(key);
+                        userMap.put(newKey,usr);
+                        Log.d("Original key, Info", key + " " + usr.getFullName() + " " + usr.getAlias() + usr.getId());
                     }
 
                     // Set the field to this hashmap we obtained from Firebase
@@ -76,6 +78,10 @@ public class Users {
      */
     public static User getUser(String uid) {
         return users.get(uid);
+    }
+
+    public static HashMap<String,User> getUsers() {
+        return users;
     }
 
     /**
