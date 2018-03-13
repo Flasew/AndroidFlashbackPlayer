@@ -28,7 +28,6 @@ import com.google.android.gms.maps.model.LatLng;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * class MusicPlayerService
@@ -57,7 +56,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     private final IBinder iBinder = new LocalBinder();  // unused
 
-    private List<Song> songs = SongList.getSongs();     // global song list
     private int counter = 0;                        // current song position counter
     private ArrayList<Integer> positionList;             // list of songs to be played
 
@@ -113,8 +111,18 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             broadcastSongList();
         }
     };
-
     private boolean songListRequestReceiverRegistered = false;
+
+    // firebase download
+    private boolean useFirebaseList = false;
+    private BroadcastReceiver songDownloadHandledReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            onSongDownloadedHandled();
+        }
+    };
+
+    private boolean songDownladedHandledReceiverRegistered = false;
 
     public MusicPlayerService() {
 
@@ -188,6 +196,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             locationListenerRegistered = true;
         }
 
+
+
         registerBroadcastReceivers();
         initMediaPlayer();
 
@@ -198,10 +208,17 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             Bundle extras = intent.getExtras();
             ArrayList<Integer> inList = extras.getIntegerArrayList(PositionPlayListFactory.POS_LIST_INTENT);
             boolean keepCurrSong = extras.getBoolean(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
+            useFirebaseList = extras.getBoolean(MusicPlayerActivity.START_MUSICSERVICE_VIBE_MODE, false);
 
             if (inList != null) {
                 Log.d(TAG, "Incoming list is not null, playing from list");
 
+                // check if the list is firebase list. If it is, immediately queue all the download.
+                if (useFirebaseList) {
+                    queueDownloads(inList);
+                }
+
+                // queue the firebase song's download
                 if (!keepCurrSong || !mediaPlayer.isPlaying()) {
 
                     counter = 0;
@@ -209,18 +226,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                     if (inList.size() == 0) {
                         stopMedia();
                         broadcastSongChange();
-                        stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
-                    }
-                    else
+                        stopForeground(STOP_FOREGROUND_REMOVE);
+                        stopSelf();
+                    } else
                         prepSongAsync(true);
-                }
-                else {
+                } else {
                     inList.add(0, positionList.get(counter));
                     counter = 0;
                     positionList = inList;
                 }
-            }
-            else {
+            } else {
 
                 int pos = extras.getInt(SongActivity.SINGLE_SONG_INTENT, -1);
 
@@ -231,6 +246,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                 counter = 0;
                 prepSongAsync(false);
             }
+
         }
         // Invalid intent: just stop and exit.
         catch (NullPointerException | IndexOutOfBoundsException e) {
@@ -239,7 +255,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             broadcastSongChange();
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
         }
-
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -361,7 +376,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             return;
         }
         // The Song whose info we need to update
-        Song toUpdate = songs.get(positionList.get(counter));
+        Song toUpdate = SongList.getSongs().get(positionList.get(counter));
         // Update the most recently played song's latest location, datetime
         Log.d(TAG, "Song " + toUpdate +" finished playing.");
 
@@ -439,13 +454,41 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         Log.d(TAG, "Entering prepSongAsync...");
         try {
             // Set the data source to the mediaFile location
-            Song currSong = songs.get(positionList.get(counter));
-            Log.d(TAG, "Initial song of preparing: " + currSong.getTitle());
+            Song currSong;
+            int index = positionList.get(counter);
+            if (!useFirebaseList) {
+                currSong =  SongList.getSongs().get(index);
+            }
+            else {
+
+                int curr = index;
+                currSong = FirebaseSongList.getSongs().get(index);
+
+                while (SongList.getSongs().indexOf(currSong) == -1 && curr+1 < positionList.size()) {
+                    // the song didn't finish downloading, find the next available song and swap
+                    currSong = FirebaseSongList.getSongs().get(positionList.get(++curr));
+
+                }
+
+                if (curr < positionList.size()) {
+                    // swap
+                    int tmp = positionList.get(index);
+                    positionList.set(index, positionList.get(curr));
+                    positionList.set(curr, tmp);
+                    broadcastSongList();
+
+                }
+                else if (curr >= positionList.size()) {
+                    // if no song is ready, don't prepare anything and wait for the next download finish signal.
+                    return;
+                }
+            }
+
 
             if (skipDislike) {
                 while (currSong.isDisliked()) {
                     counter += 1;
-                    currSong = songs.get(positionList.get(counter));
+                    currSong = SongList.getSongs().get(positionList.get(counter));
                 }
             }
 
@@ -579,6 +622,17 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     /**
+     * Called when songs are copied over to the music directory. Useful for firebase song list.
+     * Start a new song if download finishes and no song was playing due to they're all offline.
+     */
+    private void onSongDownloadedHandled() {
+        if (!useFirebaseList || mediaPlayer == null || mediaPlayer.isPlaying())
+            return;
+
+        prepSongAsync(true);
+    }
+
+    /**
      * "Callback funciton" for a song control event
      * @param controlCode code of this control
      */
@@ -637,6 +691,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             songControlReceiverRegistered = true;
         }
 
+        if (!songDownladedHandledReceiverRegistered) {
+            localBroadcastManager.registerReceiver(songDislikedReceiver,
+                    new IntentFilter(VibeModeDownloadedFileHanlderDecorator.BROADCAST_FILE_HANDLED));
+            songDownladedHandledReceiverRegistered = true;
+        }
+
     }
 
     /**
@@ -651,6 +711,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         songControlReceiverRegistered = false;
         localBroadcastManager.unregisterReceiver(songListRequestReceiver);
         songListRequestReceiverRegistered = false;
+        localBroadcastManager.unregisterReceiver(songDownloadHandledReceiver);
+        songDownladedHandledReceiverRegistered = false;
     }
 
     /* ---------------------UPDATE SONG SP------------------------ */
@@ -694,6 +756,26 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             return MusicPlayerService.this;
         }
     }
+
+    /* ------------------------------------Vibe mode download---------------------------*/
+
+    /**
+     * Queue the downloading of non-local songs.
+     * @param inList incomming firebase list
+     */
+    private void queueDownloads(ArrayList<Integer> inList) {
+        for(int i: inList) {
+            // this long if says "a song is not locally available"
+            Song s = FirebaseSongList.getSongs().get(i);
+            if (SongList.getSongs().indexOf(s) == -1) {
+                Intent intent = new Intent(MusicPlayerService.this, VibeModeDownloadingIntentService.class);
+                intent.putExtra(VibeModeDownloadingIntentService.AUTO_DOWNLOAD_REQ_URL, s.getUrl());
+                startService(intent);
+            }
+        }
+    }
+
+
 
 
 }

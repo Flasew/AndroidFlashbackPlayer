@@ -115,9 +115,10 @@ public class AlbumActivity extends MusicPlayerNavigateActivity implements Downlo
      */
     private void play(Album album) {
         Log.d(TAG, "Start playing album: " + album.getName());
-        PositionPlayListFactory ppl = new PositionPlayListFactory(album);
+
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
-        playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, ppl.getPositionList());
+        playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT,
+                PositionPlayListFactory.makeList(album));
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
         startService(playerIntent);
 

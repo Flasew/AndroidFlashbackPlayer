@@ -32,15 +32,6 @@ public class FirebaseSongList {
     private static FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance(firebaseURL);
     private static DatabaseReference songsReference = firebaseDatabase.getReference("songs");
 
-    /**
-     * Adds the song to the local user list (called on download)
-     * Meaning that the song will always never already exist in the list
-     * @param song Song to add
-     */
-    public static void addSongToLocalList(Song song) {
-        // If we are calling this we know that the song doesn't already exist in the local list
-        SongList.getSongs().add(song);
-    }
 
     /**
      * Adds song to Firebase database if the song does not already exist there

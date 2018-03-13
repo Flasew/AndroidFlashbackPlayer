@@ -94,6 +94,7 @@ public class SongScoreCalculator {
      * @param t time to be asserted
      * @return day of week score.
      */
+    @Deprecated
     private static int dowScore(Song s, ZonedDateTime t) {
         int score = 0;
         if (s.getDayHist()[t.getDayOfWeek().getValue()])

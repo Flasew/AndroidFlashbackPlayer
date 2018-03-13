@@ -57,7 +57,7 @@ public class WebDownloaderTest {
     }
 
     @Test
-    public void testDownloadBadMp3() throws Exception {
+    public void testDownloadNonMp3() throws Exception {
         String url = "http://cseweb.ucsd.edu/classes/wi18/cse140-a/lectures/sec5.pdf";
         String fname = "sec5.pdf";
 
@@ -83,12 +83,14 @@ public class WebDownloaderTest {
 
             // should be fast enough... file is small
             Thread.sleep(5000);
+            File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
+            assertTrue(file.exists());
 
-            fail();
+            // fail();
         }
         catch (RuntimeException e) {
             File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
-            assertFalse(file.exists());
+            assertTrue(file.exists());
         }
 
     }
@@ -117,7 +119,7 @@ public class WebDownloaderTest {
         wdl.downloadFromUrl(url);
 
         // should be fast enough... file is small
-        Thread.sleep(5000);
+        Thread.sleep(8000);
 
         File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
         assertTrue(file.exists());
@@ -127,7 +129,7 @@ public class WebDownloaderTest {
     @Test
     public void testDownloadInvalid() throws Exception {
 
-        String url = "https://code.tutsplus.com/tutorials/essential-textmate-shortcuts-tips-and-techniques--net-21168";
+        String url = "lol:!!code.tutsplus.com/tutorials/essential-textmate-shortcuts-tips-and-techniques--net-21168";
         String fname = "essential-textmate-shortcuts-tips-and-techniques--net-21168.html";
 
         try {
@@ -153,7 +155,8 @@ public class WebDownloaderTest {
             // should be fast enough... file is small
             Thread.sleep(5000);
 
-            fail();
+            File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
+            assertFalse(file.exists());
 
         } catch (RuntimeException e) {
 
@@ -193,11 +196,52 @@ public class WebDownloaderTest {
 
             // should be fast enough... file is small
             Thread.sleep(5000);
-            fail();
+            File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
+            assertFalse(file.exists());
+
         } catch (RuntimeException e) {
 
             File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
             assertFalse(file.exists());
+        }
+
+    }
+
+    @Test
+    public void testDownloadImplicit() {
+
+
+        String url = "https://yun.davidzz.me/index.php/s/5RjFh3jz9ENUIsn/download";
+        String fname = "clannad.zip";
+
+        try {
+
+            WebMusicDownloader wdl = new WebMusicDownloader(new DownloadedFileHandlerStrategy() {
+                @Override
+                public boolean checkExtension(String extension) {
+                    return true;
+                }
+
+                @Override
+                public Context getContext() {
+                    return mainActivity.getActivity();
+                }
+
+                @Override
+                public LinkedList<String> process(String url, String filename) {
+                    return null;
+                }
+            });
+
+            wdl.downloadFromUrl(url);
+
+            // should be fast enough... file is small
+            Thread.sleep(10000);
+            File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
+            assertTrue(file.exists());
+
+        } catch (RuntimeException | InterruptedException e) {
+
         }
 
     }

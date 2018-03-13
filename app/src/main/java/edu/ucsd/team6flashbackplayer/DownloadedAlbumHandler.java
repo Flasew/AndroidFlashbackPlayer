@@ -6,6 +6,7 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -44,10 +45,19 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
     @Override
     public LinkedList<String> process(String url, String filename) {
 
+        if (!checkExtension(FilenameUtils.getExtension(filename))) {
+            Log.d(TAG, "Extension: " + FilenameUtils.getExtension(filename));
+            FileUtils.deleteQuietly(new File(WebMusicDownloader.DOWNLOAD_DIR, filename));
+            return null;
+        }
+
         String unzipFolderStr = filename.replaceAll("\\.zip$", "");
 
         LinkedList<String> unzippedFiles = unpackZip(WebMusicDownloader.DOWNLOAD_DIR, filename);
         LinkedList<String> copiedFiles = new LinkedList<>();
+
+        // make song objects, add them to the global song list.
+
 
         // copy over the files.
         for (String songFilename: unzippedFiles) {

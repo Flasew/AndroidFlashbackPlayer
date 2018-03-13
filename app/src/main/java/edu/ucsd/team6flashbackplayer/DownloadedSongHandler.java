@@ -11,6 +11,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -57,6 +58,13 @@ public class DownloadedSongHandler implements DownloadedFileHandlerStrategy {
 
         File fileInMusicDir = new File(makeDirStr(MusicPlayerActivity.MUSIC_DIR, filename));
         File fileInDownloadDir = new File(makeDirStr(WebMusicDownloader.DOWNLOAD_DIR, filename));
+
+        // make song objects, add them to the global song list.
+        if (!checkExtension(FilenameUtils.getExtension(filename))) {
+            Log.d(TAG, "Extension: " + FilenameUtils.getExtension(filename));
+            FileUtils.deleteQuietly(fileInDownloadDir);
+            return null;
+        }
 
         // if the same file (or at least with the same name) already exist in music dir,
         // remove the downloaded file and return

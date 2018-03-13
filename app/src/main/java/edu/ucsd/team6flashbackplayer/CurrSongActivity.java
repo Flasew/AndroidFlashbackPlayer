@@ -84,7 +84,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private AlarmManager alarmManager;
     private PendingIntent[] alarmPendingIntents;
     // trigger time of time updates
-    private long[] updateTriggerMilliTime = new long[4];
+    private long[] updateTriggerMilliTime = new long[UPDATE_TIME.length];
 
     // location update frequency
     private final int LOC_UPDATE_MIN_TIME = 1000;       // milliseconds
@@ -440,6 +440,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
         playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, stoplist);
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, true);
+        playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_VIBE_MODE, true);
         startService(playerIntent);
 
     }
@@ -456,11 +457,11 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private void startMusicPlayerServiceFBMode(boolean update) {
 
         try {
-            PositionPlayListFactory ppl = new PositionPlayListFactory(lastLatLngCache, AppTime.getInstance());
             Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
-            ArrayList<Integer> positionList = ppl.getPositionList();
+            ArrayList<Integer> positionList = PositionPlayListFactory.makeList(lastLatLngCache, AppTime.getInstance());
             playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, positionList);
             playerIntent.putExtra(MainActivity.START_MUSICSERVICE_KEEP_CURRPLAY, update);
+
             startService(playerIntent);
 
             // send a toast for updated list

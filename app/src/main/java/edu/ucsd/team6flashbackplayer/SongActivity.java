@@ -154,9 +154,9 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
      */
     private void play(Song song) {
         Log.d(TAG, "Start playing song: " + song.getTitle());
-        PositionPlayListFactory ppl = new PositionPlayListFactory(song);
+
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
-        playerIntent.putExtra(SINGLE_SONG_INTENT, ppl.getPositionList().get(0));
+        playerIntent.putExtra(SINGLE_SONG_INTENT, PositionPlayListFactory.makeList(song));
 
         playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, null);
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);

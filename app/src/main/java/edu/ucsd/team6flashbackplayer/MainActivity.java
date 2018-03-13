@@ -155,6 +155,9 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         if (flashBackMode) {
             startCurrSongActivity();
         }
+
+        // nah just wait for loading...
+        try{ Thread.sleep(1000); } catch (InterruptedException e) {}
     }
 
     /**

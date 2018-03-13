@@ -12,13 +12,24 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
-import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.Html;
 import android.util.Log;
 import android.util.LongSparseArray;
-import android.webkit.MimeTypeMap;
+import android.webkit.CookieManager;
 import android.webkit.URLUtil;
 import android.widget.Toast;
+
+import com.google.api.client.util.Charsets;
+
+import org.apache.commons.io.FilenameUtils;
+import org.springframework.web.util.UriUtils;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.LinkedList;
 
 
 /**
@@ -41,6 +52,8 @@ public class WebMusicDownloader {
     private LongSparseArray<UrlFnamePair> requestIds = new LongSparseArray<>();   // download request ids -> filenames
     private LocalBroadcastManager localBroadcastManager;
 
+    private static final Object lockSynchronizer = new Object(); // synchronize download requests.
+
     /**
      * Constructor. Acquire a download manager object from the context.
      * @param fh class that handles the downloaded file.
@@ -54,42 +67,18 @@ public class WebMusicDownloader {
 
     /**
      * Download a file from the given url
-     * @param url url to be downloaded
+     * @param urlStr url to be downloaded
      */
-    public void downloadFromUrl(String url) {
+    public void downloadFromUrl(String urlStr) {
 
-        // if the boradcast receiver if its not registered (i.e. no downloads is running), register it
-        registerAutoBroadcastReceiver();
-
-        // parse the url to a uri
-        Uri uri = Uri.parse(url);
-        Log.d(TAG, "Parsed URI: " + uri);
-
-        String fileExtenstion = MimeTypeMap.getFileExtensionFromUrl(url);
-
-        // if the extension is wrong, make a Toast and do nothing.
-        if (!fileHandler.checkExtension(fileExtenstion)) {
-            Toast.makeText(context, "Invalid file.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String filename = URLUtil.guessFileName(url, null, fileExtenstion);
-        Log.d(TAG, "Filename of the file to be downloaded: " + filename);
-
-        try {
-            // create a downlad request.
-            DownloadManager.Request request = new DownloadManager.Request(uri);
-            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
-            request.setTitle("Music Player Downloading");
-            request.setDescription("Downloading " + filename);
-            request.setVisibleInDownloadsUi(true);
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "/" + filename);
+        synchronized (lockSynchronizer) {
+            // if the boradcast receiver if its not registered (i.e. no downloads is running), register it
+            registerAutoBroadcastReceiver();
 
 
-            requestIds.put(downloadManager.enqueue(request), UrlFnamePair.mkpair(url, filename));
-        }
-        catch (IllegalArgumentException e) {
-            Toast.makeText(context, "Invalid URL.", Toast.LENGTH_SHORT).show();
+            AsyncDownloadFromUrl downloadFromUrl = new AsyncDownloadFromUrl(this);
+            downloadFromUrl.execute(urlStr);
+
         }
 
     }
@@ -110,6 +99,7 @@ public class WebMusicDownloader {
 
                     // if the file does belong to this download session, process the downloaded file.
                     if (ufp.filename != null) {
+                        Log.d(TAG, "File just downloaded: " + ufp.filename);
                         AsyncFileProcessor runner = new AsyncFileProcessor(WebMusicDownloader.this);
                         runner.execute(ufp.url, ufp.filename);
                     }
@@ -138,11 +128,15 @@ public class WebMusicDownloader {
         localBroadcastManager.sendBroadcast(intent);
     }
 
+    public DownloadedFileHandlerStrategy getHandler() {
+        return fileHandler;
+    }
+
 
     /**
      * AsyncTask class for song unzipping (file processing in general)
      */
-    private static class AsyncFileProcessor extends AsyncTask<String, Void, Void> {
+    private static class AsyncFileProcessor extends AsyncTask<String, Void, LinkedList<String>> {
 
         private WebMusicDownloader associatedDownloader;
         public AsyncFileProcessor(WebMusicDownloader wd) {
@@ -150,14 +144,18 @@ public class WebMusicDownloader {
         }
 
         @Override
-        protected Void doInBackground(String... params) {
-            associatedDownloader.fileHandler.process(params[0], params[1]);
-            return null;
+        protected LinkedList<String> doInBackground(String... params) {
+            return associatedDownloader.fileHandler.process(params[0], params[1]);
         }
 
         @Override
-        protected void onPostExecute(Void ignored) {
+        protected void onPostExecute(LinkedList<String> result) {
             associatedDownloader.broadcastFileHandled();
+            if (result == null)
+                Toast.makeText(associatedDownloader.context, "Downloaded file is invalid.", Toast.LENGTH_SHORT).show();
+            else
+                Toast.makeText(associatedDownloader.context, "New songs added to the library.", Toast.LENGTH_SHORT).show();
+
             associatedDownloader = null;
         }
 
@@ -169,6 +167,98 @@ public class WebMusicDownloader {
         @Override
         protected void onProgressUpdate(Void... ignored) {
 
+        }
+    }
+
+    /**
+     * Async. get file name from url and start to download it. Code segments acquired from
+     * https://stackoverflow.com/questions/23069965/get-file-name-from-headers-with-downloadmanager-in-android/23164914
+     */
+    private static class AsyncDownloadFromUrl extends AsyncTask<String, Integer, UrlFnamePair> {
+
+        private WebMusicDownloader associatedDownloader;
+        public AsyncDownloadFromUrl(WebMusicDownloader wd) {
+            associatedDownloader = wd;
+        }
+
+        protected UrlFnamePair doInBackground(String... urls)
+        {
+            URL url;
+            String filename = null;
+
+            // first guess from URL
+            String filenameGuessed = URLUtil.guessFileName(urls[0], null, null);
+            Log.d(TAG, "Filename guessed from URL: " + filenameGuessed);
+            Log.d(TAG, "Extension: " + FilenameUtils.getExtension(filenameGuessed));
+
+            if (!FilenameUtils.getExtension(filenameGuessed).equals("") && !FilenameUtils.getExtension(filenameGuessed).equals("bin"))
+                return new UrlFnamePair(urls[0], filenameGuessed);
+
+            try {
+                url = new URL(urls[0]);
+                String cookie = CookieManager.getInstance().getCookie(urls[0]);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestProperty("Cookie", cookie);
+                con.setRequestMethod("HEAD");
+                con.setInstanceFollowRedirects(false);
+                con.connect();
+
+                String content = con.getHeaderField("Content-Disposition");
+                String contentSplit[] = content.split("filename=");
+                filename = contentSplit[1].replace("filename=", "").replace("\"", "").trim();
+                Log.d(TAG, "Filename from URL: " + filename);
+                filename = UriUtils.decode(filename, Charsets.UTF_8.toString());
+            } catch (IOException | NullPointerException e1) {
+                e1.printStackTrace();
+                return null;
+            }
+
+            return new UrlFnamePair(urls[0], filename);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+        @Override
+        protected void onPostExecute(UrlFnamePair result) {
+            if (result == null) {
+                Toast.makeText(associatedDownloader.context, "Invalid URL.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String filename = result.filename;
+            String fileExtenstion = FilenameUtils.getExtension(filename);
+
+//            // if the extension is wrong, make a Toast and do nothing.
+//            if (!fileHandler.checkExtension(fileExtenstion)) {
+//                Toast.makeText(context, "Invalid file.", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+
+//            String filename = URLUtil.guessFileName(url, null, fileExtenstion);
+//            Log.d(TAG, "Filename of the file to be downloaded: " + filename);
+
+            try {
+                // create a downlad request.
+                // parse the url to a uri
+                Uri uri = Uri.parse(result.url);
+                Log.d(TAG, "Parsed URI: " + uri);
+                Log.d(TAG, "Filename to be downloaded: " + filename);
+
+                DownloadManager.Request request = new DownloadManager.Request(uri);
+                request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+                request.setTitle("Music Player Downloading");
+                request.setDescription("Downloading...");
+                request.setVisibleInDownloadsUi(true);
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "/" + filename);
+
+
+
+                associatedDownloader.requestIds.put(associatedDownloader.downloadManager.enqueue(request),
+                        UrlFnamePair.mkpair(result.url, filename));
+            } catch (IllegalArgumentException e) {
+                Toast.makeText(associatedDownloader.context, "Invalid URL.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
