@@ -231,6 +231,9 @@ public class User {
     public static String displayString(String lastPlayedUid) {
         User currentUser = User.getSelf();
 
+        if (currentUser == null) {
+            return "Not available";
+        }
         // Check if the user id is the same as the one logged in (then display you)
         if (lastPlayedUid.equals(currentUser.getId())) {
             return "You";

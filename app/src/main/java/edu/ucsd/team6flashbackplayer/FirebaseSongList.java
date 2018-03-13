@@ -32,7 +32,11 @@ public class FirebaseSongList {
     private static FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance(firebaseURL);
     private static DatabaseReference songsReference = firebaseDatabase.getReference("songs");
 
-
+//    static {
+//        firebaseDatabase = FirebaseDatabase.getInstance(firebaseURL);
+//        songsReference = firebaseDatabase.getReference("songs");
+//        songsReference.keepSynced(true);
+//    }
     /**
      * Adds song to Firebase database if the song does not already exist there
      * called when songs are downloaded specifically
@@ -158,7 +162,7 @@ public class FirebaseSongList {
         // Reference specifically to user and the song in the userPref list
         // /users/user.id/songListPref/song.id
         DatabaseReference userRefSong = firebaseDatabase.getReference("users")
-                .child(currentUser.getId()).child("songListPref").child(song.getId());
+                .child(User.EncodeString(currentUser.getId())).child("songListPref").child(song.getId());
 
         // Create an ArrayList with updated boolean values for liked and disliked
         ArrayList<Boolean> bList = new ArrayList<>();

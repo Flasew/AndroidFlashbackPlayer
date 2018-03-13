@@ -28,6 +28,7 @@ import com.google.android.gms.maps.model.LatLng;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * class MusicPlayerService
@@ -143,6 +144,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        Log.d(TAG, "StartID: " + startId);
 
         // put the activity in foreground so it won't die
         Intent notificationIntent = new Intent(this, MusicPlayerActivity.class);
@@ -224,6 +226,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                     counter = 0;
                     positionList = inList;
                     if (inList.size() == 0) {
+                        Log.d(TAG, "inList size is 0, music player service stopped");
                         stopMedia();
                         broadcastSongChange();
                         stopForeground(STOP_FOREGROUND_REMOVE);
@@ -231,6 +234,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                     } else
                         prepSongAsync(true);
                 } else {
+
                     inList.add(0, positionList.get(counter));
                     counter = 0;
                     positionList = inList;
@@ -251,6 +255,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         // Invalid intent: just stop and exit.
         catch (NullPointerException | IndexOutOfBoundsException e) {
             Log.d(TAG, "Invalid incoming playlist, exiting...");
+            e.printStackTrace();
             stopMedia();
             broadcastSongChange();
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
@@ -456,28 +461,46 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             // Set the data source to the mediaFile location
             Song currSong;
             int index = positionList.get(counter);
+            List<Song> songList;
             if (!useFirebaseList) {
-                currSong =  SongList.getSongs().get(index);
+                songList = SongList.getSongs();
+                currSong = songList.get(index);
             }
             else {
 
-                int curr = index;
-                currSong = FirebaseSongList.getSongs().get(index);
+                for (Song s: SongList.getSongs()) {
+                    Log.d(TAG, "Local songlist has item " + s.getTitle());
+                }
+                for (Song s: FirebaseSongList.getSongs()) {
+                    Log.d(TAG, "Firebase songlist has item " + s.getTitle());
+                }
 
-                while (SongList.getSongs().indexOf(currSong) == -1 && curr+1 < positionList.size()) {
+                songList = FirebaseSongList.getSongs();
+                int curr = counter;
+                currSong = songList.get(index);
+                Log.d(TAG, "curr: "  + curr);
+                Log.d(TAG, "Currsong: " + currSong.getTitle());
+                Log.d(TAG,"SongList.getSongs().indexOf(currSong) == -1: " + (SongList.getSongs().indexOf(currSong) == -1));
+
+                while (SongList.getSongs().indexOf(currSong) == -1 && ++curr < positionList.size()) {
                     // the song didn't finish downloading, find the next available song and swap
-                    currSong = FirebaseSongList.getSongs().get(positionList.get(++curr));
+                    Log.d(TAG, "Song " + currSong.getTitle() + " is not available locally, advancing...");
+                    currSong = songList.get(positionList.get(curr));
+
 
                 }
 
+                Log.d(TAG, "curr after: "  + curr);
+
                 if (curr < positionList.size()) {
                     // swap
-                    int tmp = positionList.get(index);
-                    positionList.set(index, positionList.get(curr));
+                    int tmp = positionList.get(counter);
+                    positionList.set(counter, positionList.get(curr));
                     positionList.set(curr, tmp);
                     broadcastSongList();
 
                 }
+
                 else if (curr >= positionList.size()) {
                     // if no song is ready, don't prepare anything and wait for the next download finish signal.
                     return;
@@ -488,7 +511,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             if (skipDislike) {
                 while (currSong.isDisliked()) {
                     counter += 1;
-                    currSong = SongList.getSongs().get(positionList.get(counter));
+                    currSong = songList.get(positionList.get(counter));
                 }
             }
 
@@ -498,6 +521,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             Log.d(TAG, "Preparing song " + currSong.getTitle());
 
         } catch (IOException e) {
+            Log.d(TAG, "PrepSongAsync got IO exception, exiting...");
             e.printStackTrace();
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
         } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
@@ -572,7 +596,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         boolean playerStatus;
 
         try {
-            index = positionList.get(counter);
+            if (useFirebaseList)
+                index = SongList.getSongs().indexOf(FirebaseSongList.getSongs().get(positionList.get(counter)));
+            else
+                index = positionList.get(counter);
+
             playerStatus = mediaPlayer.isPlaying();
         }
         catch (IndexOutOfBoundsException | NullPointerException | IllegalStateException e ) {
@@ -769,6 +797,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             Song s = FirebaseSongList.getSongs().get(i);
             if (SongList.getSongs().indexOf(s) == -1) {
                 Intent intent = new Intent(MusicPlayerService.this, VibeModeDownloadingIntentService.class);
+                Log.d(TAG, s.getTitle() + "'s URL passing to intent service: " + s.getUrl());
                 intent.putExtra(VibeModeDownloadingIntentService.AUTO_DOWNLOAD_REQ_URL, s.getUrl());
                 startService(intent);
             }

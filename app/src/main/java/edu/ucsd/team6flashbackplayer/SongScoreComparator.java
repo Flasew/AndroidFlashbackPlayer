@@ -20,7 +20,7 @@ public class SongScoreComparator implements Comparator<Integer> {
 
     private LatLng currLoc;
     private ZonedDateTime currTime;
-    private List<Song> songs = SongList.getSongs();
+    private List<Song> songs = FirebaseSongList.getSongs();
 
     /**
      * Constructor

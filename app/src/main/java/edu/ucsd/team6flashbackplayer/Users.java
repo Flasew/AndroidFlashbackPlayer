@@ -27,7 +27,11 @@ public class Users {
     private static FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance(FirebaseSongList.firebaseURL);
     private static DatabaseReference databaseReference = firebaseDatabase.getReference("users");
 
-
+//    static {
+//        firebaseDatabase = FirebaseDatabase.getInstance();
+//        databaseReference = firebaseDatabase.getReference("users");
+//        databaseReference.keepSynced(true);
+//    }
     /**
      * Loads the entire list of Users from Firebase database into users
      * hashed on String(id) and User object

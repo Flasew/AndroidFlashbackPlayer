@@ -96,11 +96,7 @@ public class SongScoreCalculator {
      */
     @Deprecated
     private static int dowScore(Song s, ZonedDateTime t) {
-        int score = 0;
-        if (s.getDayHist()[t.getDayOfWeek().getValue()])
-            score = 1;
-        Log.d(TAG, "Song " + s.getTitle() + " gets a day of week score " + score);
-        return score;
+        return 1;
     }
 
     /**

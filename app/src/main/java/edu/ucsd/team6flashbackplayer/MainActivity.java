@@ -44,6 +44,8 @@ import com.google.api.services.people.v1.PeopleScopes;
 import com.google.api.services.people.v1.model.EmailAddress;
 import com.google.api.services.people.v1.model.ListConnectionsResponse;
 import com.google.api.services.people.v1.model.Person;
+import com.google.firebase.database.DatabaseException;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,6 +97,11 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         super.onCreate(savedInstanceState);
         assetManager = getAssets(); // for generating alias in User
 
+//        try {
+//             FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+//        } catch (DatabaseException e) {
+//            e.printStackTrace();
+//        }
         // set title and layout of this activity
         setTitle(R.string.main_activity_title);
         setContentView(R.layout.activity_main);
@@ -150,14 +157,8 @@ public class MainActivity extends MusicPlayerNavigateActivity {
             startCurrSongActivity();
         });
 
-        // lanuch fb mode if it was in it.
-        boolean flashBackMode = fbModeSharedPreferences.getBoolean("mode", false);
-        if (flashBackMode) {
-            startCurrSongActivity();
-        }
-
         // nah just wait for loading...
-        try{ Thread.sleep(1000); } catch (InterruptedException e) {}
+        // try{ Thread.sleep(1000); } catch (InterruptedException e) {}
     }
 
     /**
@@ -723,6 +724,11 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         protected void onPostExecute(Void ignored) {
             Log.d(TAG, "Account async task finished...");
             associatedMainActivity.get().updateSignInUI();
+            // lanuch fb mode if it was in it.
+            boolean flashBackMode = associatedMainActivity.get().fbModeSharedPreferences.getBoolean("mode", false);
+            if (flashBackMode) {
+                associatedMainActivity.get().startCurrSongActivity();
+            }
         }
 
         @Override

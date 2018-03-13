@@ -4,7 +4,11 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
 import android.media.AudioRouting;
+import android.os.Bundle;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
+
+import org.apache.commons.io.FilenameUtils;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -26,19 +30,7 @@ public class VibeModeDownloadingIntentService extends IntentService {
 
     public VibeModeDownloadingIntentService() {
         super("VibeModeDownloadingIntentService");
-        if (songDownloader == null)
-            songDownloader = new WebMusicDownloader(
-                    new VibeModeDownloadedFileHanlderDecorator(
-                            new DownloadedSongHandler(this)
-                    )
-            );
 
-        if (albumDownloader == null)
-            albumDownloader = new WebMusicDownloader(
-                    new VibeModeDownloadedFileHanlderDecorator(
-                            new DownloadedAlbumHandler(this)
-                    )
-            );
     }
 
     /**
@@ -48,16 +40,34 @@ public class VibeModeDownloadingIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
+
             synchronized (this) {
-                // check if is just a song or an url
-                String url = intent.getStringExtra(AUTO_DOWNLOAD_REQ_URL);
-                String fileExtenstion = MimeTypeMap.getFileExtensionFromUrl(url);
+                if (songDownloader == null)
+                    songDownloader = new WebMusicDownloader(
+                            new VibeModeDownloadedFileHanlderDecorator(
+                                    new DownloadedSongHandler(this)
+                            )
+                    );
+
+                if (albumDownloader == null)
+                    albumDownloader = new WebMusicDownloader(
+                            new VibeModeDownloadedFileHanlderDecorator(
+                                    new DownloadedAlbumHandler(this)
+                            )
+                    );
+                // check if is just a song or an album
+                Bundle extra = intent.getExtras();
+                String url = extra.getString(AUTO_DOWNLOAD_REQ_URL);
+                Log.d(TAG, "URL passed to intent service: " + url);
+                WebMusicDownloader.UrlFnamePair urlFnamePair =
+                        WebMusicDownloader.getUrlFnamePair(url);
+                String fileExtenstion = FilenameUtils.getExtension(urlFnamePair.filename);
 
                 if (songDownloader.getHandler().checkExtension(fileExtenstion)) {
-                    songDownloader.downloadFromUrl(url);
+                    songDownloader.download(urlFnamePair);
                 }
                 else if (albumDownloader.getHandler().checkExtension(fileExtenstion)) {
-                    albumDownloader.downloadFromUrl(url);
+                    albumDownloader.download(urlFnamePair);
                 }
                 else {
                     throw new RuntimeException(TAG+" ERROR: unrecognized file format from firebase.");
