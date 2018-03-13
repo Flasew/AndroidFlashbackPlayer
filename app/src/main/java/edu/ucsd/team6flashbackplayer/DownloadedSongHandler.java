@@ -10,6 +10,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -59,7 +61,7 @@ public class DownloadedSongHandler implements DownloadedFileHandlerStrategy {
         // if the same file (or at least with the same name) already exist in music dir,
         // remove the downloaded file and return
         if (fileInMusicDir.exists()) {
-            fileInDownloadDir.delete();
+            FileUtils.deleteQuietly(fileInDownloadDir);
             return new LinkedList<>();
         }
 

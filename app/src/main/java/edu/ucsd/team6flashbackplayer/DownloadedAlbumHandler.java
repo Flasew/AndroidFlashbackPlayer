@@ -75,8 +75,9 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
             }
         }
 
-        // delete the unzipped folder
-        (new File(makeDirStr(WebMusicDownloader.DOWNLOAD_DIR, unzipFolderStr))).delete();
+        // delete the unzipped folder and downloaded zip
+        FileUtils.deleteQuietly(new File(makeDirStr(WebMusicDownloader.DOWNLOAD_DIR, unzipFolderStr)));
+        FileUtils.deleteQuietly(new File(makeDirStr(WebMusicDownloader.DOWNLOAD_DIR, filename)));
 
         for (String s: copiedFiles) {
             Log.d(TAG, "Files copied over: " + s);
@@ -107,10 +108,10 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
      * @param zipname file name of the zip file
      * @return List of unzipped file paths.
      */
-    private LinkedList<String> unpackZip(String path, String zipname) {
+    public LinkedList<String> unpackZip(String path, String zipname) {
 
         // folder to unzip to
-        String unzipFolder = zipname.replaceAll(".zip$", "");
+        String unzipFolder = zipname.replaceAll("\\.zip$", "");
         File unzipFolderFile = new File(makeDirStr(path, unzipFolder));
         unzipFolderFile.mkdirs();
 
@@ -128,9 +129,10 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
             int count;
 
             while ((ze = zis.getNextEntry()) != null) {
-                // zapis do souboru
+
                 filename = ze.getName();
 
+                Log.d(TAG, "Unzipping " + filename);
                 // Need to create directories if not exists, or
                 // it will generate an Exception...
                 if (ze.isDirectory()) {
@@ -147,7 +149,6 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
                 }
 
                 fout.close();
-                zis.closeEntry();
 
                 result.add(makeDirStr(unzipFolder, filename));
                 Log.d(TAG, makeDirStr(unzipFolder, filename) + " extracted.");

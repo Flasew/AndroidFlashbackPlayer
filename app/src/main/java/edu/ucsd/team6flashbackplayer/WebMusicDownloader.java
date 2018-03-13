@@ -29,7 +29,7 @@ import android.widget.Toast;
  */
 public class WebMusicDownloader {
 
-    static final String DOWNLOAD_DIR =
+    public static final String DOWNLOAD_DIR =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
 
     private static final String TAG = "WebMucicDownloader";
@@ -117,6 +117,7 @@ public class WebMusicDownloader {
                     // if all downloads are completed, remove this broadcast listener.
                     if (requestIds.size() == 0)
                     {
+                        Log.d(TAG, "All download processed, unregister broadcast receiver");
                         context.unregisterReceiver(broadcastReceiver);
                         broadcastReceiver = null;
                     }
