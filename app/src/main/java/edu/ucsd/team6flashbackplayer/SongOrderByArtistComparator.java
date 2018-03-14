@@ -27,7 +27,7 @@ class SongOrderByArtistComparator implements SongOrderComparator {
             return -1;
         }
 
-        return s1.getArtist().compareTo(s1.getArtist());
+        return s1.getArtist().compareTo(s2.getArtist());
     }
 
 }

@@ -42,6 +42,11 @@
     <!--<string name="android_client_id">657172641436-eqt3f4cgpqo1lddl9pm2h1ir2cg573s0.apps.googleusercontent.com</string>-->
     <string name="user_last">Played by:</string>
     <string name="show_playlist">Show Playlist</string>
+    <string name="sort_lastplayed">Sort by last played</string>
+    <string name="sort_title">Sort by title</string>
+    <string name="sort_album">Sort by album</string>
+    <string name="sort_artist">Sort by artist</string>
+    <string name="sort_favorite">Sort by favorite status</string>
     <!--<string name="client_sec">mfHZRa8yqr1BhvnwevefdOKm</string>-->
 
 </resources>
