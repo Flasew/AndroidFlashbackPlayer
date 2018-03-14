@@ -10,6 +10,9 @@ import android.webkit.MimeTypeMap;
 
 import org.apache.commons.io.FilenameUtils;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
@@ -26,6 +29,8 @@ public class VibeModeDownloadingIntentService extends IntentService {
     // auto download
     private WebMusicDownloader songDownloader;
     private WebMusicDownloader albumDownloader;
+
+    private static HashSet<WebMusicDownloader.UrlFnamePair> albumQueued = new HashSet<>();
 
 
     public VibeModeDownloadingIntentService() {
@@ -67,7 +72,12 @@ public class VibeModeDownloadingIntentService extends IntentService {
                     songDownloader.download(urlFnamePair);
                 }
                 else if (albumDownloader.getHandler().checkExtension(fileExtenstion)) {
-                    albumDownloader.download(urlFnamePair);
+                    if (!albumQueued.contains(urlFnamePair)) {
+                        Log.d(TAG, "Adding " + urlFnamePair.filename + ", " + urlFnamePair.url + " to known downloaded album");
+                        albumDownloader.download(urlFnamePair);
+                        albumQueued.add(urlFnamePair);
+                    }
+
                 }
                 else {
                     throw new RuntimeException(TAG+" ERROR: unrecognized file format from firebase.");

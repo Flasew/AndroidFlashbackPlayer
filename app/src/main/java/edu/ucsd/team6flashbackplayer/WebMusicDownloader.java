@@ -97,7 +97,7 @@ public class WebMusicDownloader {
                     requestIds.delete(referenceId);
 
                     // if the file does belong to this download session, process the downloaded file.
-                    if (ufp.filename != null) {
+                    if (ufp != null) {
                         Log.d(TAG, "File just downloaded: " + ufp.filename);
                         AsyncFileProcessor runner = new AsyncFileProcessor(WebMusicDownloader.this);
                         runner.execute(ufp.url, ufp.filename);
@@ -289,6 +289,21 @@ public class WebMusicDownloader {
         public UrlFnamePair(String u, String f) {
             url = u;
             filename = f;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other == null || ! (other instanceof UrlFnamePair))
+                return false;
+
+            UrlFnamePair o = (UrlFnamePair) other;
+            return o.filename.equals(this.filename) && o.url.equals(this.url);
+
+        }
+
+        @Override
+        public int hashCode() {
+            return (int)((long)url.hashCode() + (long)filename.hashCode());
         }
 
         public static UrlFnamePair mkpair(String u, String f) {

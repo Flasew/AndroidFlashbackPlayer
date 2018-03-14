@@ -14,7 +14,7 @@ public class VibeModeDownloadedFileHanlderDecorator extends DownloadedFileHandle
 
     private LocalBroadcastManager localBroadcastManager;
     private static final String TAG = VibeModeDownloadedFileHanlderDecorator.class.getName();
-    private static final String VIBE_FILE_FINISHED_PROCESS = "vibeModeFileFinishedProcessing";
+    static final String VIBE_FILE_FINISHED_PROCESS = "vibeModeFileFinishedProcessing";
 
     /**
      * constructor just delegate to super since it only sets a field.

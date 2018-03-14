@@ -493,10 +493,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                 Log.d(TAG, "curr after: "  + curr);
 
                 if (curr < positionList.size()) {
-                    // swap
-                    int tmp = positionList.get(counter);
-                    positionList.set(counter, positionList.get(curr));
-                    positionList.set(curr, tmp);
+                    // move the song to current counter position
+                    int tmp = positionList.remove(curr);
+                    positionList.add(counter, tmp);
                     broadcastSongList();
 
                 }
@@ -628,6 +627,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
         Intent intent = new Intent(BROADCAST_SONG_LIST);
         intent.putIntegerArrayListExtra(BROADCAST_SONG_LIST, positionList);
+        intent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_VIBE_MODE, useFirebaseList);
         localBroadcastManager.sendBroadcast(intent);
     }
 
@@ -654,6 +654,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
      * Start a new song if download finishes and no song was playing due to they're all offline.
      */
     private void onSongDownloadedHandled() {
+        Log.d(TAG, "Song downloaded broadcast received");
         if (!useFirebaseList || mediaPlayer == null || mediaPlayer.isPlaying())
             return;
 
@@ -720,8 +721,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         }
 
         if (!songDownladedHandledReceiverRegistered) {
-            localBroadcastManager.registerReceiver(songDislikedReceiver,
-                    new IntentFilter(VibeModeDownloadedFileHanlderDecorator.BROADCAST_FILE_HANDLED));
+            localBroadcastManager.registerReceiver(songDownloadHandledReceiver,
+                    new IntentFilter(VibeModeDownloadedFileHanlderDecorator.VIBE_FILE_FINISHED_PROCESS));
             songDownladedHandledReceiverRegistered = true;
         }
 

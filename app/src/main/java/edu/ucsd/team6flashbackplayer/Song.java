@@ -11,7 +11,7 @@ import java.util.HashSet;
 
 public class Song {
 
-    private static final String NO_INFO = "---";     // noinfo string
+    static final String NO_INFO = "---";     // noinfo string
 
     private final String PATH;
     private final String TITLE;

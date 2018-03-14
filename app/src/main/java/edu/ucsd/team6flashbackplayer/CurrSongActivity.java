@@ -412,12 +412,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         flashBackButton.setBackground(getDrawable(R.drawable.fb_enabled));
 
         // force a location update to enter the flachback mode play list
-        try {
-            Thread.sleep(800);
-        }
-        catch (InterruptedException e) {
 
-        }
         if (lastLatLngCache != null)
             startMusicPlayerServiceFBMode(false);
     }
