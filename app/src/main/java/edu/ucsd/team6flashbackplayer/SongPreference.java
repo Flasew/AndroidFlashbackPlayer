@@ -35,7 +35,6 @@ public class SongPreference {
             song.setLike(false);
         }
         Log.d(TAG, "Final status: Like = " + song.isLiked() + ", dislike = " + song.isDisliked());
-
     }
 
     /**
