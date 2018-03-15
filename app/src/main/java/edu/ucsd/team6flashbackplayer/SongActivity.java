@@ -145,7 +145,8 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
             case R.id.sort_lastplayed:  sortType = SortType.LAST_PLAYED; break;
             case R.id.sort_title:   sortType = SortType.SONGNAME; break;
             case R.id.add_song:
-                DialogFragment downloadDialog = new DownloadDialogFragment();
+                DownloadDialogFragment downloadDialog = new DownloadDialogFragment();
+                downloadDialog.setTitle("Download a song...");
                 downloadDialog.show(getFragmentManager(), getResources().getString(R.string.download_song));
             default: return super.onOptionsItemSelected(item);
         }

@@ -24,8 +24,18 @@ import android.widget.TextView;
 public class DownloadDialogFragment extends DialogFragment {
 
 
+    private String title = "Download";
+
     public DownloadDialogFragment() {
         // Required empty public constructor
+    }
+
+    /**
+     * set the dialog title
+     * @param title new title
+     */
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     /**
@@ -54,7 +64,7 @@ public class DownloadDialogFragment extends DialogFragment {
         // Pass null as the parent view because its going in the dialog layout
         builder.setView(inflater.inflate(R.layout.download_dialog, null))
         // Add action buttons
-                .setMessage(R.string.download_msg)
+                .setMessage(title)
                 .setPositiveButton(R.string.download, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         mListener.onDialogPositiveClick(DownloadDialogFragment.this);

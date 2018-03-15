@@ -1,8 +1,13 @@
 package edu.ucsd.team6flashbackplayer;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import java.time.ZonedDateTime;
+
 
 /**
  * Class for time mocking.
@@ -12,14 +17,51 @@ import java.time.ZonedDateTime;
  */
 public class AppTime {
 
+    private static final String TAG = AppTime.class.getName();
+
+    static final String BROADCAST_FAKE_TIME_UPDATE = "fakeTimeUpdate";
+    static final int[] UPDATE_TIME = {0, 5, 11, 17};
+
     private static ZonedDateTime fixedTime = null; // stores a user set date time
+    private static LocalBroadcastManager localBroadcastManager;
+
+    public static void setupBroadcastManager(Context c) {
+        if (localBroadcastManager != null) {
+            localBroadcastManager = LocalBroadcastManager.getInstance(c.getApplicationContext());
+        }
+    }
 
     /**
      * Set a fixed time and use it for future calls
      * @param zdt fixed ZonedDateTime that use provided
      */
     public static void setUseFixedTime(@NonNull ZonedDateTime zdt) {
+        if (fixedTime != null) {
+            // check if there should be a "update for time"
+            if (zdt.getYear() > fixedTime.getYear() || zdt.getDayOfYear() > fixedTime.getDayOfYear())
+                broadcastFakeTimeChange();
+
+            else {
+                for (int uTime: UPDATE_TIME) {
+                    if (zdt.getHour() >= uTime && fixedTime.getHour() < uTime) {
+                       broadcastFakeTimeChange();
+                       break;
+                    }
+                }
+            }
+        }
         fixedTime = zdt;
+    }
+
+    /**
+     * broadcast a fake app time update to trigger vibe mode list update when mocking time.
+     */
+    private static void broadcastFakeTimeChange() {
+        Intent intent = new Intent(BROADCAST_FAKE_TIME_UPDATE);
+        if (localBroadcastManager != null) {
+            localBroadcastManager.sendBroadcast(intent);
+            Log.d(TAG, "Fake time update send");
+        }
     }
 
     /**
@@ -39,6 +81,14 @@ public class AppTime {
             return fixedTime;   // safe to do so since it's immutable
         else
             return ZonedDateTime.now();
+    }
+
+    /**
+     * if the app is using fixed time
+     * @return
+     */
+    public static boolean usingFixedTime() {
+        return fixedTime != null;
     }
 
 

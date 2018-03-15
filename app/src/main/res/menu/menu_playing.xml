@@ -2,6 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <item
+        android:id="@+id/pick_fixed_time"
+        android:orderInCategory="100"
+        android:title="@string/fixed_time"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/use_sys_time"
+        android:orderInCategory="100"
+        android:title="@string/sys_time"
+        app:showAsAction="never" />
+
     <item android:id="@+id/show_playlist"
         android:icon="@drawable/ic_list_white_24dp"
         android:title="@string/show_playlist"

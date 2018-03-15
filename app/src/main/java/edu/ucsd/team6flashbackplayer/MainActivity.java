@@ -22,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -83,6 +84,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     private GoogleSignInAccount account;
     private String serverAuthCode;
     private AsyncSetupAccount apf;    // used to prevent mem leak.
+    private SharedPreferences.Editor editor;
 
     private HashMap<String, String> friendsMap = new HashMap<>();
 
@@ -110,6 +112,8 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        AppTime.setupBroadcastManager(this);
 
         //Trying doing this before Firebase init
         initSongAndAlbumList();
@@ -152,10 +156,14 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         // the GoogleSignInAccount will be non-null.
         trySilentSignIn();
 
-        final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
+         editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
 
         flashBackButton.setOnClickListener(v -> {
+            if (account == null) {
+                Toast.makeText(this, "You must login to use vibe mode.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             editor.putBoolean("mode", true);
             editor.apply();
             startCurrSongActivity();
@@ -208,8 +216,8 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
         // enable a user time or set back to the system time.
         if (id == R.id.pick_fixed_time) {
-            DialogFragment downloadDialog = new DateTimeSetterDialogFragment();
-            downloadDialog.show(getFragmentManager(), getResources().getString(R.string.pick_time));
+            DialogFragment dateTimeSetterDialogFragment = new DateTimeSetterDialogFragment();
+            dateTimeSetterDialogFragment.show(getFragmentManager(), getResources().getString(R.string.pick_time));
         }
 
         else if (id == R.id.use_sys_time){
@@ -424,9 +432,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
             // load in User object for the global User (from Firebase)
             User.loadUser(account, assetManager, friendsMap);
             Log.d(TAG, account.getDisplayName());
-            welcomeText.setText(String.format(
-                    getResources().getString(R.string.welcome_info),
-                    account.getDisplayName()));
+            welcomeText.setText(getResources().getString(R.string.welcome_info));
             welcomeText.setVisibility(View.VISIBLE);
             signInButton.setVisibility(View.GONE);
         }
@@ -444,7 +450,6 @@ public class MainActivity extends MusicPlayerNavigateActivity {
      * Set up the people API. Tutorial obtained from
      * https://developers.google.com/people/v1/getting-started and
      * http://blog.iamsuleiman.com/people-api-android-tutorial-2/
-     * TODO: consider put this part in async task.
      * @param context context used to setup people api
      * @param serverAuthCode server auth code of the account
      * @return people object set up
@@ -638,7 +643,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                 mmr.setDataSource(MUSIC_DIR + "/" + path);
 
                 Song toAdd = new Song(
-                        "",
+                        null,
                         path,
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE),
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST),
@@ -735,6 +740,12 @@ public class MainActivity extends MusicPlayerNavigateActivity {
             // lanuch fb mode if it was in it.
             boolean flashBackMode = associatedMainActivity.get().fbModeSharedPreferences.getBoolean("mode", false);
             if (flashBackMode) {
+                if (associatedMainActivity.get().account == null) {
+                    associatedMainActivity.get().editor.putBoolean("mode", true);
+                    associatedMainActivity.get().editor.apply();
+                    Toast.makeText(associatedMainActivity.get(), "You must login to use vibe mode.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 associatedMainActivity.get().startCurrSongActivity();
             }
         }

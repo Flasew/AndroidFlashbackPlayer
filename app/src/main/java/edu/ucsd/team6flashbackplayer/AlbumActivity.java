@@ -101,7 +101,8 @@ public class AlbumActivity extends MusicPlayerNavigateActivity implements Downlo
         int id = item.getItemId();
 
         if (id == R.id.add_album) {
-            DialogFragment downloadDialog = new DownloadDialogFragment();
+            DownloadDialogFragment downloadDialog = new DownloadDialogFragment();
+            downloadDialog.setTitle("Download a song...");
             downloadDialog.show(getFragmentManager(), getResources().getString(R.string.download_album));
         }
 
