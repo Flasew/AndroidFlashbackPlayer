@@ -136,6 +136,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestServerAuthCode(getString(R.string.client_id))
                 .requestEmail()
+                .requestProfile()
                 .requestScopes(new Scope(Scopes.PROFILE),
                         new Scope(PeopleScopes.CONTACTS_READONLY),
                         new Scope(PeopleScopes.USER_EMAILS_READ),
@@ -472,7 +473,9 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         credential.setFromTokenResponse(tokenResponse);
 
         // STEP 3 get the people object
-        return new People.Builder(httpTransport, jsonFactory, credential).build();
+        return new People.Builder(httpTransport, jsonFactory, credential)
+                .setApplicationName("Vibe Player")
+                .build();
     }
 
 
