@@ -239,10 +239,15 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
             DialogFragment dateTimeSetterDialogFragment = new DateTimeSetterDialogFragment();
             dateTimeSetterDialogFragment.show(getFragmentManager(), getResources().getString(R.string.pick_time));
         }
+        else if (id == R.id.use_sys_time){
+            AppTime.unsetFixedTime();
+            setVibeAlarmReceiver();
+        }
 
         else if (id == R.id.show_playlist) {
             startFBListActivity();
         }
+
 
         return super.onOptionsItemSelected(item);
     }
@@ -431,10 +436,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         // redraw the buttons
         flashBackButton.setBackground(getDrawable(R.drawable.fb_enabled));
 
-        // force a location update to enter the flachback mode play list
-
-        if (lastLatLngCache != null)
-            startMusicPlayerServiceFBMode(false);
+        startMusicPlayerServiceFBMode(false);
     }
 
     /**
@@ -649,6 +651,10 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     @Override
     public void onDialogClosed() {
         Log.d(TAG, "Picker dialog destroyed");
+        setVibeAlarmReceiver();
+    }
+
+    private void setVibeAlarmReceiver() {
         if (flashBackMode) {
             if (AppTime.usingFixedTime()) {
                 unregisterAlarmReceivers();

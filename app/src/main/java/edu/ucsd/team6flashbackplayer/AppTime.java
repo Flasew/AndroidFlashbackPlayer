@@ -26,8 +26,9 @@ public class AppTime {
     private static LocalBroadcastManager localBroadcastManager;
 
     public static void setupBroadcastManager(Context c) {
-        if (localBroadcastManager != null) {
+        if (localBroadcastManager == null) {
             localBroadcastManager = LocalBroadcastManager.getInstance(c.getApplicationContext());
+            Log.d(TAG, "local BM " + localBroadcastManager);
         }
     }
 
@@ -57,6 +58,7 @@ public class AppTime {
      * broadcast a fake app time update to trigger vibe mode list update when mocking time.
      */
     private static void broadcastFakeTimeChange() {
+        Log.d(TAG, "Attempting to send broadcast of fake time change...");
         Intent intent = new Intent(BROADCAST_FAKE_TIME_UPDATE);
         if (localBroadcastManager != null) {
             localBroadcastManager.sendBroadcast(intent);

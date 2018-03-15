@@ -2,15 +2,11 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.content.Context;
-import android.media.AudioRouting;
 import android.os.Bundle;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
 
 import org.apache.commons.io.FilenameUtils;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
@@ -30,7 +26,7 @@ public class VibeModeDownloadingIntentService extends IntentService {
     private WebMusicDownloader songDownloader;
     private WebMusicDownloader albumDownloader;
 
-    private static HashSet<WebMusicDownloader.UrlFnamePair> albumQueued = new HashSet<>();
+    private static HashSet<WebMusicDownloader.UrlFnamePair> downloadsQueued = new HashSet<>();
 
 
     public VibeModeDownloadingIntentService() {
@@ -69,13 +65,17 @@ public class VibeModeDownloadingIntentService extends IntentService {
                 String fileExtenstion = FilenameUtils.getExtension(urlFnamePair.filename);
 
                 if (songDownloader.getHandler().checkExtension(fileExtenstion)) {
-                    songDownloader.download(urlFnamePair);
+                    if (!downloadsQueued.contains(urlFnamePair)) {
+                        Log.d(TAG, "Adding " + urlFnamePair.filename + ", " + urlFnamePair.url + " to known downloaded song");
+                        songDownloader.download(urlFnamePair);
+                        downloadsQueued.add(urlFnamePair);
+                    }
                 }
                 else if (albumDownloader.getHandler().checkExtension(fileExtenstion)) {
-                    if (!albumQueued.contains(urlFnamePair)) {
+                    if (!downloadsQueued.contains(urlFnamePair)) {
                         Log.d(TAG, "Adding " + urlFnamePair.filename + ", " + urlFnamePair.url + " to known downloaded album");
                         albumDownloader.download(urlFnamePair);
-                        albumQueued.add(urlFnamePair);
+                        downloadsQueued.add(urlFnamePair);
                     }
 
                 }

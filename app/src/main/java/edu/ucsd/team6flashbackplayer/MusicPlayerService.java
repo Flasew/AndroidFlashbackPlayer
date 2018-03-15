@@ -61,6 +61,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private ArrayList<Integer> positionList;             // list of songs to be played
 
     private MediaPlayer mediaPlayer;                // media player that plays the song
+    private boolean isPaused = false;               // media player is paused
 
     // broadcast
     private LocalBroadcastManager localBroadcastManager;
@@ -221,7 +222,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                 }
 
                 // queue the firebase song's download
-                if (!keepCurrSong || !mediaPlayer.isPlaying()) {
+                if (!keepCurrSong || (isStopped())) {
 
                     counter = 0;
                     positionList = inList;
@@ -374,6 +375,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onCompletion(MediaPlayer mp) {
         // Invoked when playback of a media source has completed
+        isPaused = true;
 
         if (positionList.size() == 0) {
             broadcastSongChange();
@@ -537,6 +539,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
      */
     private void playMedia() {
         if (!mediaPlayer.isPlaying()) {
+            isPaused = false;
             mediaPlayer.start();
             Log.d(TAG, "Media player started");
         }
@@ -547,6 +550,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
      */
     private void pauseMedia() {
         if (mediaPlayer.isPlaying()) {
+            isPaused = true;
             mediaPlayer.pause();
             Log.d(TAG, "Media player paused");
         }
@@ -576,9 +580,15 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private void stopMedia() {
         if (mediaPlayer == null) return;
         if (mediaPlayer.isPlaying()) {
+            isPaused = false;
             mediaPlayer.stop();
             Log.d(TAG, "Media player stopped");
         }
+    }
+
+    private boolean isStopped() {
+        if (mediaPlayer == null) return true;
+        return !isPaused && !mediaPlayer.isPlaying();
     }
 
 
@@ -638,7 +648,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private void onSongDisliked(int position) {
         // if the media player is not playing, we don't have to worry.
         // if we somehow passed in an invalid position, also ignore it.
-        if (mediaPlayer == null || !mediaPlayer.isPlaying() || position == -1)
+        if (mediaPlayer == null || isStopped() || position == -1)
             return;
 
         // otherwise check if the disliked song is currently playing
