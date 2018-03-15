@@ -5,7 +5,7 @@ Puppy
 Panda
 Bear
 Hedgehog
-Polar bear
+Polar Bear
 Penguin
 Koala
 Sloth
@@ -26,3 +26,15 @@ Owl
 Duck
 Sea Lion
 Alpaca
+Rabbit
+Cow
+Hen
+Pig
+Albatross
+Fox
+Chihuahua
+Deer
+Crocodile
+Chameleon
+Husky
+Lion

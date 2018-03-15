@@ -20,7 +20,7 @@ public class SongScoreComparator implements Comparator<Integer> {
 
     private LatLng currLoc;
     private ZonedDateTime currTime;
-    private List<Song> songs = SongList.getSongs();
+    private List<Song> songs = FirebaseSongList.getSongs();
 
     /**
      * Constructor
@@ -50,32 +50,37 @@ public class SongScoreComparator implements Comparator<Integer> {
         Song s2 = songs.get(index2);
         int score1 = SongScoreCalculator.calcScore(s1, currLoc, currTime);
         int score2 = SongScoreCalculator.calcScore(s2, currLoc, currTime);
-        if( score1 == score2) {
-            if( s1.isLiked() == s2.isLiked() ){
-
+        int loc1 = SongScoreCalculator.getLocScore(s1,currLoc);
+        int loc2 = SongScoreCalculator.getLocScore(s2,currLoc);
+        int week1 = SongScoreCalculator.getWeekScore(s1,currTime);
+        int week2 = SongScoreCalculator.getWeekScore(s2,currTime);
+        if(score1 == score2) {
+            if(loc1 != loc2) {
+                return loc1 > loc2 ? -1 : 1;
+            }
+            else if(week1 != week2) {
+                return week1 > week2 ? -1 : 1;
+            }
+            else {
                 // check if either song is not played before
-                if(s1.getLatestTime() == null) {
-                    if(s2.getLatestTime() == null) {
+                if (s1.getLatestTime() == null) {
+                    if (s2.getLatestTime() == null) {
                         return 0;
                     }
                     return 1;
                 }
 
-                if(s2.getLatestTime() == null) {
+                if (s2.getLatestTime() == null) {
                     return -1;
                 }
 
                 // song with earlier last played time will be ordered first
-                long timediff = s1.getLatestTime().until( s2.getLatestTime(), NANOS );
-                if(timediff == 0) {
+                long timediff = s1.getLatestTime().until(s2.getLatestTime(), NANOS);
+                if (timediff == 0) {
                     return 0;
                 }
-
                 return timediff < 0 ? -1 : 1;
             }
-
-            // Liked song < Neutral Song
-            return s1.isLiked() ? -1 : 1;
         }
 
         // song with larger score < song with smaller score

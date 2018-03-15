@@ -5,9 +5,13 @@ package edu.ucsd.team6flashbackplayer;
  * Edited by alice 3/9/18
  */
 
+import android.content.Context;
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -26,11 +30,16 @@ public class FirebaseSongList {
 
     private static final String TAG = "FirebaseSongList";
 
-    private static List<Song> firebaseSongList = new ArrayList<Song>();
+    private static List<Song> firebaseSongList = new ArrayList<>();
 
     public static String firebaseURL = "https://cse-110-team-project-team-6.firebaseio.com/";
     private static FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance(firebaseURL);
     private static DatabaseReference songsReference = firebaseDatabase.getReference("songs");
+
+    public static ChildEventListener songListener;
+
+    // local broadcast manager
+    protected static LocalBroadcastManager localBroadcastManager;
 
     /**
      * Adds the song to the local user list (called on download)
@@ -64,14 +73,17 @@ public class FirebaseSongList {
 
                     // This adds the song to the local Firebase list
                     firebaseSongList.add(song);
+                    // Pushes to Firebase
                     childReference.setValue(song.getJsonString());
                 }
                 else {
-                    // If the user already exists don't push it to Firebase
+                    // If the user already exists don't push it to Firebase (aka don't override)
                     Log.d(TAG,"Song already exists");
                     // Still add it to the local Firebase list (since this function is called on download)
                     firebaseSongList.add(song);
                 }
+                // Add the id of the song to the current user's songPref (to start to keep track of pref)
+                User.addPrefToHash(song.getId());
             }
 
             @Override
@@ -84,7 +96,7 @@ public class FirebaseSongList {
     /**
      * Populate the FirebaseSongList list of songs with info of songs from the Firebase database
      */
-    public static void populateFromFirebase() {
+    public static void populateFromFirebase(Context appContext) {
 
         songsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -139,6 +151,11 @@ public class FirebaseSongList {
                 }
 
                 firebaseSongList = tempList;
+                for(Song a : FirebaseSongList.getSongs()) {
+                    Log.d("FirebaseSongList", a.getId());
+                }
+
+                FirebaseSongList.createListener(appContext);
 
                 /*
                 for (Song a : firebaseSongList) {
@@ -151,7 +168,7 @@ public class FirebaseSongList {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                //
+                throw databaseError.toException();
             }
         });
     }
@@ -167,7 +184,7 @@ public class FirebaseSongList {
         // Reference specifically to user and the song in the userPref list
         // /users/user.id/songListPref/song.id
         DatabaseReference userRefSong = firebaseDatabase.getReference("users")
-                .child(currentUser.getId()).child("songListPref").child(song.getId());
+                .child(User.EncodeString(currentUser.getId())).child("songListPref").child(song.getId());
 
         // Create an ArrayList with updated boolean values for liked and disliked
         ArrayList<Boolean> bList = new ArrayList<>();
@@ -264,6 +281,112 @@ public class FirebaseSongList {
         listPlayedRef.setValue(currentUser.getSongListPlayed());
     }
 
+    /**
+     * For each song in the local list, updates the preferences based on the current user's
+     * preferences that were loaded in through Firebase
+     */
+    public static void populatePreferences() {
+        User curr = User.getSelf();
+        List<Song> localList = SongList.getSongs();
+
+        // Iterate through local list of the user
+        for (Song s : localList) {
+            Log.d("Setting pref", s.getId() + "," + s.isLiked() + "," + s.isDisliked() );
+            // get the preferences associated with this song from the User's songListPref
+            // and set the song's pref to those prefs that were saved before
+            s.setLike(curr.getSongListPref().get(s.getId()).get(0));
+            s.setDislike(curr.getSongListPref().get(s.getId()).get(1));
+            Log.d("Setting pref after", s.getId() + ","  + s.isLiked() + "," + s.isDisliked() );
+        }
+        // Note there is no case for if a song doesn't match in local list but matches in Firebase
+        // Because all the songs in songlistPref for a user will be the ones they have downloaded before
+        // So it will have to be in Firebase but not vice versa
+    }
+
+    /**
+     * Creates a listener for the /songs/ path in firebase and handles events when new songs are
+     * added or when song info is modified
+     * @param appContext the application context of the whole app (passed through MainActivity)
+     */
+    private static void createListener(Context appContext) {
+        songListener = songsReference.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                // If a new song is added to Firebase database (meaning another user has downloaded a new song
+                // while the app is running) - Add this to the Firebase song list only
+                String songString = dataSnapshot.getValue(String.class);
+                Song updatedSong = SongJsonParser.jsonPopulateFromFirebase(songString);
+
+                // Check if it is not already in our Firebase song list (double adding might occur if
+                // the current user downloads the song
+                for (Song song : FirebaseSongList.getSongs()) {
+                    if (updatedSong.getId().equals(song.getId())) {
+                        return;
+                    }
+                }
+
+                FirebaseSongList.getSongs().add(updatedSong);
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                String songString = dataSnapshot.getValue(String.class);
+                Song updatedSong = SongJsonParser.jsonPopulateFromFirebase(songString);
+
+                // Check if the song that was updated existed in the local list
+                // Aka already downloaded (firebase song list gets automatically updated from this)
+                for (Song song : SongList.getSongs()) {
+                    if (updatedSong.getId().equals(song.getId())) {
+                        // Update the Latest time, location, location history, and last played id
+                        // Because those are the fields that will/or could change if song info changes at all
+                        song.setLatestTime(updatedSong.getLatestTime());
+                        song.setLatestLoc(updatedSong.getLatestLoc());
+                        song.setLocHist(updatedSong.getLocHist());
+                        song.setLastPlayedUserUid(updatedSong.getLastPlayedUserUid());
+
+                        Log.d(TAG, "Was updated "+ updatedSong.getId() + " " + updatedSong.getLastPlayedUserUid());
+
+                        // Send a broadcast that the last played user id changed for a particular song
+                        // This is only really relevant for a song that is already downloaded/can be played
+                        localBroadcastManager = LocalBroadcastManager.getInstance(appContext);
+                        Intent intent = new Intent("reqUpdate");
+                        localBroadcastManager.sendBroadcast(intent);
+
+                        return;
+                    }
+                }
+
+                // If the song only existed in the Firebase song list aka wasn't downloaded yet
+                // Update those fields as well
+                for (Song song: FirebaseSongList.getSongs()) {
+                    if (updatedSong.getId().equals(song.getId())) {
+                        song.setLatestTime(updatedSong.getLatestTime());
+                        song.setLatestLoc(updatedSong.getLatestLoc());
+                        song.setLocHist(updatedSong.getLocHist());
+                        song.setLastPlayedUserUid(updatedSong.getLastPlayedUserUid());
+
+                        // Don't need to send a broadcast in this case
+                        Log.d(TAG,"Was updated "+ updatedSong.getId() + " " + updatedSong.getLastPlayedUserUid());
+                    }
+                }
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                // This won't occur (except in the case of manual removal or error)
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                // This also won't occur
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                throw databaseError.toException();
+            }
+        });
+    }
 
     // Getter for songs
     public static List<Song> getSongs() {

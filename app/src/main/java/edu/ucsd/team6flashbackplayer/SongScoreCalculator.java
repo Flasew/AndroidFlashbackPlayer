@@ -2,10 +2,10 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.location.Location;
 import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 import java.time.ZonedDateTime;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * class SongScoreCalculator
@@ -55,7 +55,7 @@ public class SongScoreCalculator {
      * Calculate a song's time of day score
      * @param s song to be calculated
      * @param t time to be asserted
-     * @return Time of day score.
+     * @return Played last week score.
      */
     private static int weekScore(Song s, ZonedDateTime t) {
         int score = 0;
@@ -84,21 +84,31 @@ public class SongScoreCalculator {
                 }
             }
         }
-        Log.d(TAG, "Song " + s.getTitle() + " gets a time of day score " + score);
+        Log.d(TAG, "Song " + s.getTitle() + " gets a played last week score of" + score);
         return score;
     }
 
     /**
      * Calculate a song's day of week
      * @param s song to be calculated
-     * @param t time to be asserted
-     * @return day of week score.
+     * @return Played by friend score
      */
-    private static int dowScore(Song s, ZonedDateTime t) {
+    private static int friendScore(Song s) {
         int score = 0;
-        if (s.getDayHist()[t.getDayOfWeek().getValue()])
-            score = 1;
-        Log.d(TAG, "Song " + s.getTitle() + " gets a day of week score " + score);
+        User curr = User.getSelf();
+        HashMap<String,String> friends = curr.getFriendsMap();
+
+        for(String id : friends.keySet()) {
+            User friend = Users.getUser(User.DecodeString(id));
+            ArrayList<String> friendSongs = friend.getSongListPlayed();
+            String songId = s.getId();
+            if(friendSongs.contains(songId)){
+                score = 1;
+                break;
+            }
+        }
+
+        Log.d(TAG, "Song " + s.getTitle() + " gets a played by friend score of " + score);
         return score;
     }
 
@@ -110,7 +120,14 @@ public class SongScoreCalculator {
      * @return total score.
      */
     public static int calcScore(Song s, LatLng l, ZonedDateTime t) {
-        return locScore(s, l) + weekScore(s, t) + dowScore(s, t);
+        return locScore(s, l) + weekScore(s, t) + friendScore(s);
+    }
+
+    public static int getLocScore(Song s,LatLng l) {
+        return locScore(s,l);
+    }
+    public static int getWeekScore(Song s,ZonedDateTime t) {
+        return weekScore(s,t);
     }
 
 }

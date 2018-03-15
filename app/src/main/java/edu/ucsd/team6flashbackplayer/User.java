@@ -1,9 +1,11 @@
 package edu.ucsd.team6flashbackplayer;
 
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
 
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -13,6 +15,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +32,7 @@ public class User {
 
     private String fullName;
     private String alias;
-    private String id; // The id is the email that the user has
+    private String id; // The id is the email that the user has (NOT encoded)
     private ArrayList<String> songListPlayed;
     private HashMap<String, List<Boolean>> songListPref;
     // Key is the friend's ID aka email and Value is the friend's given name
@@ -115,25 +118,6 @@ public class User {
         String alias = colorsList.get(randomColorIndex) + " " + animalsList.get(randomAnimalIndex);
         Log.d("Alias is", alias);
 
-        /* Later if necessary... check/handle uniqueness
-        DatabaseReference dr = FirebaseDatabase.getInstance().getReference("aliases").child(alias);
-        dr.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String exists = dataSnapshot.getValue(String.class);
-
-                if (exists == null) {
-
-                }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                //
-            }
-        });
-        dr = dr.push();
-        dr.setValue(alias); */
-
         return alias;
     }
 
@@ -204,12 +188,15 @@ public class User {
                     // Also add this user to the global user list
                     Users.addUser(id, newUser);
 
-                    Log.d("User", "The user is " + newUser.getId() + " " + newUser.getAlias());
+                    Log.d("User", "The new user is " + newUser.getId() + " " + newUser.getAlias());
                 }
                 // Otherwise set to the user we received from Firebase
                 else {
                     self = aUser;
                     Log.d("User", "The user is " + aUser.getId() + " " + aUser.getAlias());
+                    // Also populate the song preferences based on the prefs saved in User before (only do if user already existed)
+                    // TODO consider changing around the logic so maybe Users are loaded in after Songs
+                    FirebaseSongList.populatePreferences();
                 }
             }
 
@@ -228,6 +215,12 @@ public class User {
      */
     public static String displayString(String lastPlayedUid) {
         User currentUser = User.getSelf();
+
+        // In the case that Firebase has not loaded in current User information yet
+        // TODO might change later
+        if (currentUser == null) {
+            return "Not available";
+        }
 
         // Check if the user id is the same as the one logged in (then display you)
         if (lastPlayedUid.equals(currentUser.getId())) {
@@ -266,5 +259,25 @@ public class User {
      */
     public static String DecodeString(String string) {
         return string.replace(",", ".");
+    }
+
+
+    /**
+     * Adds to Firebase the initial preferences for a song for the current user
+     * @param id The id of the song that was just downloaded, initial preferences to add
+     */
+    public static void addPrefToHash(String id) {
+        // When a song is first downloaded it has both like and dislike set to false
+        ArrayList<Boolean> prefs = new ArrayList<Boolean>();
+        prefs.add(false); //like
+        prefs.add(false); //dislike
+        // update in current song list prefs
+        self.getSongListPref().put(id,prefs);
+        // push to Firebase
+        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance(FirebaseSongList.firebaseURL);
+        DatabaseReference databaseReference = firebaseDatabase.getReference("users")
+                .child(EncodeString(self.getId())).child("songListPref").child(id);
+
+        databaseReference.setValue(prefs);
     }
 }
