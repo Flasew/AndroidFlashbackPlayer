@@ -67,7 +67,7 @@ public class FirebaseSongList {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String songObject = dataSnapshot.getValue(String.class);
 
-                // When no Users have used the app yet
+                // if the song does not exist in Firebase
                 if (songObject == null) {
                     Log.d(TAG,"Song does not exist");
 
@@ -134,6 +134,7 @@ public class FirebaseSongList {
                     local.setLatestLoc(temp.getLatestLoc());
                     local.setLocHist(temp.getLocHist());
                     local.setLastPlayedUserUid(temp.getLastPlayedUserUid());
+                    local.setUrl(temp.getUrl()); // here is where the URL is loaded in
 
                     // Add the Song that was just modified as well as the id to two temp lists
                     tempList.add(local);
