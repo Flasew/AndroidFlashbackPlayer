@@ -31,7 +31,6 @@ import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.Scope;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -44,6 +43,8 @@ import com.google.api.services.people.v1.PeopleScopes;
 import com.google.api.services.people.v1.model.EmailAddress;
 import com.google.api.services.people.v1.model.ListConnectionsResponse;
 import com.google.api.services.people.v1.model.Person;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +54,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -82,6 +84,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
     private List<Person> friends;   // list of people fetched from google account,
                                     // might be unnecessary as a field
+    private HashMap<String, String> friendsMap = new HashMap<>();
 
     AssetManager assetManager;
 
@@ -95,7 +98,6 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         super.onCreate(savedInstanceState);
         assetManager = getAssets(); // for generating alias in User
 
-
         // set title and layout of this activity
         setTitle(R.string.main_activity_title);
         setContentView(R.layout.activity_main);
@@ -103,10 +105,13 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        //Trying doing this before Firebase init
+        initSongAndAlbumList();
+
         // Initialize the list of Users from Firebase
-        Users.loadUsers();
+        Users.loadUsers(this.getApplicationContext());
         // Intialize the songs from Firebase
-        FirebaseSongList.populateFromFirebase();
+        FirebaseSongList.populateFromFirebase(this.getApplicationContext());
 
         // Check for/request location permission
         requestAllPermission();
@@ -131,6 +136,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                         new Scope(PeopleScopes.CONTACTS_READONLY),
                         new Scope(PeopleScopes.USER_EMAILS_READ),
                         new Scope(PeopleScopes.USERINFO_PROFILE))
+                .requestProfile()
                 .build();
         // Build a GoogleSignInClient with the options specified by gso.
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -198,8 +204,10 @@ public class MainActivity extends MusicPlayerNavigateActivity {
             apf.cancel(true);
             apf = null;
         }
-        // Commented out to keep functionality of music playing when exiting with back buttons
-        // stopService(new Intent(getApplicationContext(), MusicPlayerService.class));
+        // Remove the child event listener for the sake of no memory leaks
+        DatabaseReference dR = FirebaseDatabase.getInstance().getReference().child("songs");
+        dR.removeEventListener(FirebaseSongList.songListener);
+        dR.removeEventListener(Users.userListener);
     }
 
 
@@ -318,8 +326,9 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                         if (!p.isEmpty()) {
                             List<EmailAddress> emails = p.getEmailAddresses();
                             if (emails != null) {
-                                Log.d(TAG, p.getNames().get(0).getDisplayName() + " has email: " + emails.get(0).getValue());
+                                Log.d(TAG, "Friend " + p.getNames().get(0).getDisplayName() + " has email: " + emails.get(0).getValue());
                             }
+                            friendsMap.put(User.EncodeString(emails.get(0).getValue()),p.getNames().get(0).getDisplayName());
                         }
                     }
                 }
@@ -408,8 +417,8 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         // if the user already signed in, display the welcome message.
         if (account != null) {
             // load in User object for the global User (from Firebase)
-            User.loadUser(account, assetManager);
-
+            User.loadUser(account, assetManager, friendsMap);
+            Log.d(TAG, account.getDisplayName());
             welcomeText.setText(String.format(
                     getResources().getString(R.string.welcome_info),
                     account.getDisplayName()));

@@ -234,6 +234,8 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
 
         final Song currSong = SongList.getSongs().get(position);
         Log.d(TAG, "Updating UI information to song " + currSong.getTitle());
+        Log.d(TAG, "The id of the song is " + currSong.getId());
+        lastUserView.setText(User.displayString(currSong.getLastPlayedUserUid()));
 
         songTitleView.setText(currSong.getTitle());
         songTitleView.setSelected(true);
@@ -275,6 +277,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         locationTextView.setText(NO_INFO);
         timeDateView.setText(NO_INFO);
         timeClockView.setText(NO_INFO);
+        lastUserView.setText(NO_INFO);
         preferenceButtons.setSong(null);
         preferenceButtons.removeButtonListeners();
         preferenceButtons.redrawButtons();
