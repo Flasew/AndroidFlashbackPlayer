@@ -13,6 +13,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 
 /**
@@ -64,9 +65,13 @@ public class AlbumActivity extends MusicPlayerNavigateActivity implements Downlo
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
         flashBackButton.setOnClickListener(v -> {
-                editor.putBoolean("mode" , true);
-                editor.apply();
-                startCurrSongActivity();
+            if (User.getSelf() == null) {
+                Toast.makeText(this, "You must login to use vibe mode.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            editor.putBoolean("mode" , true);
+            editor.apply();
+            startCurrSongActivity();
         });
 
         downloader = new WebMusicDownloader(

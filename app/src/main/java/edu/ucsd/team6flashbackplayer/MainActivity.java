@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.location.LocationManager;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -116,14 +117,17 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         AppTime.setupBroadcastManager(this);
 
         //Trying doing this before Firebase init
-        initSongAndAlbumList();
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            initSongAndAlbumList();
+            // Initialize the list of Users from Firebase
+            Users.loadUsers(this.getApplicationContext());
+            // Intialize the songs from Firebase
+            FirebaseSongList.populateFromFirebase(this.getApplicationContext());
+        }
 
-        // Initialize the list of Users from Firebase
-        Users.loadUsers(this.getApplicationContext());
-        // Intialize the songs from Firebase
-        FirebaseSongList.populateFromFirebase(this.getApplicationContext());
-
-        // Check for/request location permission
+        // Check for/request location/file permission
         requestAllPermission();
 
         currSong = findViewById(R.id.current_song);
@@ -156,7 +160,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         // the GoogleSignInAccount will be non-null.
         trySilentSignIn();
 
-         editor = fbModeSharedPreferences.edit();
+        editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
 
         flashBackButton.setOnClickListener(v -> {
@@ -267,6 +271,11 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                     Log.d(TAG, "All permission granted");
 
                     initSongAndAlbumList();
+
+                    // Initialize the list of Users from Firebase
+                    Users.loadUsers(this.getApplicationContext());
+                    // Intialize the songs from Firebase
+                    FirebaseSongList.populateFromFirebase(this.getApplicationContext());
                 }
             }
         }
@@ -338,10 +347,10 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                     for (Person p : connections) {
                         if (!p.isEmpty()) {
                             List<EmailAddress> emails = p.getEmailAddresses();
-                            if (emails != null) {
+                            if (emails != null && emails.size() != 0) {
                                 Log.d(TAG, "Friend " + p.getNames().get(0).getDisplayName() + " has email: " + emails.get(0).getValue());
+                                friendsMap.put(User.EncodeString(emails.get(0).getValue()),p.getNames().get(0).getDisplayName());
                             }
-                            friendsMap.put(User.EncodeString(emails.get(0).getValue()),p.getNames().get(0).getDisplayName());
                         }
                     }
                 }
@@ -687,7 +696,10 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         List<String> songPaths = new ArrayList<>();
         List<String> songIDs = new ArrayList<>();
         listMp3Files(Environment
-                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString(), songPaths, songIDs);
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+                .toString(),
+                songPaths, songIDs
+        );
 
         List<Song> songs = getSongList(songPaths, songIDs);
         SongList.initSongList(songs);

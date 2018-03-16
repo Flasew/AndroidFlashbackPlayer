@@ -159,14 +159,18 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         // flashback mode button listener. Depending on the current state, enter or
         // exit the flashback mode.
         flashBackButton.setOnClickListener(v -> {
-                Log.d(TAG, "FB mode before pressing: " + flashBackMode);
-                flashBackMode = !flashBackMode;
-                editor.putBoolean(FLASHBACK_SHAREDPREFERENCE_NAME, flashBackMode);
-                editor.apply();
-                if (flashBackMode)
-                    enableFBMode();
-                else
-                    disableFBMode();
+            if (User.getSelf() == null) {
+                Toast.makeText(this, "You must login to use vibe mode.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Log.d(TAG, "FB mode before pressing: " + flashBackMode);
+            flashBackMode = !flashBackMode;
+            editor.putBoolean(FLASHBACK_SHAREDPREFERENCE_NAME, flashBackMode);
+            editor.apply();
+            if (flashBackMode)
+                enableFBMode();
+            else
+                disableFBMode();
         });
 
         // register location change listener but disable it first
