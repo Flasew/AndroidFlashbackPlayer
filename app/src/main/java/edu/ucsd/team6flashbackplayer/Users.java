@@ -110,6 +110,7 @@ public class Users {
     }
 
 
+
     /**
      * Creates a listener for the /users/ path in firebase and handles events when new users are
      * added or when user info is updated
@@ -183,4 +184,5 @@ public class Users {
             }
         });
     }
+
 }

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+
 /**
  * Created by frankwang on 3/6/18.
  * Edited by alice 3/7/18
@@ -28,6 +29,7 @@ import java.util.Random;
 
 public class User {
 
+    private static final String TAG = User.class.getName();
     private static User self;
 
     private String fullName;
@@ -216,6 +218,7 @@ public class User {
     public static String displayString(String lastPlayedUid) {
         User currentUser = User.getSelf();
 
+
         // In the case that Firebase has not loaded in current User information yet
         // TODO might change later
         if (currentUser == null) {
@@ -224,7 +227,7 @@ public class User {
 
         // Check if the user id is the same as the one logged in (then display you)
         if (lastPlayedUid.equals(currentUser.getId())) {
-            return "you";
+            return "You";
         }
         // Check if it is played by a friend
         // Note that in the friend hash maps the keys are in their encoded versions (for storage purposes)
@@ -262,6 +265,7 @@ public class User {
     }
 
 
+
     /**
      * Adds to Firebase the initial preferences for a song for the current user
      * @param id The id of the song that was just downloaded, initial preferences to add
@@ -279,5 +283,6 @@ public class User {
                 .child(EncodeString(self.getId())).child("songListPref").child(id);
 
         databaseReference.setValue(prefs);
+
     }
 }

@@ -32,22 +32,24 @@ public class PlayListActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             ArrayList<Integer> playlist = intent.getIntegerArrayListExtra(MusicPlayerService.BROADCAST_SONG_LIST);
+            boolean useFirebaseList = intent.getBooleanExtra(MusicPlayerActivity.START_MUSICSERVICE_VIBE_MODE, false);
             Log.d(TAG, "Received new playlist, is null: " + (playlist == null));
             if (playlist != null)
                 for(int i: playlist) {
                     Log.d(TAG, "Playlist has item " + i);
                 }
-            updateListUI(playlist);
+            updateListUI(playlist, useFirebaseList);
         }
     };
 
-    private void updateListUI(ArrayList<Integer> playlist) {
+    private void updateListUI(ArrayList<Integer> playlist, boolean firebaseList) {
 
         songList.clear();
+        List<Song> currList = firebaseList ? FirebaseSongList.getSongs() : SongList.getSongs();
 
         if (playlist != null) {
             for (int pos : playlist) {
-                Song currSong = SongList.getSongs().get(pos);
+                Song currSong = currList.get(pos);
                 if (!currSong.isDisliked())
                     songList.add(currSong);
             }

@@ -3,21 +3,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="edu.ucsd.team6flashbackplayer.SongActivity">
+
+
     <item
-        android:id="@+id/sort_holder"
+        android:id="@+id/sort_lastplayed"
         android:orderInCategory="100"
-        android:title="SORT WHATEVER"
+        android:title="@string/sort_lastplayed"
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/sort_title"
         android:orderInCategory="100"
-        android:title="SORT WHATEVER"
+        android:title="@string/sort_title"
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/sort_album"
         android:orderInCategory="100"
-        android:title="SORT WHATEVER"
+        android:title="@string/sort_album"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/sort_artist"
+        android:orderInCategory="100"
+        android:title="@string/sort_artist"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/sort_favorite"
+        android:orderInCategory="100"
+        android:title="@string/sort_favorite"
+        app:showAsAction="never" />
+
 
     <item android:id="@+id/add_song"
         android:icon="@drawable/ic_add"

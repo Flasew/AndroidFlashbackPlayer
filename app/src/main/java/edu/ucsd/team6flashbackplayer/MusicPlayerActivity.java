@@ -24,6 +24,7 @@ public abstract class MusicPlayerActivity extends AppCompatActivity {
     // global strings
     // if the service should finish the current song for a new start command.
     static final String MUSIC_DIR = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath();
+    static final String START_MUSICSERVICE_VIBE_MODE = "vibeModeStart";
     static final String START_MUSICSERVICE_KEEP_CURRPLAY = "cutPlaying";
     static final String BROADCAST_REQUEST_SONG_UPDATE = "reqUpdate";
     static final String FLASHBACK_SHAREDPREFERENCE_NAME = "mode";
