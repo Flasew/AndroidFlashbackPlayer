@@ -129,6 +129,7 @@ public class SongEntryAdapter extends BaseAdapter {
             ViewHolder holder = (ViewHolder) row.getTag();
             holder.title.setSelected(true);
             holder.title.setText(currSong.getTitle());
+            holder.albumArtist.setText(context.getResources().getString(R.string.artist_albums, currSong.getArtist(), currSong.getAlbum()));
             holder.buttons.setSong(currSong);
             holder.buttons.redrawButtons();
         }
