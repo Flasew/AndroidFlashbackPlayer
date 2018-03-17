@@ -1,14 +1,8 @@
-package Tests;
+package edu.ucsd.team6flashbackplayer;
 
-import android.support.test.rule.ActivityTestRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-
-import edu.ucsd.team6flashbackplayer.MainActivity;
-import edu.ucsd.team6flashbackplayer.Song;
-import edu.ucsd.team6flashbackplayer.SongPreference;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -20,8 +14,8 @@ public class JUnitTestPreferences {
     Song s;
     SongPreference sp;
 
-    @Rule
-    public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);
+//    @Rule
+//    public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);
 
     @Before
     public void setup() {

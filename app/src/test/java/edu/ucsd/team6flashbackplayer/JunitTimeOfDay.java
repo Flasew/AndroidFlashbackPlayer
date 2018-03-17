@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
 /**
  * Unit test for Time of day method in the song class.
  */
-public class TimeOfDayUnitTest {
+public class JunitTimeOfDay {
 
     @Test
     public void testTOD5PMto5AM() {

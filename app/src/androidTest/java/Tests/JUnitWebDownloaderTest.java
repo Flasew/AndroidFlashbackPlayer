@@ -19,7 +19,7 @@ import edu.ucsd.team6flashbackplayer.WebMusicDownloader;
 
 import static org.junit.Assert.*;
 
-public class WebDownloaderTest {
+public class JUnitWebDownloaderTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);
@@ -49,7 +49,7 @@ public class WebDownloaderTest {
         wdl.downloadFromUrl(url);
 
         // should be fast enough... file is small
-        Thread.sleep(5000);
+        Thread.sleep(10000);
 
         File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
         assertTrue(file.exists());
@@ -82,7 +82,7 @@ public class WebDownloaderTest {
             wdl.downloadFromUrl(url);
 
             // should be fast enough... file is small
-            Thread.sleep(5000);
+            Thread.sleep(10000);
             File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
             assertTrue(file.exists());
 
@@ -119,7 +119,7 @@ public class WebDownloaderTest {
         wdl.downloadFromUrl(url);
 
         // should be fast enough... file is small
-        Thread.sleep(8000);
+        Thread.sleep(10000);
 
         File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
         assertTrue(file.exists());
@@ -153,7 +153,7 @@ public class WebDownloaderTest {
             wdl.downloadFromUrl(url);
 
             // should be fast enough... file is small
-            Thread.sleep(5000);
+            Thread.sleep(10000);
 
             File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
             assertFalse(file.exists());
@@ -195,7 +195,7 @@ public class WebDownloaderTest {
             wdl.downloadFromUrl(url);
 
             // should be fast enough... file is small
-            Thread.sleep(5000);
+            Thread.sleep(10000);
             File file = new File(WebMusicDownloader.DOWNLOAD_DIR + "/" + fname);
             assertFalse(file.exists());
 

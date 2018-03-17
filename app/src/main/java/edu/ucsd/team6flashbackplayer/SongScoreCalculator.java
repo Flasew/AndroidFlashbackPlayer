@@ -60,25 +60,26 @@ public class SongScoreCalculator {
     private static int weekScore(Song s, ZonedDateTime t) {
         int score = 0;
         ZonedDateTime sTime = s.getLatestTime();
-        t = t.minusWeeks(1);
-        if (sTime.getDayOfYear() > t.getDayOfYear()) {
+
+        if (sTime == null)
             score = 1;
-        }
-        else if(sTime.getDayOfYear() == t.getDayOfYear()) {
-            if(sTime.getHour() > t.getHour()){
+        else {
+            t = t.minusWeeks(1);
+            if (sTime.getDayOfYear() > t.getDayOfYear()) {
                 score = 1;
-            }
-            else if(sTime.getHour() == t.getHour()){
-                if(sTime.getMinute() > t.getMinute()){
+            } else if (sTime.getDayOfYear() == t.getDayOfYear()) {
+                if (sTime.getHour() > t.getHour()) {
                     score = 1;
-                }
-                else if(sTime.getMinute() == t.getMinute()){
-                    if(sTime.getSecond() > t.getSecond()){
+                } else if (sTime.getHour() == t.getHour()) {
+                    if (sTime.getMinute() > t.getMinute()) {
                         score = 1;
-                    }
-                    else if(sTime.getSecond() == t.getSecond()){
-                        if(sTime.getNano() > t.getNano()){
+                    } else if (sTime.getMinute() == t.getMinute()) {
+                        if (sTime.getSecond() > t.getSecond()) {
                             score = 1;
+                        } else if (sTime.getSecond() == t.getSecond()) {
+                            if (sTime.getNano() > t.getNano()) {
+                                score = 1;
+                            }
                         }
                     }
                 }
@@ -93,11 +94,6 @@ public class SongScoreCalculator {
      * @param s song to be calculated
      * @return Played by friend score
      */
-//<<<<<<< HEAD
-//    @Deprecated
-//    private static int dowScore(Song s, ZonedDateTime t) {
-//        return 1;
-//=======
     private static int friendScore(Song s) {
         int score = 0;
         User curr = User.getSelf();
@@ -107,18 +103,23 @@ public class SongScoreCalculator {
         HashMap<String,String> friends = curr.getFriendsMap();
 
         for(String id : friends.keySet()) {
-            User friend = Users.getUser(User.DecodeString(id));
-            ArrayList<String> friendSongs = friend.getSongListPlayed();
-            String songId = s.getId();
-            if(friendSongs.contains(songId)){
-                score = 1;
-                break;
+            if (!(id.equals('-'))) {
+                User friend = Users.getUser(User.DecodeString(id));
+                if (friend == null) {
+                    score = 0;
+                    break;
+                }
+                ArrayList<String> friendSongs = friend.getSongListPlayed();
+                String songId = s.getId();
+                if(friendSongs.contains(songId)){
+                    score = 1;
+                    break;
+                }
             }
         }
 
         Log.d(TAG, "Song " + s.getTitle() + " gets a played by friend score of " + score);
         return score;
-//>>>>>>> 9dde51fd842a11a422f683a366beca243e9a30fd
     }
 
     /**

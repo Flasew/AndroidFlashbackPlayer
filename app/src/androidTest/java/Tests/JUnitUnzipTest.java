@@ -30,7 +30,7 @@ import static org.junit.Assert.*;
  * Unit test for unzip in downloaded Album.
  */
 
-public class UnzipTest {
+public class JUnitUnzipTest {
 
     private static String TEST_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Test";
 

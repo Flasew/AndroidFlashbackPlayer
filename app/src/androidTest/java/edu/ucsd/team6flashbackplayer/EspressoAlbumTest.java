@@ -14,7 +14,6 @@ import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.hamcrest.core.IsInstanceOf;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,65 +33,53 @@ import static org.hamcrest.Matchers.is;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class PlayAlbumTest {
+public class EspressoAlbumTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
     @Test
-    public void playAlbumTest() {
+    public void espressoAlbumTest() {
+        // Added a sleep statement to match the app's execution delay.
+        // The recommended way to handle such scenarios is to use Espresso idling resources:
+        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
+        try {
+            Thread.sleep(8000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         ViewInteraction appCompatButton = onView(
-                allOf(withId(R.id.main_albums), withText("Albums"),
-                        childAtPosition(
-                                allOf(withId(R.id.main_layout),
-                                        childAtPosition(
-                                                withClassName(is("android.support.constraint.ConstraintLayout")),
-                                                0)),
-                                4),
-                        isDisplayed()));
+                allOf(withId(R.id.main_albums), withText("Albums")));
         appCompatButton.perform(click());
 
-        ViewInteraction textView = onView(
-                allOf(withId(R.id.entry_name), withText("Town of Windmill"),
-                        childAtPosition(
-                                allOf(withId(R.id.album_entry),
-                                        childAtPosition(
-                                                withId(R.id.album_list),
-                                                1)),
-                                0),
-                        isDisplayed()));
 
         onData(CoreMatchers.anything())
                 .inAdapterView(withId(R.id.album_list))
-                .atPosition(1)
+                .atPosition(0)
                 .onChildView(withId(R.id.entry_name))
-                .check(matches(withText("Town of Windmill")));
-
-
+                .check(matches(withText("Minions (Original Motion Picture Soundtrack)")));
 
         DataInteraction constraintLayout = onData(anything())
                 .inAdapterView(allOf(withId(R.id.album_list),
                         childAtPosition(
                                 withClassName(is("android.support.constraint.ConstraintLayout")),
                                 3)))
-                .atPosition(1);
+                .atPosition(0);
         constraintLayout.perform(click());
 
+
         ViewInteraction textView3 = onView(
-                allOf(withId(R.id.song_name), withText("Town of Windmill")));
-        textView3.check(matches(withText("Town of Windmill")));
+                allOf(withId(R.id.song_name), withText("Universal Fanfare")));
+        textView3.check(matches(withText("Universal Fanfare")));
 
         ViewInteraction textView4 = onView(
-                allOf(withId(R.id.curr_playing_name), withText("Town of Windmill")));
-        textView4.check(matches(withText("Town of Windmill")));
+                allOf(withId(R.id.curr_playing_name), withText("Universal Fanfare")));
+        textView4.check(matches(withText("Universal Fanfare")));
 
         ViewInteraction textView5 = onView(
-                allOf(withId(R.id.curr_playing_artist), withText("a_hisa")));
-        textView5.check(matches(withText("a_hisa")));
-
-        ViewInteraction textView6 = onView(
-                allOf(withId(R.id.curr_playing_artist), withText("a_hisa")));
-        textView6.check(matches(withText("a_hisa")));
+                allOf(withId(R.id.curr_playing_artist), withText("The Minions")));
+        textView5.check(matches(withText("The Minions")));
 
 
         ViewInteraction imageButton = onView(
@@ -104,51 +91,55 @@ public class PlayAlbumTest {
         imageButton2.check(matches(isDisplayed()));
 
         ViewInteraction textView7 = onView(
-                allOf(withId(R.id.curr_playing_name), withText("Town of Windmill")));
-        textView7.check(matches(withText("Town of Windmill")));
+                allOf(withId(R.id.curr_playing_name), withText("Universal Fanfare")));
+        textView7.check(matches(withText("Universal Fanfare")));
 
         ViewInteraction textView8 = onView(
-                allOf(withId(R.id.curr_playing_artist), withText("a_hisa")));
-        textView8.check(matches(withText("a_hisa")));
+                allOf(withId(R.id.curr_playing_artist), withText("The Minions")));
+        textView8.check(matches(withText("The Minions")));
 
         pressBack();
+        try {
+            Thread.sleep(7000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         ViewInteraction textView9 = onView(
-                allOf(withText("Albums"),
-                        childAtPosition(
-                                allOf(withId(R.id.action_bar),
-                                        childAtPosition(
-                                                withId(R.id.action_bar_container),
-                                                0)),
-                                0),
-                        isDisplayed()));
+                allOf(withText("Albums")));
         textView9.check(matches(withText("Albums")));
 
         ViewInteraction textView10 = onView(
-                allOf(withId(R.id.curr_playing_name), withText("Town of Windmill")));
-        textView10.check(matches(withText("Town of Windmill")));
+                allOf(withId(R.id.curr_playing_name), withText("Universal Fanfare")));
+        textView10.check(matches(withText("Universal Fanfare")));
 
         ViewInteraction textView11 = onView(
-                allOf(withId(R.id.curr_playing_artist), withText("a_hisa")));
-        textView11.check(matches(withText("a_hisa")));
+                allOf(withId(R.id.curr_playing_artist), withText("The Minions")));
+        textView11.check(matches(withText("The Minions")));
 
         ViewInteraction textView12 = onView(
-                allOf(withId(R.id.curr_playing_artist), withText("a_hisa")));
-        textView12.check(matches(withText("a_hisa")));
+                allOf(withId(R.id.curr_playing_artist), withText("The Minions")));
+        textView12.check(matches(withText("The Minions")));
 
         pressBack();
+        try {
+            Thread.sleep(7000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         ViewInteraction textView13 = onView(
-                allOf(withId(R.id.curr_playing_name), withText("Town of Windmill")));
-        textView13.check(matches(withText("Town of Windmill")));
+                allOf(withId(R.id.curr_playing_name), withText("Universal Fanfare")));
+        textView13.check(matches(withText("Universal Fanfare")));
 
         ViewInteraction textView14 = onView(
-                allOf(withId(R.id.curr_playing_artist), withText("a_hisa")));
-        textView14.check(matches(withText("a_hisa")));
+                allOf(withId(R.id.curr_playing_artist), withText("The Minions")));
+        textView14.check(matches(withText("The Minions")));
 
         ViewInteraction textView15 = onView(
-                allOf(withId(R.id.curr_playing_artist), withText("a_hisa")));
-        textView15.check(matches(withText("a_hisa")));
+                allOf(withId(R.id.curr_playing_artist), withText("The Minions")));
+        textView15.check(matches(withText("The Minions")));
+
 
     }
 

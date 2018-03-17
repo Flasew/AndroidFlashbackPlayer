@@ -263,7 +263,19 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     @Override
     protected void onSongUpdate(int position, boolean status) {
 
-        final Song currSong = SongList.getSongs().get(position);
+        Song currSong;
+        try {
+            currSong = SongList.getSongs().get(position);
+        }
+        catch (IndexOutOfBoundsException e) {
+            try {
+                currSong = FirebaseSongList.getSongs().get(position);
+            }
+            catch (IndexOutOfBoundsException e1) {
+                return;
+            }
+        }
+
         Log.d(TAG, "Updating UI information to song " + currSong.getTitle());
         Log.d(TAG, "The id of the song is " + currSong.getId());
         lastUserView.setText(User.displayString(currSong.getLastPlayedUserUid()));
@@ -493,6 +505,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
         playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, stoplist);
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, true);
+        playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_VIBE_MODE, true);
 
         startService(playerIntent);
 

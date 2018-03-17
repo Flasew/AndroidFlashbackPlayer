@@ -1,7 +1,6 @@
 package edu.ucsd.team6flashbackplayer;
 
 import android.content.Intent;
-import android.media.MediaMetadataRetriever;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -10,17 +9,17 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.LinkedList;
 
-public class VibeModeDownloadedFileHanlderDecorator extends DownloadedFileHandlerDecorator {
+public class VibeModeDownloadedFileHandlerDecorator extends DownloadedFileHandlerDecorator {
 
     private LocalBroadcastManager localBroadcastManager;
-    private static final String TAG = VibeModeDownloadedFileHanlderDecorator.class.getName();
+    private static final String TAG = VibeModeDownloadedFileHandlerDecorator.class.getName();
     static final String VIBE_FILE_FINISHED_PROCESS = "vibeModeFileFinishedProcessing";
 
     /**
      * constructor just delegate to super since it only sets a field.
      * @param fileHandler file handler to be decorated
      */
-    public VibeModeDownloadedFileHanlderDecorator(DownloadedFileHandlerStrategy fileHandler) {
+    public VibeModeDownloadedFileHandlerDecorator(DownloadedFileHandlerStrategy fileHandler) {
         super(fileHandler);
         localBroadcastManager = LocalBroadcastManager.getInstance(getContext());
     }
@@ -47,7 +46,8 @@ public class VibeModeDownloadedFileHanlderDecorator extends DownloadedFileHandle
 
             if (toAdd == null) {
                 // something is seriously wrong.
-                throw new RuntimeException(TAG + ": ERROR: didn't find the downloaded song in firebase list");
+                Log.d(TAG, ": ERROR: didn't find the downloaded song in firebase list");
+                continue;
             }
 
             SongList.addSong(toAdd);
