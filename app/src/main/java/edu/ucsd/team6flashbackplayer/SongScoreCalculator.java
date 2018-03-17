@@ -93,11 +93,6 @@ public class SongScoreCalculator {
      * @param s song to be calculated
      * @return Played by friend score
      */
-//<<<<<<< HEAD
-//    @Deprecated
-//    private static int dowScore(Song s, ZonedDateTime t) {
-//        return 1;
-//=======
     private static int friendScore(Song s) {
         int score = 0;
         User curr = User.getSelf();
@@ -109,6 +104,10 @@ public class SongScoreCalculator {
         for(String id : friends.keySet()) {
             if (!(id.equals('-'))) {
                 User friend = Users.getUser(User.DecodeString(id));
+                if (friend == null) {
+                    score = 0;
+                    break;
+                }
                 ArrayList<String> friendSongs = friend.getSongListPlayed();
                 String songId = s.getId();
                 if(friendSongs.contains(songId)){
@@ -120,7 +119,6 @@ public class SongScoreCalculator {
 
         Log.d(TAG, "Song " + s.getTitle() + " gets a played by friend score of " + score);
         return score;
-//>>>>>>> 9dde51fd842a11a422f683a366beca243e9a30fd
     }
 
     /**

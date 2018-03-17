@@ -193,6 +193,12 @@ public class User {
                 }
                 // Otherwise set to the user we received from Firebase
                 else {
+                    // set the friends map to the one we got on app load
+                    aUser.setFriendsMap(friendEmails);
+                    // push this to Firebase
+                    DatabaseReference friendsRef = databaseReference.child("friendsMap");
+                    friendsRef.setValue(friendEmails);
+                    // Set the current user
                     self = aUser;
                     Log.d("User", "The user is " + aUser.getId() + " " + aUser.getAlias());
                     // Also populate the song preferences based on the prefs saved in User before (only do if user already existed)

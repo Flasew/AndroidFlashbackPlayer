@@ -117,10 +117,10 @@ public class PositionPlayListFactory {
         for( int index = 0; index < FirebaseSongList.getSongs().size(); index++ ){
             Song s = FirebaseSongList.getSongs().get(index);
             // get rid of disliked songs
-            if( !(s.isDisliked()) ) {
+            if( SongScoreCalculator.calcScore(s, currLoc, currTime) != 0 && !(s.isDisliked()) ) {
+
                 // get rid of songs not liked and not played before
-                if( s.isLiked() || !(s.getLatestTime() == null) ||
-                        SongScoreCalculator.calcScore(s, currLoc, currTime) != 0 ) {
+                if( s.isLiked() || !(s.getLatestTime() == null) ) {
                     pq.add(index);
                 }
             }
