@@ -60,25 +60,26 @@ public class SongScoreCalculator {
     private static int weekScore(Song s, ZonedDateTime t) {
         int score = 0;
         ZonedDateTime sTime = s.getLatestTime();
-        t = t.minusWeeks(1);
-        if (sTime.getDayOfYear() > t.getDayOfYear()) {
+
+        if (sTime == null)
             score = 1;
-        }
-        else if(sTime.getDayOfYear() == t.getDayOfYear()) {
-            if(sTime.getHour() > t.getHour()){
+        else {
+            t = t.minusWeeks(1);
+            if (sTime.getDayOfYear() > t.getDayOfYear()) {
                 score = 1;
-            }
-            else if(sTime.getHour() == t.getHour()){
-                if(sTime.getMinute() > t.getMinute()){
+            } else if (sTime.getDayOfYear() == t.getDayOfYear()) {
+                if (sTime.getHour() > t.getHour()) {
                     score = 1;
-                }
-                else if(sTime.getMinute() == t.getMinute()){
-                    if(sTime.getSecond() > t.getSecond()){
+                } else if (sTime.getHour() == t.getHour()) {
+                    if (sTime.getMinute() > t.getMinute()) {
                         score = 1;
-                    }
-                    else if(sTime.getSecond() == t.getSecond()){
-                        if(sTime.getNano() > t.getNano()){
+                    } else if (sTime.getMinute() == t.getMinute()) {
+                        if (sTime.getSecond() > t.getSecond()) {
                             score = 1;
+                        } else if (sTime.getSecond() == t.getSecond()) {
+                            if (sTime.getNano() > t.getNano()) {
+                                score = 1;
+                            }
                         }
                     }
                 }
