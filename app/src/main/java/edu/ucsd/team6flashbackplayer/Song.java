@@ -1,5 +1,7 @@
 package edu.ucsd.team6flashbackplayer;
 
+import android.support.annotation.NonNull;
+
 import com.google.android.gms.maps.model.LatLng;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -11,7 +13,7 @@ import java.util.HashSet;
 
 public class Song {
 
-    private static final String NO_INFO = "---";     // noinfo string
+    static final String NO_INFO = "---";     // noinfo string
 
     private final String PATH;
     private final String TITLE;

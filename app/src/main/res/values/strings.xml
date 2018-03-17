@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Team6FlashbackPlayer</string>
-    <string name="flashback">FLASHBACK</string>
+    <string name="flashback">VIBE MODE</string>
     <string name="songs">Songs</string>
     <string name="albusms">Albums</string>
     <string name="curr_playing">Currently Playing</string>
@@ -8,21 +8,21 @@
     <string name="location">Location:</string>
     <string name="time">Time:</string>
     <string name="loc_req_title">Location Service Request</string>
-    <string name="loc_req_txt">Flashback Player need your location</string>
+    <string name="loc_req_txt">Player need your location</string>
     <string name="ok">OK</string>
     <string name="showplaylist">Show Playlist</string>
-    <string name="main_activity_title">Flashback Player</string>
+    <string name="main_activity_title">Player</string>
     <string name="song_activity_title">Songs</string>
     <string name="album_activity_title">Albums</string>
     <string name="curr_song_activity_title">Currently Playing</string>
-    <string name="fbList_activity_title">Current Flashback Playlist</string>
-    <string name="notification_title">Flashback Player</string>
-    <string name="notification_message">Flashback Player is running</string>
-    <string name="welcome_info">Hello, %1$s!</string>
+    <string name="fbList_activity_title">Current Playlist</string>
+    <string name="notification_title">Player</string>
+    <string name="notification_message">Player is running</string>
+    <string name="welcome_info">Welcome!</string>
     <string name="storage_req_title">Storage access</string>
     <string name="storage_req_txt">Need permission to ext storage</string>
     <string name="perm_req_title">Permission Request</string>
-    <string name="perm_req_txt">Permission request</string>
+    <string name="perm_req_txt">For the app to function properly, we need your permission to access your location and external storage.</string>
     <string name="download_song">ADD SONG</string>
     <string name="download_album">ADD ALBUM</string>
     <string name="download_hint">Paste the URL here...</string>
@@ -32,6 +32,7 @@
     <string name="fixed_time">Pick a fixed App time...</string>
     <string name="sys_time">Use System Time</string>
     <string name="pick_time">Pick a fixed time...</string>
+    <string name="artist_albums">%1$s &#8226; %2$s</string>
 
     <!--<string name="client_id">657172641436-03j27eicvaog1lqfg90svd4vjistdgkr.apps.googleusercontent.com</string>-->
     <!--<string name="client_sec">mfHZRa8yqr1BhvnwevefdOKm</string>-->
@@ -42,6 +43,11 @@
     <!--<string name="android_client_id">657172641436-eqt3f4cgpqo1lddl9pm2h1ir2cg573s0.apps.googleusercontent.com</string>-->
     <string name="user_last">Played by:</string>
     <string name="show_playlist">Show Playlist</string>
+    <string name="sort_lastplayed">Sort by last played</string>
+    <string name="sort_title">Sort by title</string>
+    <string name="sort_album">Sort by album</string>
+    <string name="sort_artist">Sort by artist</string>
+    <string name="sort_favorite">Sort by favorite status</string>
     <!--<string name="client_sec">mfHZRa8yqr1BhvnwevefdOKm</string>-->
 
 </resources>

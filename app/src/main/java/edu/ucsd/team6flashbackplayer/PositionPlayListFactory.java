@@ -3,9 +3,14 @@ package edu.ucsd.team6flashbackplayer;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.database.FirebaseDatabase;
 
+import java.lang.reflect.Array;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -22,44 +27,95 @@ public class PositionPlayListFactory {
 
     private static final String TAG = "PositionPlaylist";
 
-    private ArrayList<Integer> positionList = new ArrayList<>();;
-    private List<Song> songs = SongList.getSongs();
+//    private ArrayList<Integer> positionList = new ArrayList<>();
+//    private List<Song> songs = SongList.getSongs();
+
+//
+//    public PositionPlayListFactory(Song song) {
+//        Log.d(TAG, "Generating playlist for song " + song.getTitle());
+//        positionList.add(songs.indexOf(song));
+//    }
 
     /**
      * Create a ppl from a song, basically an arraylist of only one element corresponding to
      * the position of the song in the global list.
      * @param song song of this ppl.
      */
-    public PositionPlayListFactory(Song song) {
+    public static int makeList(Song song) {
         Log.d(TAG, "Generating playlist for song " + song.getTitle());
-        positionList.add(songs.indexOf(song));
+        return SongList.getSongs().indexOf(song);
     }
+
+
+//    public PositionPlayListFactory(Album album) {
+//        Log.d(TAG, "Generating playlist for album " + album.getName());
+//        for (Song song: album.getSongs()) {
+//            positionList.add(songs.indexOf(song));
+//        }
+//    }
 
     /**
      * Create a ppl from an album. An arraylist of all songs' position in the album.
      * @param album album of this ppl
      */
-    public PositionPlayListFactory(Album album) {
+    public static ArrayList<Integer> makeList(Album album) {
         Log.d(TAG, "Generating playlist for album " + album.getName());
+        ArrayList<Integer> list = new ArrayList<>();
         for (Song song: album.getSongs()) {
-            positionList.add(songs.indexOf(song));
+            list.add(SongList.getSongs().indexOf(song));
         }
+        return list;
     }
 
+//    /**
+//     * Constructor for flashback
+//     * This constructor will created the list of songs ordered by
+//     * the priorities for flashback mode, all disliked songs will be removed
+//     * @param currLoc location when entering flashback mode
+//     * @param currTime time when entering flashback mode
+//     */
+//    @Deprecated
+//    public PositionPlayListFactory(LatLng currLoc, ZonedDateTime currTime ){
+//
+//        Log.d(TAG, "Generating FB playlist...");
+//        Queue<Integer> pq = new PriorityQueue<Integer>(new SongScoreComparator(currLoc, currTime));
+//
+//        for( int index = 0; index < songs.size(); index++ ){
+//            Song s = songs.get(index);
+//            // get rid of disliked songs
+//            if( !(s.isDisliked()) ) {
+//                // get rid of songs not liked and not played before
+//                if( s.isLiked() || !(s.getLatestTime() == null) ) {
+//                    pq.add(index);
+//                }
+//            }
+//        }
+//
+//        while(!(pq.isEmpty())) {
+//            positionList.add(pq.poll());
+//        }
+//    }
     /**
-     * Constructor for flashback
+     * factory for vibe
      * This constructor will created the list of songs ordered by
      * the priorities for flashback mode, all disliked songs will be removed
      * @param currLoc location when entering flashback mode
      * @param currTime time when entering flashback mode
+     * @ensure User.self != null (otherwise should not allow vibe mode to be turned on
      */
-    public PositionPlayListFactory(LatLng currLoc, ZonedDateTime currTime ){
+    public static ArrayList<Integer> makeList(LatLng currLoc, ZonedDateTime currTime ) {
 
+        // TODO: CHANGE THESE TO VIBE MODE!
+
+        for (Song s: FirebaseSongList.getSongs()) {
+            Log.d(TAG, "Firebase list contains " + s.getTitle() + " from " + s.getUrl());
+        }
+        ArrayList<Integer> positionList = new ArrayList<>();
         Log.d(TAG, "Generating FB playlist...");
         Queue<Integer> pq = new PriorityQueue<Integer>(new SongScoreComparator(currLoc, currTime));
 
-        for( int index = 0; index < songs.size(); index++ ){
-            Song s = songs.get(index);
+        for( int index = 0; index < FirebaseSongList.getSongs().size(); index++ ){
+            Song s = FirebaseSongList.getSongs().get(index);
             // get rid of disliked songs
             if( !(s.isDisliked()) ) {
                 // get rid of songs not liked and not played before
@@ -72,16 +128,20 @@ public class PositionPlayListFactory {
         while(!(pq.isEmpty())) {
             positionList.add(pq.poll());
         }
-    }
 
-
-    /**
-     * get the arraylist of song positions correspond to the information passed in.
-     * @return arraylist of song positions
-     */
-    public ArrayList<Integer> getPositionList() {
+        for (int i: positionList) {
+            Log.d(TAG, "Position " + i + " is in the vibelist generated by the factory.");
+        }
         return positionList;
     }
+//
+//    /**
+//     * get the arraylist of song positions correspond to the information passed in.
+//     * @return arraylist of song positions
+//     */
+//    public ArrayList<Integer> getPositionList() {
+//        return positionList;
+//    }
 
 }
 

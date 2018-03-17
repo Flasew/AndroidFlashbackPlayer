@@ -6,6 +6,7 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -44,10 +45,19 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
     @Override
     public LinkedList<String> process(String url, String filename) {
 
+        if (!checkExtension(FilenameUtils.getExtension(filename))) {
+            Log.d(TAG, "Extension: " + FilenameUtils.getExtension(filename));
+            FileUtils.deleteQuietly(new File(WebMusicDownloader.DOWNLOAD_DIR, filename));
+            return null;
+        }
+
         String unzipFolderStr = filename.replaceAll("\\.zip$", "");
 
         LinkedList<String> unzippedFiles = unpackZip(WebMusicDownloader.DOWNLOAD_DIR, filename);
         LinkedList<String> copiedFiles = new LinkedList<>();
+
+        // make song objects, add them to the global song list.
+
 
         // copy over the files.
         for (String songFilename: unzippedFiles) {
@@ -75,8 +85,9 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
             }
         }
 
-        // delete the unzipped folder
-        (new File(makeDirStr(WebMusicDownloader.DOWNLOAD_DIR, unzipFolderStr))).delete();
+        // delete the unzipped folder and downloaded zip
+        FileUtils.deleteQuietly(new File(makeDirStr(WebMusicDownloader.DOWNLOAD_DIR, unzipFolderStr)));
+        FileUtils.deleteQuietly(new File(makeDirStr(WebMusicDownloader.DOWNLOAD_DIR, filename)));
 
         for (String s: copiedFiles) {
             Log.d(TAG, "Files copied over: " + s);
@@ -107,10 +118,10 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
      * @param zipname file name of the zip file
      * @return List of unzipped file paths.
      */
-    private LinkedList<String> unpackZip(String path, String zipname) {
+    public LinkedList<String> unpackZip(String path, String zipname) {
 
         // folder to unzip to
-        String unzipFolder = zipname.replaceAll(".zip$", "");
+        String unzipFolder = zipname.replaceAll("\\.zip$", "");
         File unzipFolderFile = new File(makeDirStr(path, unzipFolder));
         unzipFolderFile.mkdirs();
 
@@ -128,9 +139,10 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
             int count;
 
             while ((ze = zis.getNextEntry()) != null) {
-                // zapis do souboru
+
                 filename = ze.getName();
 
+                Log.d(TAG, "Unzipping " + filename);
                 // Need to create directories if not exists, or
                 // it will generate an Exception...
                 if (ze.isDirectory()) {
@@ -147,7 +159,6 @@ public class DownloadedAlbumHandler implements DownloadedFileHandlerStrategy {
                 }
 
                 fout.close();
-                zis.closeEntry();
 
                 result.add(makeDirStr(unzipFolder, filename));
                 Log.d(TAG, makeDirStr(unzipFolder, filename) + " extracted.");

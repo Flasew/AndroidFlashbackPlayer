@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+
 /**
  * Created by frankwang on 3/6/18.
  * Edited by alice 3/7/18
@@ -28,6 +29,7 @@ import java.util.Random;
 
 public class User {
 
+    private static final String TAG = User.class.getName();
     private static User self;
 
     private String fullName;
@@ -66,7 +68,6 @@ public class User {
         newList.add(false);
         newList.add(false);
         songListPref.put(dummy, newList);
-
     }
 
     // Public getters and setters for all the fields of the class - necessary to store User in Firebase
@@ -217,14 +218,13 @@ public class User {
         User currentUser = User.getSelf();
 
         // In the case that Firebase has not loaded in current User information yet
-        // TODO might change later
         if (currentUser == null) {
             return "Not available";
         }
 
         // Check if the user id is the same as the one logged in (then display you)
         if (lastPlayedUid.equals(currentUser.getId())) {
-            return "you";
+            return "You";
         }
         // Check if it is played by a friend
         // Note that in the friend hash maps the keys are in their encoded versions (for storage purposes)
@@ -267,10 +267,17 @@ public class User {
      * @param id The id of the song that was just downloaded, initial preferences to add
      */
     public static void addPrefToHash(String id) {
+        // Check if noone is logged in
+        if (User.getSelf() == null) {
+            Log.d(TAG, "Not logged in");
+            return;
+        }
+
         // When a song is first downloaded it has both like and dislike set to false
         ArrayList<Boolean> prefs = new ArrayList<Boolean>();
         prefs.add(false); //like
         prefs.add(false); //dislike
+
         // update in current song list prefs
         self.getSongListPref().put(id,prefs);
         // push to Firebase
@@ -279,5 +286,6 @@ public class User {
                 .child(EncodeString(self.getId())).child("songListPref").child(id);
 
         databaseReference.setValue(prefs);
+
     }
 }

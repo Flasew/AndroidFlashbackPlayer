@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.location.LocationManager;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -43,6 +45,8 @@ import com.google.api.services.people.v1.PeopleScopes;
 import com.google.api.services.people.v1.model.EmailAddress;
 import com.google.api.services.people.v1.model.ListConnectionsResponse;
 import com.google.api.services.people.v1.model.Person;
+
+import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -81,9 +85,8 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     private GoogleSignInAccount account;
     private String serverAuthCode;
     private AsyncSetupAccount apf;    // used to prevent mem leak.
+    private SharedPreferences.Editor editor;
 
-    private List<Person> friends;   // list of people fetched from google account,
-                                    // might be unnecessary as a field
     private HashMap<String, String> friendsMap = new HashMap<>();
 
     AssetManager assetManager;
@@ -98,6 +101,12 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         super.onCreate(savedInstanceState);
         assetManager = getAssets(); // for generating alias in User
 
+        try {
+             FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        } catch (DatabaseException e) {
+            e.printStackTrace();
+        }
+
         // set title and layout of this activity
         setTitle(R.string.main_activity_title);
         setContentView(R.layout.activity_main);
@@ -105,15 +114,20 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        AppTime.setupBroadcastManager(this);
+
         //Trying doing this before Firebase init
-        initSongAndAlbumList();
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            initSongAndAlbumList();
+            // Initialize the list of Users from Firebase
+            Users.loadUsers(this.getApplicationContext());
+            // Intialize the songs from Firebase
+            FirebaseSongList.populateFromFirebase(this.getApplicationContext());
+        }
 
-        // Initialize the list of Users from Firebase
-        Users.loadUsers(this.getApplicationContext());
-        // Intialize the songs from Firebase
-        FirebaseSongList.populateFromFirebase(this.getApplicationContext());
-
-        // Check for/request location permission
+        // Check for/request location/file permission
         requestAllPermission();
 
         currSong = findViewById(R.id.current_song);
@@ -132,6 +146,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestServerAuthCode(getString(R.string.client_id))
                 .requestEmail()
+                .requestProfile()
                 .requestScopes(new Scope(Scopes.PROFILE),
                         new Scope(PeopleScopes.CONTACTS_READONLY),
                         new Scope(PeopleScopes.USER_EMAILS_READ),
@@ -145,53 +160,21 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         // the GoogleSignInAccount will be non-null.
         trySilentSignIn();
 
-        final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
+        editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
 
         flashBackButton.setOnClickListener(v -> {
+            if (account == null) {
+                Toast.makeText(this, "You must login to use vibe mode.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             editor.putBoolean("mode", true);
             editor.apply();
             startCurrSongActivity();
         });
 
-        // lanuch fb mode if it was in it.
-        boolean flashBackMode = fbModeSharedPreferences.getBoolean("mode", false);
-        if (flashBackMode) {
-            startCurrSongActivity();
-        }
-    }
-
-    private synchronized void trySilentSignIn() {
-        Task<GoogleSignInAccount> task = mGoogleSignInClient.silentSignIn();
-
-        if (task.isSuccessful()) {
-            // There's immediate result available.
-            Log.d(TAG, "Silent sign in succeeded");
-            account = task.getResult();
-            executeAccountUpdateAsync();
-        } else {
-            // There's no immediate result ready
-            Log.d(TAG, "Silent sign in taking long...");
-            task.addOnCompleteListener(t -> {
-                try {
-                    account = t.getResult(ApiException.class);
-                    Log.d(TAG, "Silent sign in successful...");
-                } catch (ApiException apiException) {
-                    // You can get from apiException.getStatusCode() the detailed error code
-                    // e.g. GoogleSignInStatusCodes.SIGN_IN_REQUIRED means user needs to take
-                    // explicit action to finish sign-in;
-                    // Please refer to GoogleSignInStatusCodes Javadoc for details
-                    account = null;
-                    Log.d(TAG, "Silent sign failed.");
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                    account = null;
-                }
-                finally {
-                    executeAccountUpdateAsync();
-                }
-            });
-        }
+        // nah just wait for loading...
+        // try{ Thread.sleep(1000); } catch (InterruptedException e) {}
     }
 
     /**
@@ -237,8 +220,8 @@ public class MainActivity extends MusicPlayerNavigateActivity {
 
         // enable a user time or set back to the system time.
         if (id == R.id.pick_fixed_time) {
-            DialogFragment downloadDialog = new DateTimeSetterDialogFragment();
-            downloadDialog.show(getFragmentManager(), getResources().getString(R.string.pick_time));
+            DialogFragment dateTimeSetterDialogFragment = new DateTimeSetterDialogFragment();
+            dateTimeSetterDialogFragment.show(getFragmentManager(), getResources().getString(R.string.pick_time));
         }
 
         else if (id == R.id.use_sys_time){
@@ -288,12 +271,51 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                     Log.d(TAG, "All permission granted");
 
                     initSongAndAlbumList();
+
+                    // Initialize the list of Users from Firebase
+                    Users.loadUsers(this.getApplicationContext());
+                    // Intialize the songs from Firebase
+                    FirebaseSongList.populateFromFirebase(this.getApplicationContext());
                 }
             }
         }
     }
 
     //--------------------------------------GOOGLE SIGNIN------------------------------------------
+
+    private synchronized void trySilentSignIn() {
+        Task<GoogleSignInAccount> task = mGoogleSignInClient.silentSignIn();
+
+        if (task.isSuccessful()) {
+            // There's immediate result available.
+            Log.d(TAG, "Silent sign in succeeded");
+            account = task.getResult();
+            executeAccountUpdateAsync();
+        } else {
+            // There's no immediate result ready
+            Log.d(TAG, "Silent sign in taking long...");
+            task.addOnCompleteListener(t -> {
+                try {
+                    account = t.getResult(ApiException.class);
+                    Log.d(TAG, "Silent sign in successful...");
+                } catch (ApiException apiException) {
+                    // You can get from apiException.getStatusCode() the detailed error code
+                    // e.g. GoogleSignInStatusCodes.SIGN_IN_REQUIRED means user needs to take
+                    // explicit action to finish sign-in;
+                    // Please refer to GoogleSignInStatusCodes Javadoc for details
+                    account = null;
+                    Log.d(TAG, "Silent sign failed.");
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                    account = null;
+                }
+                finally {
+                    executeAccountUpdateAsync();
+                }
+            });
+        }
+    }
+
     /**
      * Set up the up based on account. If the account is null ust update ui, otherwise also
      * populate the users.
@@ -325,10 +347,10 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                     for (Person p : connections) {
                         if (!p.isEmpty()) {
                             List<EmailAddress> emails = p.getEmailAddresses();
-                            if (emails != null) {
+                            if (emails != null && emails.size() != 0) {
                                 Log.d(TAG, "Friend " + p.getNames().get(0).getDisplayName() + " has email: " + emails.get(0).getValue());
+                                friendsMap.put(User.EncodeString(emails.get(0).getValue()),p.getNames().get(0).getDisplayName());
                             }
-                            friendsMap.put(User.EncodeString(emails.get(0).getValue()),p.getNames().get(0).getDisplayName());
                         }
                     }
                 }
@@ -419,9 +441,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
             // load in User object for the global User (from Firebase)
             User.loadUser(account, assetManager, friendsMap);
             Log.d(TAG, account.getDisplayName());
-            welcomeText.setText(String.format(
-                    getResources().getString(R.string.welcome_info),
-                    account.getDisplayName()));
+            welcomeText.setText(getResources().getString(R.string.welcome_info));
             welcomeText.setVisibility(View.VISIBLE);
             signInButton.setVisibility(View.GONE);
         }
@@ -439,7 +459,6 @@ public class MainActivity extends MusicPlayerNavigateActivity {
      * Set up the people API. Tutorial obtained from
      * https://developers.google.com/people/v1/getting-started and
      * http://blog.iamsuleiman.com/people-api-android-tutorial-2/
-     * TODO: consider put this part in async task.
      * @param context context used to setup people api
      * @param serverAuthCode server auth code of the account
      * @return people object set up
@@ -473,7 +492,9 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         credential.setFromTokenResponse(tokenResponse);
 
         // STEP 3 get the people object
-        return new People.Builder(httpTransport, jsonFactory, credential).build();
+        return new People.Builder(httpTransport, jsonFactory, credential)
+                .setApplicationName("Vibe Player")
+                .build();
     }
 
 
@@ -610,7 +631,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     }
 
     /**
-     * Get the list of song from the list of song paths by uusing MediaMetadataRetriever
+     * Get the list of song from the list of song paths by using MediaMetadataRetriever
      * For songs already have a history (i.e. sp found the history), populate such history
      * using the json parser.
      * Otherwise create a new entry in SP for this song.
@@ -631,7 +652,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
                 mmr.setDataSource(MUSIC_DIR + "/" + path);
 
                 Song toAdd = new Song(
-                        "",
+                        null,
                         path,
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE),
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST),
@@ -675,7 +696,10 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         List<String> songPaths = new ArrayList<>();
         List<String> songIDs = new ArrayList<>();
         listMp3Files(Environment
-                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString(), songPaths, songIDs);
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+                .toString(),
+                songPaths, songIDs
+        );
 
         List<Song> songs = getSongList(songPaths, songIDs);
         SongList.initSongList(songs);
@@ -725,6 +749,17 @@ public class MainActivity extends MusicPlayerNavigateActivity {
         protected void onPostExecute(Void ignored) {
             Log.d(TAG, "Account async task finished...");
             associatedMainActivity.get().updateSignInUI();
+            // lanuch fb mode if it was in it.
+            boolean flashBackMode = associatedMainActivity.get().fbModeSharedPreferences.getBoolean("mode", false);
+            if (flashBackMode) {
+                if (associatedMainActivity.get().account == null) {
+                    associatedMainActivity.get().editor.putBoolean("mode", true);
+                    associatedMainActivity.get().editor.apply();
+                    Toast.makeText(associatedMainActivity.get(), "You must login to use vibe mode.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                associatedMainActivity.get().startCurrSongActivity();
+            }
         }
 
         @Override

@@ -13,6 +13,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 
 /**
@@ -64,9 +65,13 @@ public class AlbumActivity extends MusicPlayerNavigateActivity implements Downlo
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
         flashBackButton.setOnClickListener(v -> {
-                editor.putBoolean("mode" , true);
-                editor.apply();
-                startCurrSongActivity();
+            if (User.getSelf() == null) {
+                Toast.makeText(this, "You must login to use vibe mode.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            editor.putBoolean("mode" , true);
+            editor.apply();
+            startCurrSongActivity();
         });
 
         downloader = new WebMusicDownloader(
@@ -101,7 +106,8 @@ public class AlbumActivity extends MusicPlayerNavigateActivity implements Downlo
         int id = item.getItemId();
 
         if (id == R.id.add_album) {
-            DialogFragment downloadDialog = new DownloadDialogFragment();
+            DownloadDialogFragment downloadDialog = new DownloadDialogFragment();
+            downloadDialog.setTitle("Download a song...");
             downloadDialog.show(getFragmentManager(), getResources().getString(R.string.download_album));
         }
 
@@ -115,9 +121,10 @@ public class AlbumActivity extends MusicPlayerNavigateActivity implements Downlo
      */
     private void play(Album album) {
         Log.d(TAG, "Start playing album: " + album.getName());
-        PositionPlayListFactory ppl = new PositionPlayListFactory(album);
+
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
-        playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, ppl.getPositionList());
+        playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT,
+                PositionPlayListFactory.makeList(album));
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
         startService(playerIntent);
 

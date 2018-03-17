@@ -14,7 +14,9 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -27,15 +29,19 @@ import java.util.List;
  */
 public class SongActivity extends MusicPlayerNavigateActivity implements DownloadDialogFragment.DownloadDialogListener {
 
+    public enum SortType {LAST_PLAYED, SONGNAME, FAVORITE, ALBUMNAME, ARTISTNAME}
+
     protected final String TAG = "SongActivity";
 
     static final String SINGLE_SONG_INTENT = "SingleSongIntent";
-    private List<Song> songList;
+    private List<Song> songList = new ArrayList<>();
     private ListView songView;
+    private String albumName;
     private SongEntryAdapter songAdapter;
     private WebMusicDownloader downloader;
     private boolean enableMenuOpts = false;     // should the options for sorting/download be enabled?
                                                 // no if start from album.
+    private SortType sortType = SortType.LAST_PLAYED;
 
     /**
      * On create will know if it's displaying a list of all songs or an album's songs from
@@ -59,17 +65,17 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
         setControlButtonsUI();
 
         // check if it's from an album or should display the global list.
-        String albumName;
+
         Bundle extras = getIntent().getExtras();
         if(extras == null) {
             albumName = null;
-            songList = SongList.getSongs();
+            songList.addAll(SongList.getSongs());
             // set title of this activity
             setTitle(R.string.song_activity_title);
             enableMenuOpts = true;
         } else {
             albumName = extras.getString("albumName");
-            songList = AlbumList.getAlbum(albumName).getSongs();
+            songList.addAll(AlbumList.getAlbum(albumName).getSongs());
 
             // set title of this activity
             setTitle(albumName);
@@ -77,6 +83,8 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
         }
 
         invalidateOptionsMenu();
+
+        songList.sort(getComparator(sortType));
 
         // setup the UI
         songView = findViewById(R.id.song_list);
@@ -93,6 +101,10 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
         final SharedPreferences.Editor editor = fbModeSharedPreferences.edit();
         Button flashBackButton = findViewById(R.id.fb_button);
         flashBackButton.setOnClickListener( v -> {
+            if (User.getSelf() == null) {
+                Toast.makeText(this, "You must login to use vibe mode.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             editor.putBoolean("mode" , true);
             editor.apply();
             startCurrSongActivity();
@@ -131,17 +143,25 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //
-        if (id == R.id.sort_holder) {
-            return true;
+        switch (id) {
+            case R.id.sort_album:   sortType = SortType.ALBUMNAME; break;
+            case R.id.sort_artist:  sortType = SortType.ARTISTNAME; break;
+            case R.id.sort_favorite:    sortType = SortType.FAVORITE; break;
+            case R.id.sort_lastplayed:  sortType = SortType.LAST_PLAYED; break;
+            case R.id.sort_title:   sortType = SortType.SONGNAME; break;
+            case R.id.add_song:
+                DownloadDialogFragment downloadDialog = new DownloadDialogFragment();
+                downloadDialog.setTitle("Download a song...");
+                downloadDialog.show(getFragmentManager(), getResources().getString(R.string.download_song));
+            default: return super.onOptionsItemSelected(item);
         }
 
-        else if (id == R.id.add_song) {
-            DialogFragment downloadDialog = new DownloadDialogFragment();
-            downloadDialog.show(getFragmentManager(), getResources().getString(R.string.download_song));
-        }
+
+        songList.sort(getComparator(sortType));
+        songAdapter.notifyDataSetChanged();
 
         return super.onOptionsItemSelected(item);
+
     }
 
 
@@ -154,9 +174,9 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
      */
     private void play(Song song) {
         Log.d(TAG, "Start playing song: " + song.getTitle());
-        PositionPlayListFactory ppl = new PositionPlayListFactory(song);
+
         Intent playerIntent = new Intent(this, MusicPlayerService.class);
-        playerIntent.putExtra(SINGLE_SONG_INTENT, ppl.getPositionList().get(0));
+        playerIntent.putExtra(SINGLE_SONG_INTENT, PositionPlayListFactory.makeList(song));
 
         playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, null);
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
@@ -179,6 +199,15 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
      * Song activity should update the list of songs when files are downloaded
      */
     protected void onFileDownloaded() {
+        songList.clear();
+        if (albumName == null) {
+            songList.addAll(SongList.getSongs());
+        }
+        else {
+            songList.addAll(AlbumList.getAlbum(albumName).getSongs());
+        }
+        songList.sort(getComparator(sortType));
+
         songAdapter.notifyDataSetChanged();
         Log.d(TAG, "List updated after file download.w");
     }
@@ -202,5 +231,21 @@ public class SongActivity extends MusicPlayerNavigateActivity implements Downloa
     @Override
     public void onDialogNegativeClick(DialogFragment dialog) {
         dialog.dismiss();
+    }
+
+    /**
+     * get a comparator for the sorting method
+     * @param sortType sorting method
+     * @return comparator correspond to that method
+     */
+    private SongOrderComparator getComparator(SortType sortType) {
+        switch (sortType) {
+            case FAVORITE:      return new SongOrderByFavoriteStatusComparator();
+            case SONGNAME:      return new SongOrderByTitleComparator();
+            case ALBUMNAME:     return new SongOrderByAlbumComparator();
+            case ARTISTNAME:    return new SongOrderByArtistComparator();
+            default: case LAST_PLAYED:   return new SongOrderByLastPlayedComparator();
+
+        }
     }
 }

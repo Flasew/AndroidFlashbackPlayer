@@ -26,7 +26,7 @@ public class JUnitTestPositionPlaylist {
     Song b;
     Song c;
     Album album;
-    PositionPlayListFactory ppl;
+    ArrayList<Integer> positionList;
     ArrayList<Integer> mockList;
     List<Song> list;
 
@@ -46,8 +46,7 @@ public class JUnitTestPositionPlaylist {
 
         album = new Album("Name", SongList.getSongs());
 
-        ppl = new PositionPlayListFactory(album);
-
+        positionList = PositionPlayListFactory.makeList(album);
         mockList = new ArrayList<>();
         mockList.add(0);
         mockList.add(1);
@@ -56,7 +55,7 @@ public class JUnitTestPositionPlaylist {
     @Test
     public void testPositions() {
 
-        ArrayList<Integer> positions = ppl.getPositionList();
+        ArrayList<Integer> positions = positionList;
 
         for (int i = 0; i < mockList.size(); i++) {
             assertEquals(mockList.get(i), positions.get(i));

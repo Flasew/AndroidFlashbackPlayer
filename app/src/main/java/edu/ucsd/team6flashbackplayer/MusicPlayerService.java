@@ -57,11 +57,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
     private final IBinder iBinder = new LocalBinder();  // unused
 
-    private List<Song> songs = SongList.getSongs();     // global song list
     private int counter = 0;                        // current song position counter
     private ArrayList<Integer> positionList;             // list of songs to be played
 
     private MediaPlayer mediaPlayer;                // media player that plays the song
+    private boolean isPaused = false;               // media player is paused
 
     // broadcast
     private LocalBroadcastManager localBroadcastManager;
@@ -113,8 +113,18 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             broadcastSongList();
         }
     };
-
     private boolean songListRequestReceiverRegistered = false;
+
+    // firebase download
+    private boolean useFirebaseList = false;
+    private BroadcastReceiver songDownloadHandledReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            onSongDownloadedHandled();
+        }
+    };
+
+    private boolean songDownladedHandledReceiverRegistered = false;
 
     public MusicPlayerService() {
 
@@ -135,6 +145,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        Log.d(TAG, "StartID: " + startId);
 
         // put the activity in foreground so it won't die
         Intent notificationIntent = new Intent(this, MusicPlayerActivity.class);
@@ -188,6 +199,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             locationListenerRegistered = true;
         }
 
+
+
         registerBroadcastReceivers();
         initMediaPlayer();
 
@@ -198,29 +211,36 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             Bundle extras = intent.getExtras();
             ArrayList<Integer> inList = extras.getIntegerArrayList(PositionPlayListFactory.POS_LIST_INTENT);
             boolean keepCurrSong = extras.getBoolean(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, false);
+            useFirebaseList = extras.getBoolean(MusicPlayerActivity.START_MUSICSERVICE_VIBE_MODE, false);
 
             if (inList != null) {
                 Log.d(TAG, "Incoming list is not null, playing from list");
 
-                if (!keepCurrSong || !mediaPlayer.isPlaying()) {
+                // check if the list is firebase list. If it is, immediately queue all the download.
+                if (useFirebaseList) {
+                    queueDownloads(inList);
+                }
+
+                // queue the firebase song's download
+                if (!keepCurrSong || (isStopped())) {
 
                     counter = 0;
                     positionList = inList;
                     if (inList.size() == 0) {
+                        Log.d(TAG, "inList size is 0, music player service stopped");
                         stopMedia();
                         broadcastSongChange();
-                        stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
-                    }
-                    else
+                        stopForeground(STOP_FOREGROUND_REMOVE);
+                        stopSelf();
+                    } else
                         prepSongAsync(true);
-                }
-                else {
+                } else {
+
                     inList.add(0, positionList.get(counter));
                     counter = 0;
                     positionList = inList;
                 }
-            }
-            else {
+            } else {
 
                 int pos = extras.getInt(SongActivity.SINGLE_SONG_INTENT, -1);
 
@@ -231,15 +251,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
                 counter = 0;
                 prepSongAsync(false);
             }
+
         }
         // Invalid intent: just stop and exit.
         catch (NullPointerException | IndexOutOfBoundsException e) {
             Log.d(TAG, "Invalid incoming playlist, exiting...");
+            e.printStackTrace();
             stopMedia();
             broadcastSongChange();
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf();
         }
-
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -354,6 +375,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onCompletion(MediaPlayer mp) {
         // Invoked when playback of a media source has completed
+        isPaused = true;
 
         if (positionList.size() == 0) {
             broadcastSongChange();
@@ -361,7 +383,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             return;
         }
         // The Song whose info we need to update
-        Song toUpdate = songs.get(positionList.get(counter));
+        Song toUpdate = SongList.getSongs().get(positionList.get(counter));
         // Update the most recently played song's latest location, datetime
         Log.d(TAG, "Song " + toUpdate +" finished playing.");
 
@@ -439,13 +461,58 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         Log.d(TAG, "Entering prepSongAsync...");
         try {
             // Set the data source to the mediaFile location
-            Song currSong = songs.get(positionList.get(counter));
-            Log.d(TAG, "Initial song of preparing: " + currSong.getTitle());
+            Song currSong;
+            int index = positionList.get(counter);
+            List<Song> songList;
+            if (!useFirebaseList) {
+                songList = SongList.getSongs();
+                currSong = songList.get(index);
+            }
+            else {
+
+                for (Song s: SongList.getSongs()) {
+                    Log.d(TAG, "Local songlist has item " + s.getTitle());
+                }
+                for (Song s: FirebaseSongList.getSongs()) {
+                    Log.d(TAG, "Firebase songlist has item " + s.getTitle());
+                }
+
+                songList = FirebaseSongList.getSongs();
+                int curr = counter;
+                currSong = songList.get(index);
+                Log.d(TAG, "curr: "  + curr);
+                Log.d(TAG, "Currsong: " + currSong.getTitle());
+                Log.d(TAG,"SongList.getSongs().indexOf(currSong) == -1: " + (SongList.getSongs().indexOf(currSong) == -1));
+
+                while (SongList.getSongs().indexOf(currSong) == -1 && ++curr < positionList.size()) {
+                    // the song didn't finish downloading, find the next available song and swap
+                    Log.d(TAG, "Song " + currSong.getTitle() + " is not available locally, advancing...");
+                    currSong = songList.get(positionList.get(curr));
+
+
+                }
+
+                Log.d(TAG, "curr after: "  + curr);
+
+                if (curr < positionList.size()) {
+                    // move the song to current counter position
+                    int tmp = positionList.remove(curr);
+                    positionList.add(counter, tmp);
+                    broadcastSongList();
+
+                }
+
+                else if (curr >= positionList.size()) {
+                    // if no song is ready, don't prepare anything and wait for the next download finish signal.
+                    return;
+                }
+            }
+
 
             if (skipDislike) {
                 while (currSong.isDisliked()) {
                     counter += 1;
-                    currSong = songs.get(positionList.get(counter));
+                    currSong = songList.get(positionList.get(counter));
                 }
             }
 
@@ -455,6 +522,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             Log.d(TAG, "Preparing song " + currSong.getTitle());
 
         } catch (IOException e) {
+            Log.d(TAG, "PrepSongAsync got IO exception, exiting...");
             e.printStackTrace();
             stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); 
         } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
@@ -471,6 +539,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
      */
     private void playMedia() {
         if (!mediaPlayer.isPlaying()) {
+            isPaused = false;
             mediaPlayer.start();
             Log.d(TAG, "Media player started");
         }
@@ -481,6 +550,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
      */
     private void pauseMedia() {
         if (mediaPlayer.isPlaying()) {
+            isPaused = true;
             mediaPlayer.pause();
             Log.d(TAG, "Media player paused");
         }
@@ -510,9 +580,15 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private void stopMedia() {
         if (mediaPlayer == null) return;
         if (mediaPlayer.isPlaying()) {
+            isPaused = false;
             mediaPlayer.stop();
             Log.d(TAG, "Media player stopped");
         }
+    }
+
+    private boolean isStopped() {
+        if (mediaPlayer == null) return true;
+        return !isPaused && !mediaPlayer.isPlaying();
     }
 
 
@@ -529,7 +605,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         boolean playerStatus;
 
         try {
-            index = positionList.get(counter);
+            if (useFirebaseList)
+                index = SongList.getSongs().indexOf(FirebaseSongList.getSongs().get(positionList.get(counter)));
+            else
+                index = positionList.get(counter);
+
             playerStatus = mediaPlayer.isPlaying();
         }
         catch (IndexOutOfBoundsException | NullPointerException | IllegalStateException e ) {
@@ -557,6 +637,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
         Intent intent = new Intent(BROADCAST_SONG_LIST);
         intent.putIntegerArrayListExtra(BROADCAST_SONG_LIST, positionList);
+        intent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_VIBE_MODE, useFirebaseList);
         localBroadcastManager.sendBroadcast(intent);
     }
 
@@ -567,7 +648,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
     private void onSongDisliked(int position) {
         // if the media player is not playing, we don't have to worry.
         // if we somehow passed in an invalid position, also ignore it.
-        if (mediaPlayer == null || !mediaPlayer.isPlaying() || position == -1)
+        if (mediaPlayer == null || isStopped() || position == -1)
             return;
 
         // otherwise check if the disliked song is currently playing
@@ -576,6 +657,18 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             nextSong();
         }
 
+    }
+
+    /**
+     * Called when songs are copied over to the music directory. Useful for firebase song list.
+     * Start a new song if download finishes and no song was playing due to they're all offline.
+     */
+    private void onSongDownloadedHandled() {
+        Log.d(TAG, "Song downloaded broadcast received");
+        if (!useFirebaseList || mediaPlayer == null || mediaPlayer.isPlaying())
+            return;
+
+        prepSongAsync(true);
     }
 
     /**
@@ -637,6 +730,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             songControlReceiverRegistered = true;
         }
 
+        if (!songDownladedHandledReceiverRegistered) {
+            localBroadcastManager.registerReceiver(songDownloadHandledReceiver,
+                    new IntentFilter(VibeModeDownloadedFileHanlderDecorator.VIBE_FILE_FINISHED_PROCESS));
+            songDownladedHandledReceiverRegistered = true;
+        }
+
     }
 
     /**
@@ -651,6 +750,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
         songControlReceiverRegistered = false;
         localBroadcastManager.unregisterReceiver(songListRequestReceiver);
         songListRequestReceiverRegistered = false;
+        localBroadcastManager.unregisterReceiver(songDownloadHandledReceiver);
+        songDownladedHandledReceiverRegistered = false;
     }
 
     /* ---------------------UPDATE SONG SP------------------------ */
@@ -694,6 +795,27 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
             return MusicPlayerService.this;
         }
     }
+
+    /* ------------------------------------Vibe mode download---------------------------*/
+
+    /**
+     * Queue the downloading of non-local songs.
+     * @param inList incomming firebase list
+     */
+    private void queueDownloads(ArrayList<Integer> inList) {
+        for(int i: inList) {
+            // this long if says "a song is not locally available"
+            Song s = FirebaseSongList.getSongs().get(i);
+            if (SongList.getSongs().indexOf(s) == -1) {
+                Intent intent = new Intent(MusicPlayerService.this, VibeModeDownloadingIntentService.class);
+                Log.d(TAG, s.getTitle() + "'s URL passing to intent service: " + s.getUrl());
+                intent.putExtra(VibeModeDownloadingIntentService.AUTO_DOWNLOAD_REQ_URL, s.getUrl());
+                startService(intent);
+            }
+        }
+    }
+
+
 
 
 }

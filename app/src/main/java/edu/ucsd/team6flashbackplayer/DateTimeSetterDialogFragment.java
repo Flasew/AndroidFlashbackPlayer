@@ -31,6 +31,9 @@ public class DateTimeSetterDialogFragment extends DialogFragment {
         // Required empty public constructor
     }
 
+    public interface DateTimeSetterClosedListener {
+        public void onDialogClosed();
+    }
 
     /**
      * Pick a date
@@ -77,5 +80,10 @@ public class DateTimeSetterDialogFragment extends DialogFragment {
         return getDatePicker();
     }
 
-
+    @Override
+    public void onDestroy() {
+        if (getActivity() instanceof DateTimeSetterClosedListener)
+            ((DateTimeSetterClosedListener) getActivity()).onDialogClosed();
+        super.onDestroy();
+    }
 }

@@ -14,9 +14,10 @@
         android:marqueeRepeatLimit ="marquee_forever"
         android:focusable="false"
         android:focusableInTouchMode="false"
+        android:gravity="bottom"
         android:scrollHorizontally="true"
-        android:gravity="center_vertical"
-        android:layout_height="50dp"
+        android:layout_marginTop="@dimen/entry_margin"
+        android:layout_height="30dp"
         android:layout_width="0dp"
         android:layout_alignParentStart="true"
         android:padding="@dimen/entry_margin"
@@ -24,6 +25,26 @@
         android:textSize="16sp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/like_button"/>
+
+    <TextView
+        android:id="@+id/song_attrs"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit ="marquee_forever"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:scrollHorizontally="true"
+        android:layout_height="20dp"
+        android:layout_width="0dp"
+        android:layout_alignParentStart="true"
+        android:gravity="bottom"
+        android:paddingHorizontal="@dimen/entry_margin"
+        android:paddingBottom="@dimen/entry_margin"
+        android:textColor="#555555"
+        android:textSize="12sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/like_button"
+        app:layout_constraintTop_toBottomOf="@id/song_name"/>
 
     <ImageButton
         android:id="@+id/dislike_button"

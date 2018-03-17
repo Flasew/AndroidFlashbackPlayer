@@ -70,6 +70,7 @@ public class SongEntryAdapter extends BaseAdapter {
      */
     static class ViewHolder {
         TextView title;
+        TextView albumArtist;
         PreferenceButtons buttons;
     }
     /**
@@ -106,8 +107,13 @@ public class SongEntryAdapter extends BaseAdapter {
             //and set its textView field to the proper value
 
             holder.title = row.findViewById(R.id.song_name);
+            holder.albumArtist = row.findViewById(R.id.song_attrs);
+
             holder.title.setSelected(true);
             holder.title.setText(currSong.getTitle());
+
+            holder.albumArtist.setText(context.getResources().getString(R.string.artist_albums, currSong.getArtist(), currSong.getAlbum()));
+
             holder.buttons = new PreferenceButtons(currSong,
                     (ImageButton)row.findViewById(R.id.like_button),
                     (ImageButton)row.findViewById(R.id.dislike_button),
@@ -123,6 +129,7 @@ public class SongEntryAdapter extends BaseAdapter {
             ViewHolder holder = (ViewHolder) row.getTag();
             holder.title.setSelected(true);
             holder.title.setText(currSong.getTitle());
+            holder.albumArtist.setText(context.getResources().getString(R.string.artist_albums, currSong.getArtist(), currSong.getAlbum()));
             holder.buttons.setSong(currSong);
             holder.buttons.redrawButtons();
         }

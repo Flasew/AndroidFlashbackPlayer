@@ -2,10 +2,12 @@ package edu.ucsd.team6flashbackplayer;
 
 import android.Manifest;
 import android.app.AlarmManager;
+import android.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -28,12 +30,15 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.lang.ref.WeakReference;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+
+import static edu.ucsd.team6flashbackplayer.AppTime.UPDATE_TIME;
 
 /**
  * Class CurrSongActivity
@@ -51,7 +56,7 @@ import java.util.List;
  * listen to system time change (using the AlarmManager API) so the list is updated
  * on appropriate time.
  */
-public class CurrSongActivity extends MusicPlayerActivity implements LocationListener {
+public class CurrSongActivity extends MusicPlayerActivity implements LocationListener, DateTimeSetterDialogFragment.DateTimeSetterClosedListener {
 
     static final String PLAYLIST_REQUEST = "playlistRequest";
 
@@ -61,7 +66,6 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     // which time it arrived
     private static final String FB_LIST_UPDATE_TIME_INDEX = "FBUpdateTimeIndex";
     // time for update the "time of day" period. 0 handles day change.
-    private final int[] UPDATE_TIME = {0};
     private boolean flashBackMode;          // if FB is enabled
 
     // UI elements
@@ -84,7 +88,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private AlarmManager alarmManager;
     private PendingIntent[] alarmPendingIntents;
     // trigger time of time updates
-    private long[] updateTriggerMilliTime = new long[4];
+    private long[] updateTriggerMilliTime = new long[UPDATE_TIME.length];
 
     // location update frequency
     private final int LOC_UPDATE_MIN_TIME = 1000;       // milliseconds
@@ -92,6 +96,21 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
 
     // location cache
     private LatLng lastLatLngCache;
+
+    // receiver for friend change
+    private BroadcastReceiver friendChangeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            startMusicPlayerServiceFBMode(true);
+        }
+    };
+
+    private BroadcastReceiver fakeAlarmReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            startMusicPlayerServiceFBMode(true);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +147,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
                 (ImageButton) findViewById(R.id.dislike_button),
                 this
         );
+
         preferenceButtons.redrawButtons();
         PreferenceButtons.setLocalBroadcastManager(this);
         flashBackButton = findViewById(R.id.fb_button);
@@ -138,18 +158,19 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
 
         // flashback mode button listener. Depending on the current state, enter or
         // exit the flashback mode.
-        flashBackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "FB mode before pressing: " + flashBackMode);
-                flashBackMode = !flashBackMode;
-                editor.putBoolean(FLASHBACK_SHAREDPREFERENCE_NAME, flashBackMode);
-                editor.apply();
-                if (flashBackMode)
-                    enableFBMode();
-                else
-                    disableFBMode();
+        flashBackButton.setOnClickListener(v -> {
+            if (User.getSelf() == null) {
+                Toast.makeText(this, "You must login to use vibe mode.", Toast.LENGTH_SHORT).show();
+                return;
             }
+            Log.d(TAG, "FB mode before pressing: " + flashBackMode);
+            flashBackMode = !flashBackMode;
+            editor.putBoolean(FLASHBACK_SHAREDPREFERENCE_NAME, flashBackMode);
+            editor.apply();
+            if (flashBackMode)
+                enableFBMode();
+            else
+                disableFBMode();
         });
 
         // register location change listener but disable it first
@@ -218,9 +239,19 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        if (id == R.id.show_playlist) {
+        if (id == R.id.pick_fixed_time) {
+            DialogFragment dateTimeSetterDialogFragment = new DateTimeSetterDialogFragment();
+            dateTimeSetterDialogFragment.show(getFragmentManager(), getResources().getString(R.string.pick_time));
+        }
+        else if (id == R.id.use_sys_time){
+            AppTime.unsetFixedTime();
+            setVibeAlarmReceiver();
+        }
+
+        else if (id == R.id.show_playlist) {
             startFBListActivity();
         }
+
 
         return super.onOptionsItemSelected(item);
     }
@@ -278,6 +309,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         timeDateView.setText(NO_INFO);
         timeClockView.setText(NO_INFO);
         lastUserView.setText(NO_INFO);
+        songAlbumView.setText(NO_INFO);
         preferenceButtons.setSong(null);
         preferenceButtons.removeButtonListeners();
         preferenceButtons.redrawButtons();
@@ -385,6 +417,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
      * (delegated to startMusicPlayerServiceFBMode).
      */
     private void enableFBMode() {
+
         Log.d(TAG, "Enabling Flashback mode... ");
         // set up listeners on location and time update
 
@@ -392,6 +425,37 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         getUpdateTimeMills();
         alarmPendingIntents = new PendingIntent[updateTriggerMilliTime.length];
 
+        if (AppTime.usingFixedTime()) {
+            registerFakeAlarmReceivers();
+        }
+        else {
+            registerAlarmReceivers();
+        }
+
+        // register friend listener
+        localBroadcastManager.registerReceiver(friendChangeReceiver,
+                new IntentFilter(Users.BROADCAST_FRIEND_CHANGE)
+        );
+
+        // redraw the buttons
+        flashBackButton.setBackground(getDrawable(R.drawable.fb_enabled));
+
+        startMusicPlayerServiceFBMode(false);
+    }
+
+    /**
+     * register the fake alarm receiver to receive update on mock times
+     */
+    private void registerFakeAlarmReceivers() {
+        localBroadcastManager.registerReceiver(fakeAlarmReceiver,
+                new IntentFilter(AppTime.BROADCAST_FAKE_TIME_UPDATE)
+        );
+    }
+
+    /**
+     * register the real alarm receiver to receive update on real times.
+     */
+    private void registerAlarmReceivers() {
         // Okay I tried setRepeat or set but none of them Fucking works. I have to
         // use this setExact.
         for (int i = 0; i < updateTriggerMilliTime.length; i++) {
@@ -404,12 +468,6 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
                     updateTriggerMilliTime[i],
                     alarmPendingIntents[i]);
         }
-
-        // redraw the buttons
-        flashBackButton.setBackground(getDrawable(R.drawable.fb_enabled));
-
-        // force a location update to enter the flachback mode play list
-        startMusicPlayerServiceFBMode(false);
     }
 
     /**
@@ -422,15 +480,10 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         Log.d(TAG, "Disabling Flashback mode... ");
         flashBackMode = false;
 
-        // unregister time listener
-        for (int i = 0; i < alarmPendingIntents.length; i++) {
-            if (alarmPendingIntents[i] != null) {
-                alarmManager.cancel(alarmPendingIntents[i]);
-                Log.d(TAG, "Pending Intent removed: " + alarmPendingIntents[i]);
-                alarmPendingIntents[i] = null;
-            }
-        }
-        alarmPendingIntents = null;
+        unregisterAlarmReceivers();
+        unregisterFakeAlarmReceivers();
+
+        localBroadcastManager.unregisterReceiver(friendChangeReceiver);
 
         // redraw button
         flashBackButton.setBackground(getDrawable(R.drawable.fb_disabled));
@@ -440,8 +493,38 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
         playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, stoplist);
         playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_KEEP_CURRPLAY, true);
+
         startService(playerIntent);
 
+    }
+
+    /**
+     * Remove the fake alarm receiver (broadcast receiver)
+     */
+    private void unregisterFakeAlarmReceivers() {
+        try {
+            localBroadcastManager.unregisterReceiver(fakeAlarmReceiver);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Remove the real alarm receiver
+     */
+    private void unregisterAlarmReceivers() {
+        // unregister time listener
+        if (alarmPendingIntents != null) {
+            for (int i = 0; i < alarmPendingIntents.length; i++) {
+                if (alarmPendingIntents[i] != null) {
+                    alarmManager.cancel(alarmPendingIntents[i]);
+                    Log.d(TAG, "Pending Intent removed: " + alarmPendingIntents[i]);
+                    alarmPendingIntents[i] = null;
+                }
+            }
+            alarmPendingIntents = null;
+        }
     }
 
     /**
@@ -456,11 +539,12 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     private void startMusicPlayerServiceFBMode(boolean update) {
 
         try {
-            PositionPlayListFactory ppl = new PositionPlayListFactory(lastLatLngCache, AppTime.getInstance());
             Intent playerIntent = new Intent(CurrSongActivity.this, MusicPlayerService.class);
-            ArrayList<Integer> positionList = ppl.getPositionList();
+            ArrayList<Integer> positionList = PositionPlayListFactory.makeList(lastLatLngCache, AppTime.getInstance());
             playerIntent.putIntegerArrayListExtra(PositionPlayListFactory.POS_LIST_INTENT, positionList);
             playerIntent.putExtra(MainActivity.START_MUSICSERVICE_KEEP_CURRPLAY, update);
+            playerIntent.putExtra(MusicPlayerActivity.START_MUSICSERVICE_VIBE_MODE, true);
+
             startService(playerIntent);
 
             // send a toast for updated list
@@ -565,6 +649,28 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         }
     }
 
+    /**
+     * When an app time is picked, reset the receiver of time update to proper real/fake receiver.
+     */
+    @Override
+    public void onDialogClosed() {
+        Log.d(TAG, "Picker dialog destroyed");
+        setVibeAlarmReceiver();
+    }
+
+    private void setVibeAlarmReceiver() {
+        if (flashBackMode) {
+            if (AppTime.usingFixedTime()) {
+                unregisterAlarmReceivers();
+                registerFakeAlarmReceivers();
+            }
+            else {
+                unregisterFakeAlarmReceivers();
+                registerAlarmReceivers();
+            }
+        }
+    }
+
 
     /**
      * AlarmReceiver class that handles the time update. Required for proper unregistering.
@@ -572,14 +678,14 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
     public static class AlarmReceiver extends BroadcastReceiver {
 
         // activity associated with this receiver.
-        private static CurrSongActivity associatedActivity;
+        private static WeakReference<CurrSongActivity> associatedActivity;
 
         /**
          * Constructor. Takes an CurrSongActivity as it's associatedactivity.
          * @param a a CurrSongActivity
          */
         public AlarmReceiver(CurrSongActivity a) {
-            associatedActivity = a;
+            associatedActivity = new WeakReference<>(a);
         }
 
         /**
@@ -589,7 +695,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
          * @param a activity to be associated with
          */
         public static void setAssociatedActivity(CurrSongActivity a) {
-            associatedActivity = a;
+            associatedActivity = new WeakReference<>(a);
         }
 
         /**
@@ -597,6 +703,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
          * Call this on unregister to guarantee things are cleaned up.
          */
         public static void removeAssociatedActivity() {
+
             associatedActivity = null;
         }
 
@@ -617,7 +724,7 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "Update flashback list triggered from AlarmReceiver.");
-            if (associatedActivity != null) {
+            if (associatedActivity != null && associatedActivity.get() != null) {
                 try {
                     int i = intent.getExtras().getInt(FB_LIST_UPDATE_TIME_INDEX, -1);
 
@@ -625,17 +732,17 @@ public class CurrSongActivity extends MusicPlayerActivity implements LocationLis
                     if (i != -1) {
 
                         // remove the current alarm (which is passed) and schedule for a day later.
-                        associatedActivity.alarmManager.cancel(associatedActivity.alarmPendingIntents[i]);
-                        associatedActivity.updateTriggerMilliTime[i] += AlarmManager.INTERVAL_DAY;
-                        Intent timeIntent = new Intent(associatedActivity, AlarmReceiver.class);
+                        associatedActivity.get().alarmManager.cancel(associatedActivity.get().alarmPendingIntents[i]);
+                        associatedActivity.get().updateTriggerMilliTime[i] += AlarmManager.INTERVAL_DAY;
+                        Intent timeIntent = new Intent(associatedActivity.get(), AlarmReceiver.class);
                         timeIntent.putExtra(FB_LIST_UPDATE_TIME_INDEX, i);
-                        associatedActivity.alarmPendingIntents[i] = PendingIntent.getBroadcast(associatedActivity,
+                        associatedActivity.get().alarmPendingIntents[i] = PendingIntent.getBroadcast(associatedActivity.get(),
                                 i, timeIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                        Log.d(TAG, "Pending Intent added: " + associatedActivity.alarmPendingIntents[i]);
-                        associatedActivity.alarmManager.setExact(AlarmManager.RTC_WAKEUP,
-                                associatedActivity.updateTriggerMilliTime[i],
-                                associatedActivity.alarmPendingIntents[i]);
-                        associatedActivity.startMusicPlayerServiceFBMode(true);
+                        Log.d(TAG, "Pending Intent added: " + associatedActivity.get().alarmPendingIntents[i]);
+                        associatedActivity.get().alarmManager.setExact(AlarmManager.RTC_WAKEUP,
+                                associatedActivity.get().updateTriggerMilliTime[i],
+                                associatedActivity.get().alarmPendingIntents[i]);
+                        associatedActivity.get().startMusicPlayerServiceFBMode(true);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -7,6 +7,10 @@ package edu.ucsd.team6flashbackplayer;
 import android.content.SharedPreferences;
 import android.media.MediaMetadataRetriever;
 import android.util.Log;
+import android.widget.Toast;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import java.util.LinkedList;
 
@@ -26,11 +30,17 @@ public class NormalModeDownloadedFileHandlerDecorator extends DownloadedFileHand
         super(fileHandler);
     }
 
+    /**
+     * Processes a downloaded file and adds to to correct song/album lists as well as firebase
+     * @param url the url of where the song was downloaded
+     * @param filename filename of the downloaded file's source
+     * @return a list of strings that are the files downloaded
+     */
     @Override
     public LinkedList<String> process(String url, String filename) {
         LinkedList<String> copiedFiles = fileHandler.process(url, filename);
-
-        // make song objects, add them to the global song list.
+        if (copiedFiles == null)
+            return null;
 
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
         for (String path: copiedFiles) {
@@ -49,12 +59,14 @@ public class NormalModeDownloadedFileHandlerDecorator extends DownloadedFileHand
                         mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM),
                         id);
 
-                FirebaseSongList.addSongToLocalList(toAdd);
+                SongList.addSong(toAdd);
                 AlbumList.addFromSong(toAdd);
 
                 Log.d("Downloaded song id is: ", id);
                 Log.d("Song is titled ", toAdd.getTitle());
                 FirebaseSongList.addSongToFirebase(toAdd);
+                // Add the id of the song to the current user's songPref (to start to keep track of pref)
+                User.addPrefToHash(toAdd.getId());
 
             }
             catch (Exception e) {

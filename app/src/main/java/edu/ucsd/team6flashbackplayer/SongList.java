@@ -34,4 +34,13 @@ public class SongList {
     }
 
 
+    /**
+     * Adds the song to the local user list (called on download)
+     * Meaning that the song will always never already exist in the list
+     * @param song Song to add
+     */
+    public static void addSong(Song song) {
+        // If we are calling this we know that the song doesn't already exist in the local list
+        SongList.getSongs().add(song);
+    }
 }

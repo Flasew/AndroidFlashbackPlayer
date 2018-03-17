@@ -110,6 +110,7 @@ public class Users {
     }
 
 
+
     /**
      * Creates a listener for the /users/ path in firebase and handles events when new users are
      * added or when user info is updated
@@ -135,6 +136,11 @@ public class Users {
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                // Check if noone is logged in
+                if (User.getSelf() == null) {
+                    Log.d(TAG, "Not logged in");
+                    return;
+                }
                 // When some user's info changes, update the Users list
 
                 // Also send a broadcast only if the user's info that changed is a
@@ -183,4 +189,5 @@ public class Users {
             }
         });
     }
+
 }
