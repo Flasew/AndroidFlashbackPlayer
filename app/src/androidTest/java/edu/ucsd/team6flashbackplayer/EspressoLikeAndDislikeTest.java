@@ -74,18 +74,18 @@ public class EspressoLikeAndDislikeTest {
                 .onChildView(withId(R.id.song_name))
                 .check(matches(isDisplayed()));
 
-
-        onData(anything())
-                .inAdapterView(withId(R.id.song_list))
-                .atPosition(0)
-                .onChildView(withId(R.id.like_button))
-                .perform(click());
-
-        onData(anything())
-                .inAdapterView(withId(R.id.song_list))
-                .atPosition(0)
-                .onChildView(withId(R.id.dislike_button))
-                .perform(click());
+//
+//        onData(anything())
+//                .inAdapterView(withId(R.id.song_list))
+//                .atPosition(0)
+//                .onChildView(withId(R.id.like_button))
+//                .perform(click());
+//
+//        onData(anything())
+//                .inAdapterView(withId(R.id.song_list))
+//                .atPosition(0)
+//                .onChildView(withId(R.id.dislike_button))
+//                .perform(click());
 
         onData(anything())
                 .inAdapterView(withId(R.id.song_list))
