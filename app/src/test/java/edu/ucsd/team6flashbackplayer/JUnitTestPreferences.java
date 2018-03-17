@@ -1,14 +1,8 @@
-package Tests;
+package edu.ucsd.team6flashbackplayer;
 
-import android.support.test.rule.ActivityTestRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-
-import edu.ucsd.team6flashbackplayer.MainActivity;
-import edu.ucsd.team6flashbackplayer.Song;
-import edu.ucsd.team6flashbackplayer.SongPreference;
 
 import static junit.framework.Assert.assertEquals;
 

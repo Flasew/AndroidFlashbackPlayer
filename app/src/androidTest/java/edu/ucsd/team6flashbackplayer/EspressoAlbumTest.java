@@ -44,64 +44,42 @@ public class EspressoAlbumTest {
         // The recommended way to handle such scenarios is to use Espresso idling resources:
         // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
         try {
-            Thread.sleep(7000);
+            Thread.sleep(8000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         ViewInteraction appCompatButton = onView(
-                allOf(withId(R.id.main_albums), withText("Albums"),
-                        childAtPosition(
-                                allOf(withId(R.id.main_layout),
-                                        childAtPosition(
-                                                withClassName(is("android.support.design.widget.CoordinatorLayout")),
-                                                1)),
-                                4),
-                        isDisplayed()));
+                allOf(withId(R.id.main_albums), withText("Albums")));
         appCompatButton.perform(click());
 
-        ViewInteraction textView = onView(
-                allOf(withId(R.id.entry_name), withText("Universal Fanfare"),
-                        childAtPosition(
-                                allOf(withId(R.id.album_entry),
-                                        childAtPosition(
-                                                withId(R.id.album_list),
-                                                1)),
-                                0),
-                        isDisplayed()));
-        textView.check(matches(withText("Universal Fanfare")));
 
         onData(CoreMatchers.anything())
                 .inAdapterView(withId(R.id.album_list))
-                .atPosition(1)
+                .atPosition(0)
                 .onChildView(withId(R.id.entry_name))
-                .check(matches(withText("Universal Fanfare")));
-
-
+                .check(matches(withText("Minions (Original Motion Picture Soundtrack)")));
 
         DataInteraction constraintLayout = onData(anything())
                 .inAdapterView(allOf(withId(R.id.album_list),
                         childAtPosition(
-                                withClassName(is("android.support.design.widget.CoordinatorLayout")),
+                                withClassName(is("android.support.constraint.ConstraintLayout")),
                                 3)))
-                .atPosition(1);
+                .atPosition(0);
         constraintLayout.perform(click());
+
 
         ViewInteraction textView3 = onView(
                 allOf(withId(R.id.song_name), withText("Universal Fanfare")));
-        textView3.check(matches(withText("Minions (Original Motion Picture Soundtrack)")));
+        textView3.check(matches(withText("Universal Fanfare")));
 
         ViewInteraction textView4 = onView(
                 allOf(withId(R.id.curr_playing_name), withText("Universal Fanfare")));
-        textView4.check(matches(withText("Minions (Original Motion Picture Soundtrack)")));
+        textView4.check(matches(withText("Universal Fanfare")));
 
         ViewInteraction textView5 = onView(
                 allOf(withId(R.id.curr_playing_artist), withText("The Minions")));
         textView5.check(matches(withText("The Minions")));
-
-        ViewInteraction textView6 = onView(
-                allOf(withId(R.id.curr_playing_artist), withText("The Minions")));
-        textView6.check(matches(withText("The Minions")));
 
 
         ViewInteraction imageButton = onView(
@@ -128,14 +106,7 @@ public class EspressoAlbumTest {
         }
 
         ViewInteraction textView9 = onView(
-                allOf(withText("Albums"),
-                        childAtPosition(
-                                allOf(withId(R.id.action_bar),
-                                        childAtPosition(
-                                                withId(R.id.action_bar_container),
-                                                0)),
-                                0),
-                        isDisplayed()));
+                allOf(withText("Albums")));
         textView9.check(matches(withText("Albums")));
 
         ViewInteraction textView10 = onView(

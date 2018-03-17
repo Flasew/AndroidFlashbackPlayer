@@ -1,11 +1,9 @@
 package edu.ucsd.team6flashbackplayer;
 
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.ZonedDateTime;
 
 public class JUnitSongOrderComparatosTest {
 
@@ -56,5 +54,52 @@ public class JUnitSongOrderComparatosTest {
         assertTrue(c.compare(songNull, songB) > 0);
         assertTrue( c.compare(songA, songNull) < 0);
         assertEquals(0, c.compare(songNull, songNull));
+    }
+
+    @Test
+    public void testFavoriteComparator() {
+        SongOrderComparator c = new SongOrderByFavoriteStatusComparator();
+        SongPreference.like(songA);
+        SongPreference.like(songa);
+        SongPreference.dislike(songB);
+        SongPreference.dislike(songb);
+
+        assertEquals(0, c.compare(songA, songa));
+        assertEquals(0, c.compare(songb, songB));
+        assertEquals(0, c.compare(songNull, songBDup));
+
+        assertTrue(c.compare(songA, songB) < 0);
+        assertTrue(c.compare(songA, songNull) < 0);
+        assertTrue(c.compare(songNull, songb) < 0);
+        assertTrue(c.compare(songNull, songa) > 0);
+        assertTrue(c.compare(songB, songa) > 0);
+        assertTrue(c.compare(songB, songNull) > 0);
+
+    }
+
+    @Test
+    public void testLatestComparator() {
+        SongOrderComparator c = new SongOrderByLastPlayedComparator();
+
+        CharSequence time1 = "2018-02-01T01:30:30+01:00[Europe/Paris]";
+        CharSequence time2 = "2018-02-12T01:30:30+01:00[Europe/Paris]";
+        CharSequence time3 = "2018-02-13T01:30:30+01:00[Europe/Paris]";
+
+        songA.setLatestTime(ZonedDateTime.parse((time1)));
+        songa.setLatestTime(ZonedDateTime.parse((time2)));
+        songB.setLatestTime(ZonedDateTime.parse((time3)));
+        songb.setLatestTime(ZonedDateTime.parse((time3)));
+
+        assertEquals(0, c.compare(songb, songB));
+
+        assertTrue(c.compare(songa, songB) > 0);
+        assertTrue(c.compare(songb, songa) < 0);
+
+        assertTrue(c.compare(songNull, songa) > 0);
+        assertTrue(c.compare(songa, songNull) < 0);
+
+        assertEquals(0, c.compare(songNull, songNull));
+
+
     }
 }

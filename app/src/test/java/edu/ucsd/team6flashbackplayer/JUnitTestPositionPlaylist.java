@@ -1,19 +1,12 @@
-package Tests;
+package edu.ucsd.team6flashbackplayer;
 
-import android.support.test.rule.ActivityTestRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.ucsd.team6flashbackplayer.Album;
-import edu.ucsd.team6flashbackplayer.MainActivity;
-import edu.ucsd.team6flashbackplayer.PositionPlayListFactory;
-import edu.ucsd.team6flashbackplayer.Song;
-import edu.ucsd.team6flashbackplayer.SongList;
 
 import static junit.framework.Assert.assertEquals;
 
