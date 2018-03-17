@@ -37,6 +37,15 @@ public class ControlButtons {
 
     private static final String TAG = ControlButtons.class.getName();
 
+    /**
+     * Constructor for buttons
+     * @param c context
+     * @param pp the image
+     * @param s the image view
+     * @param pausei pause icon
+     * @param playi play icon
+     * @param skipi skip icon
+     */
     public ControlButtons(Context c, ImageView pp, ImageView s, Drawable pausei, Drawable playi, Drawable skipi) {
         context = c;
         pausePlayButton = pp;
@@ -54,16 +63,25 @@ public class ControlButtons {
         localBroadcastManager = LocalBroadcastManager.getInstance(c);
     }
 
+    /**
+     * Sets the play button
+     */
     public void setPlay() {
         pausePlayStatus = STATUS_PLAY;
         pausePlayButton.setImageDrawable(playImage);
     }
 
+    /**
+     * Sets the pause button
+     */
     public void setPause() {
         pausePlayStatus = STATUS_PAUSE;
         pausePlayButton.setImageDrawable(pauseImage);
     }
 
+    /**
+     * Sets button listeners
+     */
     public void setButtonListeners() {
         pausePlayButton.setOnClickListener(v -> {
             broadcastPlayPause();
@@ -72,6 +90,9 @@ public class ControlButtons {
         skipButton.setOnClickListener(v -> broadcastSkip());
     }
 
+    /**
+     * Flips the pause play status
+     */
     private void flipPausePlayStatus() {
         if (pausePlayStatus == STATUS_PAUSE) {
             setPlay();
@@ -82,17 +103,26 @@ public class ControlButtons {
 
     }
 
+    /**
+     * Unset button listeners
+     */
     public void unsetButtonListeners() {
         pausePlayButton.setOnClickListener(null);
         skipButton.setOnClickListener(null);
     }
 
+    /**
+     * Sets skip buttons
+     */
     private void broadcastSkip() {
         Intent intent = new Intent(CTRL_BROADCAST);
         intent.putExtra(CTRL_BROADCAST, CTRL_SKIP);
         localBroadcastManager.sendBroadcast(intent);
     }
 
+    /**
+     * Broadcast play and pause features
+     */
     private void broadcastPlayPause() {
         Intent intent = new Intent(CTRL_BROADCAST);
         intent.putExtra(CTRL_BROADCAST, CTRL_PAUSE_PLAY);

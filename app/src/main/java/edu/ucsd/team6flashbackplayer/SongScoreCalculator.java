@@ -107,12 +107,14 @@ public class SongScoreCalculator {
         HashMap<String,String> friends = curr.getFriendsMap();
 
         for(String id : friends.keySet()) {
-            User friend = Users.getUser(User.DecodeString(id));
-            ArrayList<String> friendSongs = friend.getSongListPlayed();
-            String songId = s.getId();
-            if(friendSongs.contains(songId)){
-                score = 1;
-                break;
+            if (!(id.equals('-'))) {
+                User friend = Users.getUser(User.DecodeString(id));
+                ArrayList<String> friendSongs = friend.getSongListPlayed();
+                String songId = s.getId();
+                if(friendSongs.contains(songId)){
+                    score = 1;
+                    break;
+                }
             }
         }
 
