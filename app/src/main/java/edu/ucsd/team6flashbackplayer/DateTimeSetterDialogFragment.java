@@ -52,7 +52,7 @@ public class DateTimeSetterDialogFragment extends DialogFragment {
                     day = d;
 
                     getTimePicker().show();
-                }, currSetting.getYear(), currSetting.getMonthValue(), currSetting.getDayOfMonth());
+                }, currSetting.getYear(), currSetting.getMonthValue() - 1, currSetting.getDayOfMonth());
     }
 
     /**
