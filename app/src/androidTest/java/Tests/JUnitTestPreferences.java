@@ -20,8 +20,8 @@ public class JUnitTestPreferences {
     Song s;
     SongPreference sp;
 
-    @Rule
-    public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);
+//    @Rule
+//    public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);
 
     @Before
     public void setup() {

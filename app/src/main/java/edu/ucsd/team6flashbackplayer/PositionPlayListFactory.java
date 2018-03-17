@@ -119,7 +119,8 @@ public class PositionPlayListFactory {
             // get rid of disliked songs
             if( !(s.isDisliked()) ) {
                 // get rid of songs not liked and not played before
-                if( s.isLiked() || !(s.getLatestTime() == null) ) {
+                if( s.isLiked() || !(s.getLatestTime() == null) ||
+                        SongScoreCalculator.calcScore(s, currLoc, currTime) != 0 ) {
                     pq.add(index);
                 }
             }

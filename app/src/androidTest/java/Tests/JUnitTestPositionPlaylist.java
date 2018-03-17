@@ -30,8 +30,8 @@ public class JUnitTestPositionPlaylist {
     ArrayList<Integer> mockList;
     List<Song> list;
 
-    @Rule
-    public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);
+//    @Rule
+//    public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);
 
     @Before
     public void setup() {

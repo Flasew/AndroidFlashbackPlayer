@@ -732,7 +732,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnComplet
 
         if (!songDownladedHandledReceiverRegistered) {
             localBroadcastManager.registerReceiver(songDownloadHandledReceiver,
-                    new IntentFilter(VibeModeDownloadedFileHanlderDecorator.VIBE_FILE_FINISHED_PROCESS));
+                    new IntentFilter(VibeModeDownloadedFileHandlerDecorator.VIBE_FILE_FINISHED_PROCESS));
             songDownladedHandledReceiverRegistered = true;
         }
 

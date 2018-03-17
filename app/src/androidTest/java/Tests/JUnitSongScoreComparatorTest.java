@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by hrzhang on 2/18/2018
  */
-public class SongScoreComparatorTest {
+public class JUnitSongScoreComparatorTest {
 
 //    @Rule
 //    public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);

@@ -43,6 +43,8 @@ public class NormalModeDownloadedFileHandlerDecorator extends DownloadedFileHand
             return null;
 
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+
+        // add the copied file to both firebase and local song list.
         for (String path: copiedFiles) {
             try {
                 String fullpath = makeDirStr(MusicPlayerActivity.MUSIC_DIR, path);

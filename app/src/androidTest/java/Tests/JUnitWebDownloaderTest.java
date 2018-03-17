@@ -19,7 +19,7 @@ import edu.ucsd.team6flashbackplayer.WebMusicDownloader;
 
 import static org.junit.Assert.*;
 
-public class WebDownloaderTest {
+public class JUnitWebDownloaderTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mainActivity = new ActivityTestRule<MainActivity>(MainActivity.class);

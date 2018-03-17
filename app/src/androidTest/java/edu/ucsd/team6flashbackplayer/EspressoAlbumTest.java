@@ -14,7 +14,6 @@ import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.hamcrest.core.IsInstanceOf;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,14 +33,16 @@ import static org.hamcrest.Matchers.is;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class PlayAlbumTest {
+public class EspressoAlbumTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
     @Test
-    public void playAlbumTest() {
-
+    public void espressoAlbumTest() {
+        // Added a sleep statement to match the app's execution delay.
+        // The recommended way to handle such scenarios is to use Espresso idling resources:
+        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
         try {
             Thread.sleep(7000);
         } catch (InterruptedException e) {
@@ -49,7 +50,7 @@ public class PlayAlbumTest {
         }
 
         ViewInteraction appCompatButton = onView(
-                allOf(withId(R.id.main_songs), withText("Albums"),
+                allOf(withId(R.id.main_albums), withText("Albums"),
                         childAtPosition(
                                 allOf(withId(R.id.main_layout),
                                         childAtPosition(
@@ -167,6 +168,7 @@ public class PlayAlbumTest {
         ViewInteraction textView15 = onView(
                 allOf(withId(R.id.curr_playing_artist), withText("The Minions")));
         textView15.check(matches(withText("The Minions")));
+
 
     }
 

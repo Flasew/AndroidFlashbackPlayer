@@ -66,7 +66,18 @@ public abstract class MusicPlayerNavigateActivity extends MusicPlayerActivity {
     protected void onSongUpdate(int position, boolean status) {
         TextView currPlayingName = currSong.findViewById(R.id.curr_playing_name);
         TextView currPlayingArtist = currSong.findViewById(R.id.curr_playing_artist);
-        Song currSong = SongList.getSongs().get(position);
+        Song currSong;
+        try {
+            currSong = SongList.getSongs().get(position);
+        }
+        catch (IndexOutOfBoundsException e) {
+            try {
+                currSong = FirebaseSongList.getSongs().get(position);
+            }
+            catch (IndexOutOfBoundsException e1) {
+                return;
+            }
+        }
         String title = currSong.getTitle();
         String artist = currSong.getArtist();
         currPlayingName.setText(title);

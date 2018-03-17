@@ -18,7 +18,7 @@ import edu.ucsd.team6flashbackplayer.Users;
 
 import static org.junit.Assert.assertEquals;
 
-public class SongScoreCalculatorTest {
+public class JUnitSongScoreCalculatorTest {
 
     @Test
     public void calcScore_isCorrect() throws Exception {

@@ -32,20 +32,26 @@ import static org.hamcrest.Matchers.is;
 
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class LikeAndDislikeTest {
+public class EspressoLikeAndDislikeTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
     @Test
     public void likeAndDislikeTest() {
+        try {
+            Thread.sleep(7000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         ViewInteraction appCompatButton = onView(
                 allOf(withId(R.id.main_songs), withText("Songs"),
                         childAtPosition(
                                 allOf(withId(R.id.main_layout),
                                         childAtPosition(
-                                                withClassName(is("android.support.constraint.ConstraintLayout")),
-                                                0)),
+                                                withClassName(is("android.support.design.widget.CoordinatorLayout")),
+                                                1)),
                                 3),
                         isDisplayed()));
         appCompatButton.perform(click());
