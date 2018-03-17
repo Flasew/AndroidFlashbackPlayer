@@ -52,6 +52,7 @@ public class VibeModeDownloadedFileHanlderDecorator extends DownloadedFileHandle
 
             SongList.addSong(toAdd);
             AlbumList.addFromSong(toAdd);
+            User.addPrefToHash(toAdd.getId()); // added to fix bug
 
             Log.d(TAG,"Downloaded song id is: " + md5);
             Log.d(TAG,"Song is titled " + toAdd.getTitle());

@@ -20,12 +20,18 @@ public class JUnitJson {
     String jsonString1;
     ZoneId zone;
 
+    Song song2;
+    String jsonString2;
+
 
     @Before
     public void initialize() {
         song1 = new Song("song1-id", "A", "A", "A");
-        jsonString1 = "{\"ID\":\"sunrise-id\",\"Title\":\"Sunrise\",\"Album\":\"Feels Like Home\",\"Artist\":\"Norah Jones\",\"LatestLocation\":[-39.3484,175.376],\"LatestTime\":[2018,2,19,1,53,35,448000000],\"Liked\":true,\"Disliked\":false,\"TimeOfDay\":[false,false,true],\"DayOfWeek\":[false,false,false,false,false,false,true,true],\"LocationHistory\":[[-39.3484,175.376],[16.816431,-4.876562]]}";
+        jsonString1 = "{\"Path\":\"sunrise-id\",\"Title\":\"Sunrise\",\"Album\":\"Feels Like Home\",\"Artist\":\"Norah Jones\",\"LatestLocation\":[-39.3484,175.376],\"LatestTime\":[2018,2,19,1,53,35,448000000],\"Liked\":true,\"Disliked\":false,\"TimeOfDay\":[false,false,true],\"DayOfWeek\":[false,false,false,false,false,false,true,true],\"LocationHistory\":[[-39.3484,175.376],[16.816431,-4.876562]]}";
         zone = ZoneId.systemDefault();
+
+        song2 = new Song("www.google.com","song1","Song One", "A", "A", "123");
+        jsonString2 = "{\"Path\":\"song1\",\"Title\":\"Song One\",\"Album\":\"A\",\"Artist\":\"A\",\"Url\":\"www.google.com\",\"Id\":\"123\",\"LastPlayedUserUid\":\"---\",\"LatestLocation\":[-39.3484,175.376],\"LocationHistory\":[[-39.3484,175.376],[16.816431,-4.876562]],\"LatestTime\":[2018,2,19,1,53,35,448000000],\"Liked\":false,\"Disliked\":false}";
     }
 
     /**
@@ -34,7 +40,7 @@ public class JUnitJson {
     @Test
     public void testInitJsonParse() {
         String jsonParsed = SongJsonParser.jsonParse(song1);
-        String correctJson = "{\"ID\":\"song1-id\",\"Title\":\"A\",\"Album\":\"A\",\"Artist\":\"A\",\"LatestLocation\":[1000],\"LatestTime\":[10000],\"Liked\":false,\"Disliked\":false,\"TimeOfDay\":[false,false,false],\"DayOfWeek\":[false,false,false,false,false,false,false,false],\"LocationHistory\":[1000]}";
+        String correctJson = "{\"Path\":\"song1-id\",\"Title\":\"A\",\"Album\":\"A\",\"Artist\":\"A\",\"LatestLocation\":[1000],\"LatestTime\":[10000],\"Liked\":false,\"Disliked\":false,\"TimeOfDay\":[false,false,false],\"DayOfWeek\":[false,false,false,false,false,false,false,false],\"LocationHistory\":[1000]}";
         Assert.assertEquals(correctJson,jsonParsed);
         // The json string of the Song object should be set correctly to the string above on the constructor
         Assert.assertEquals(correctJson,song1.getJsonString());
@@ -109,4 +115,48 @@ public class JUnitJson {
         SongJsonParser.refreshJson(song1);
         Assert.assertEquals(newJson, song1.getJsonString());
     }
+
+    @Test
+    public void testInitJsonParseFirebase() {
+        String jsonParsed = SongJsonParser.jsonParseFirebase(song2);
+        String correctJson = "{\"Path\":\"song1\",\"Title\":\"Song One\",\"Album\":\"A\",\"Artist\":\"A\",\"Url\":\"www.google.com\",\"Id\":\"123\",\"LastPlayedUserUid\":\"---\",\"LatestLocation\":[1000],\"LocationHistory\":[1000],\"LatestTime\":[10000],\"Liked\":false,\"Disliked\":false}";
+        Assert.assertEquals(correctJson,jsonParsed);
+        // The json string of the Song object should be set correctly to the string above on the constructor
+        Assert.assertEquals(correctJson,song2.getJsonString());
+    }
+
+    @Test
+    public void testJsonPopulateFirebase() {
+        Song songTest = SongJsonParser.jsonPopulateFromFirebase(jsonString2);
+
+        // Check all the fields of the song generated from the json string
+        Assert.assertEquals("song1",songTest.getPath());
+        Assert.assertEquals("Song One", songTest.getTitle());
+        Assert.assertEquals("A", songTest.getArtist());
+        Assert.assertEquals("A", songTest.getAlbum());
+        Assert.assertEquals("123", songTest.getId());
+        Assert.assertEquals("www.google.com", songTest.getUrl());
+        Assert.assertEquals("---", songTest.getLastPlayedUserUid()); // last played user
+
+        // Location and time history
+        ZonedDateTime correctLatestTime = ZonedDateTime.of(2018,2,19,1,53,35,448000000,zone);
+        Assert.assertEquals(correctLatestTime,songTest.getLatestTime());
+        // Latest Location
+        LatLng correctLatLng = new LatLng(-39.3484,175.376);
+        Assert.assertEquals(correctLatLng, songTest.getLatestLoc());
+        //Set of Locations
+        HashSet<LatLng> correctSet = new HashSet<LatLng>();
+        LatLng loc1 = new LatLng(-39.3484,175.376);
+        LatLng loc2 = new LatLng(16.816431,-4.876562);
+        correctSet.add(loc1);
+        correctSet.add(loc2);
+        Assert.assertEquals(correctSet, songTest.getLocHist());
+
+        // like and dislike don't matter here but can check anyways
+        Assert.assertEquals(false, songTest.isLiked());
+        Assert.assertEquals(false, songTest.isDisliked());
+
+    }
+
+
 }

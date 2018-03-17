@@ -631,7 +631,7 @@ public class MainActivity extends MusicPlayerNavigateActivity {
     }
 
     /**
-     * Get the list of song from the list of song paths by uusing MediaMetadataRetriever
+     * Get the list of song from the list of song paths by using MediaMetadataRetriever
      * For songs already have a history (i.e. sp found the history), populate such history
      * using the json parser.
      * Otherwise create a new entry in SP for this song.

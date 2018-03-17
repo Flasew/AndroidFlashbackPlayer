@@ -101,6 +101,9 @@ public class SongScoreCalculator {
     private static int friendScore(Song s) {
         int score = 0;
         User curr = User.getSelf();
+        if (curr == null) {
+            return 0;
+        }
         HashMap<String,String> friends = curr.getFriendsMap();
 
         for(String id : friends.keySet()) {

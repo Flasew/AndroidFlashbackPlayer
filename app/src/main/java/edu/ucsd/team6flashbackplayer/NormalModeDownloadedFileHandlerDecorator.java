@@ -30,6 +30,12 @@ public class NormalModeDownloadedFileHandlerDecorator extends DownloadedFileHand
         super(fileHandler);
     }
 
+    /**
+     * Processes a downloaded file and adds to to correct song/album lists as well as firebase
+     * @param url the url of where the song was downloaded
+     * @param filename filename of the downloaded file's source
+     * @return a list of strings that are the files downloaded
+     */
     @Override
     public LinkedList<String> process(String url, String filename) {
         LinkedList<String> copiedFiles = fileHandler.process(url, filename);
@@ -59,6 +65,8 @@ public class NormalModeDownloadedFileHandlerDecorator extends DownloadedFileHand
                 Log.d("Downloaded song id is: ", id);
                 Log.d("Song is titled ", toAdd.getTitle());
                 FirebaseSongList.addSongToFirebase(toAdd);
+                // Add the id of the song to the current user's songPref (to start to keep track of pref)
+                User.addPrefToHash(toAdd.getId());
 
             }
             catch (Exception e) {

@@ -136,6 +136,11 @@ public class Users {
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                // Check if noone is logged in
+                if (User.getSelf() == null) {
+                    Log.d(TAG, "Not logged in");
+                    return;
+                }
                 // When some user's info changes, update the Users list
 
                 // Also send a broadcast only if the user's info that changed is a

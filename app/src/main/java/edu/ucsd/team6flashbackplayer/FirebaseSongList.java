@@ -41,6 +41,8 @@ public class FirebaseSongList {
     // local broadcast manager
     protected static LocalBroadcastManager localBroadcastManager;
 
+    public static void setFirebaseSongList(List<Song> firebaseSongList) {FirebaseSongList.firebaseSongList = firebaseSongList;}
+
     /**
      * Adds the song to the local user list (called on download)
      * Meaning that the song will always never already exist in the list
@@ -82,8 +84,6 @@ public class FirebaseSongList {
                     // Still add it to the local Firebase list (since this function is called on download)
                     firebaseSongList.add(song);
                 }
-                // Add the id of the song to the current user's songPref (to start to keep track of pref)
-                User.addPrefToHash(song.getId());
             }
 
             @Override
@@ -182,6 +182,11 @@ public class FirebaseSongList {
     public static void changePreference(Song song) {
         // Get the current user to only update for logged in user
         User currentUser = User.getSelf();
+        // Check if there's noone logged in
+        if (currentUser == null) {
+            return;
+        }
+
         // Reference specifically to user and the song in the userPref list
         // /users/user.id/songListPref/song.id
         DatabaseReference userRefSong = firebaseDatabase.getReference("users")
@@ -229,6 +234,10 @@ public class FirebaseSongList {
 
         // Get the current user
         User currentUser = User.getSelf();
+        // Check if there's noone logged in
+        if (currentUser == null) {
+            return;
+        }
         String lastPlayedID = currentUser.getId();
         s.setLastPlayedUserUid(lastPlayedID);
 
@@ -254,6 +263,7 @@ public class FirebaseSongList {
         DatabaseReference userRefSong = firebaseDatabase.getReference("songs").child(s.getId());
 
         userRefSong.setValue(s.getJsonString());
+        Log.d(TAG, "Updated song history for: " + s.getId() + " " + time.toString() + " url: " + s.getUrl());
     }
 
 
@@ -265,6 +275,10 @@ public class FirebaseSongList {
     public static void updateUserHistory(Song s) {
         // Get the current user
         User currentUser = User.getSelf();
+        // Check if there's noone logged in
+        if (currentUser == null) {
+            return;
+        }
 
         // check if the s.id already exists within the user's play history (if so then return)
         if (currentUser.getSongListPlayed().contains(s.getId())) {
@@ -280,6 +294,8 @@ public class FirebaseSongList {
 
         // Update with the list we just modified
         listPlayedRef.setValue(currentUser.getSongListPlayed());
+
+        Log.d(TAG, "Updated list with: " + s.getId());
     }
 
     /**
@@ -288,10 +304,18 @@ public class FirebaseSongList {
      */
     public static void populatePreferences() {
         User curr = User.getSelf();
+        // check if there's noone logged in
+        if (curr == null ) {
+            return;
+        }
         List<Song> localList = SongList.getSongs();
 
         // Iterate through local list of the user
         for (Song s : localList) {
+            // It should be there but in case it's not check if it's null then return (async)
+            if (curr.getSongListPref().get(s.getId()) == null) {
+                return;
+            }
             Log.d("Setting pref", s.getId() + "," + s.isLiked() + "," + s.isDisliked() );
             // get the preferences associated with this song from the User's songListPref
             // and set the song's pref to those prefs that were saved before
@@ -375,11 +399,13 @@ public class FirebaseSongList {
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
                 // This won't occur (except in the case of manual removal or error)
+                Log.d(TAG, "Song was removed");
             }
 
             @Override
             public void onChildMoved(DataSnapshot dataSnapshot, String s) {
                 // This also won't occur
+                Log.d(TAG, "Song was moved");
             }
 
             @Override
