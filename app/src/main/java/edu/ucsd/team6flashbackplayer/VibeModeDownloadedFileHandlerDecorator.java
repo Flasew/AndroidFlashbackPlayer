@@ -46,7 +46,8 @@ public class VibeModeDownloadedFileHandlerDecorator extends DownloadedFileHandle
 
             if (toAdd == null) {
                 // something is seriously wrong.
-                throw new RuntimeException(TAG + ": ERROR: didn't find the downloaded song in firebase list");
+                Log.d(TAG, ": ERROR: didn't find the downloaded song in firebase list");
+                continue;
             }
 
             SongList.addSong(toAdd);
